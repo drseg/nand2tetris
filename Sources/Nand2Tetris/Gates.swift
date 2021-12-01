@@ -1,8 +1,8 @@
-var nandGatesUsed = 0
+var gatesUsed = 0
 
 // nand considered primitive, implemented using Swift builtins
 func nand(_ a: Int, _ b: Int) -> Int {
-    nandGatesUsed += 1
+    gatesUsed += 1
     return (!(a.asBool && b.asBool)).asInt
 }
 
@@ -29,7 +29,7 @@ func efficientXor(_ a: Int, _ b: Int) -> Int {
 
 extension Int {
     var asBool: Bool {
-        self == 0 ? false : true
+        self != 0
     }
 }
 
@@ -44,4 +44,3 @@ extension Int {
         Double(self)
     }
 }
-
