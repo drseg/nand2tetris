@@ -113,58 +113,57 @@ final class OneBitTests: XCTestCase {
 }
 
 class MultiTests: XCTestCase {
-    let onesAndZeros = 0.x(n: 8) + 1.x(n: 8)
-    let zerosAndOnes = 1.x(n: 8) + 0.x(n: 8)
+    
+    let onesAndZeros = 0[8] + 1[8]
+    let zerosAndOnes = 1[8] + 0[8]
 }
 
 final class MultiBitTests: MultiTests {
     
     func test_not16() {
-        let zeros = 0.x16
-        let ones = 1.x16
         
-        not16(zeros) => ones
-        not16(ones) => zeros
+        not16(0[16]) => 1[16]
+        not16(1[16]) => 0[16]
         
         not16(onesAndZeros) => zerosAndOnes
         not16(zerosAndOnes) => onesAndZeros
     }
     
     func test_and16() {
-        and16(0.x16, 0.x16) => 0.x16
-        and16(0.x16, 1.x16) => 0.x16
-        and16(1.x16, 0.x16) => 0.x16
-        and16(1.x16, 1.x16) => 1.x16
+        and16(0[16], 0[16]) => 0[16]
+        and16(0[16], 1[16]) => 0[16]
+        and16(1[16], 0[16]) => 0[16]
+        and16(1[16], 1[16]) => 1[16]
         
-        and16(onesAndZeros, zerosAndOnes) => 0.x16
+        and16(onesAndZeros, zerosAndOnes) => 0[16]
     }
     
     func test_or16() {
-        or16(0.x16, 0.x16) => 0.x16
-        or16(0.x16, 1.x16) => 1.x16
-        or16(1.x16, 0.x16) => 1.x16
-        or16(1.x16, 1.x16) => 1.x16
+        or16(0[16], 0[16]) => 0[16]
+        or16(0[16], 1[16]) => 1[16]
+        or16(1[16], 0[16]) => 1[16]
+        or16(1[16], 1[16]) => 1[16]
         
-        or16(onesAndZeros, zerosAndOnes) => 1.x16
+        or16(onesAndZeros, zerosAndOnes) => 1[16]
     }
     
     func test_mux16() {
-        mux16(0.x16, 0.x16, 0) => 0.x16
-        mux16(0.x16, 1.x16, 0) => 0.x16
-        mux16(1.x16, 0.x16, 0) => 1.x16
-        mux16(1.x16, 1.x16, 0) => 1.x16
-        mux16(0.x16, 0.x16, 1) => 0.x16
-        mux16(0.x16, 1.x16, 1) => 1.x16
-        mux16(1.x16, 0.x16, 1) => 0.x16
-        mux16(1.x16, 1.x16, 1) => 1.x16
+        mux16(0[16], 0[16], 0) => 0[16]
+        mux16(0[16], 0[16], 0) => 0[16]
+        mux16(1[16], 0[16], 0) => 1[16]
+        mux16(1[16], 1[16], 0) => 1[16]
+        mux16(0[16], 0[16], 1) => 0[16]
+        mux16(0[16], 1[16], 1) => 1[16]
+        mux16(1[16], 0[16], 1) => 0[16]
+        mux16(1[16], 1[16], 1) => 1[16]
     }
 }
 
 final class MultiWayTests: MultiTests {
     
     func test_or8way() {
-        or8Way(0.x8) => 0
-        or8Way(1.x8) => 1
+        or8Way(0[8]) => 0
+        or8Way(1[8]) => 1
         
         or8Way([1,1,1,1,0,0,0,0]) => 1
         or8Way([0,0,0,0,1,1,1,1]) => 1
@@ -177,10 +176,10 @@ final class MultiWayTests: MultiTests {
     }
     
     func test_mux4Way16() {
-        mux4Way16(1.x16, 0.x16, 0.x16, 0.x16, 0, 0) => 1.x16
-        mux4Way16(0.x16, 1.x16, 0.x16, 0.x16, 0, 1) => 1.x16
-        mux4Way16(0.x16, 0.x16, 1.x16, 0.x16, 1, 0) => 1.x16
-        mux4Way16(0.x16, 0.x16, 0.x16, 1.x16, 1, 1) => 1.x16
+        mux4Way16(1[16], 0[16], 0[16], 0[16], 0, 0) => 1[16]
+        mux4Way16(0[16], 1[16], 0[16], 0[16], 0, 1) => 1[16]
+        mux4Way16(0[16], 0[16], 1[16], 0[16], 1, 0) => 1[16]
+        mux4Way16(0[16], 0[16], 0[16], 1[16], 1, 1) => 1[16]
         
         mux4Way16(onesAndZeros, onesAndZeros, zerosAndOnes, zerosAndOnes,
                   0, 1)
@@ -188,37 +187,37 @@ final class MultiWayTests: MultiTests {
     }
     
     func test_mux8Way16() {
-        mux8Way16(1.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,
+        mux8Way16(1[16],0[16],0[16],0[16],0[16],0[16],0[16],0[16],
                   0,0,0)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,1.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,
+        mux8Way16(0[16],1[16],0[16],0[16],0[16],0[16],0[16],0[16],
                   0,0,1)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,0.x16,1.x16,0.x16,0.x16,0.x16,0.x16,0.x16,
+        mux8Way16(0[16],0[16],1[16],0[16],0[16],0[16],0[16],0[16],
                   0,1,0)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,0.x16,0.x16,1.x16,0.x16,0.x16,0.x16,0.x16,
+        mux8Way16(0[16],0[16],0[16],1[16],0[16],0[16],0[16],0[16],
                   0,1,1)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,0.x16,0.x16,0.x16,1.x16,0.x16,0.x16,0.x16,
+        mux8Way16(0[16],0[16],0[16],0[16],1[16],0[16],0[16],0[16],
                   1,0,0)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,0.x16,0.x16,0.x16,0.x16,1.x16,0.x16,0.x16,
+        mux8Way16(0[16],0[16],0[16],0[16],0[16],1[16],0[16],0[16],
                   1,0,1)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,1.x16,0.x16,
+        mux8Way16(0[16],0[16],0[16],0[16],0[16],0[16],1[16],0[16],
                   1,1,0)
-        => 1.x16
+        => 1[16]
         
-        mux8Way16(0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,1.x16,
+        mux8Way16(0[16],0[16],0[16],0[16],0[16],0[16],0[16],1[16],
                   1,1,1)
-        => 1.x16
+        => 1[16]
     }
     
     func test_deMux4Way() {
@@ -264,12 +263,8 @@ final class MultiWayTests: MultiTests {
 }
 
 extension Int {
-    var x8: [Int] {
-        x(n: 8)
-    }
-    
-    var x16: [Int] {
-        x(n: 16)
+    subscript(_ count: Int) -> [Int] {
+        get { x(n: count) }
     }
     
     func x(n: Int) -> [Int] {
