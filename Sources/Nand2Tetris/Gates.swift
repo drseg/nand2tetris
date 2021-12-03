@@ -59,6 +59,36 @@ func mux16(_ a: [Int], _ b: [Int], _ s: Int) -> [Int] {
     zip(a, b).map { mux($0, $1, s) }
 }
 
+func or8Way(_ a: [Int]) -> Int {
+    or(a[0],
+       or(a[1],
+          (or(a[2],
+              (or(a[3],
+                  (or(a[4],
+                      (or(a[5],
+                          or(a[6],
+                             a[7]))
+                     )
+                  ))
+              ))
+          ))
+    ))
+}
+
+func orNWay(_ a: [Int]) -> Int {
+    a.reduce(0, or)
+}
+
+func mux4Way16(_ a: [Int], _ b: [Int], _ c: [Int], _ d: [Int], _ s1: Int, _ s2: Int) -> [Int] {
+    mux16(mux16(a, b, s2), mux16(c, d, s2), s1)
+}
+
+func mux8Way16(_ a: [Int], _ b: [Int], _ c: [Int], _ d: [Int], _ e: [Int], _ f: [Int], _ g: [Int], _ h: [Int], _ s1: Int, _ s2: Int, _ s3: Int) -> [Int] {
+    mux16(mux4Way16(a, b, c, d, s2, s3),
+          mux4Way16(e, f, g, h, s2, s3),
+          s1)
+}
+
 extension Int {
     var asBool: Bool {
         self != 0

@@ -112,6 +112,9 @@ final class OneBitTests: XCTestCase {
     }
 }
 
+let onesAndZeros = 0.x(n: 8) + 1.x(n: 8)
+let zerosAndOnes = 1.x(n: 8) + 0.x(n: 8)
+
 final class MultiBitTests: XCTestCase {
     
     func test_not16() {
@@ -120,6 +123,9 @@ final class MultiBitTests: XCTestCase {
         
         not16(zeros) => ones
         not16(ones) => zeros
+        
+        not16(onesAndZeros) => zerosAndOnes
+        not16(zerosAndOnes) => onesAndZeros
     }
     
     func test_and16() {
@@ -127,6 +133,8 @@ final class MultiBitTests: XCTestCase {
         and16(0.x16, 1.x16) => 0.x16
         and16(1.x16, 0.x16) => 0.x16
         and16(1.x16, 1.x16) => 1.x16
+        
+        and16(onesAndZeros, zerosAndOnes) => 0.x16
     }
     
     func test_or16() {
@@ -134,6 +142,8 @@ final class MultiBitTests: XCTestCase {
         or16(0.x16, 1.x16) => 1.x16
         or16(1.x16, 0.x16) => 1.x16
         or16(1.x16, 1.x16) => 1.x16
+        
+        or16(onesAndZeros, zerosAndOnes) => 1.x16
     }
     
     func test_mux16() {
@@ -150,11 +160,83 @@ final class MultiBitTests: XCTestCase {
 
 final class MultiWayTests: XCTestCase {
     
+    func test_or8way() {
+        or8Way(0.x8) => 0
+        or8Way(1.x8) => 1
+        
+        or8Way([1,1,1,1,0,0,0,0]) => 1
+        or8Way([0,0,0,0,1,1,1,1]) => 1
+        or8Way([1,0,1,0,1,0,1,0]) => 1
+        or8Way([0,1,0,1,0,1,0,1]) => 1
+        or8Way([1,0,0,0,0,0,0,0]) => 1
+        or8Way([1,1,1,1,1,1,1,0]) => 1
+        or8Way([0,1,1,1,1,1,1,1]) => 1
+        or8Way([0,0,0,0,0,0,0,1]) => 1
+    }
+    
+    func test_mux4Way16() {
+        mux4Way16(1.x16, 0.x16, 0.x16, 0.x16, 0, 0) => 1.x16
+        mux4Way16(0.x16, 1.x16, 0.x16, 0.x16, 0, 1) => 1.x16
+        mux4Way16(0.x16, 0.x16, 1.x16, 0.x16, 1, 0) => 1.x16
+        mux4Way16(0.x16, 0.x16, 0.x16, 1.x16, 1, 1) => 1.x16
+        
+        mux4Way16(onesAndZeros, onesAndZeros, zerosAndOnes, zerosAndOnes, 0, 1) => onesAndZeros
+    }
+    
+    func test_mux8Way16() {
+        mux8Way16(1.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16,
+                  0, 0, 0)
+        => 1.x16
+        
+        mux8Way16(0.x16, 1.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16,
+                  0, 0, 1)
+        => 1.x16
+        
+        mux8Way16(0.x16, 0.x16, 1.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16,
+                  0, 1, 0)
+        => 1.x16
+        
+        mux8Way16(0.x16, 0.x16, 0.x16, 1.x16, 0.x16, 0.x16, 0.x16, 0.x16,
+                  0, 1, 1)
+        => 1.x16
+        
+        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 1.x16, 0.x16, 0.x16, 0.x16,
+                  1, 0, 0)
+        => 1.x16
+        
+        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 1.x16, 0.x16, 0.x16,
+                  1, 0, 1)
+        => 1.x16
+        
+        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 1.x16, 0.x16,
+                  1, 1, 0)
+        => 1.x16
+        
+        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 1.x16,
+                  1, 1, 1)
+        => 1.x16
+    }
+}
+
+extension Array where Element == Int {
+    func randomCombination(length: Int) -> [Int] {
+        (0..<length).reduce(into: [Int]()) { result, _ in
+            result.append(randomElement()!)
+        }
+    }
 }
 
 extension Int {
+    var x8: [Int] {
+        x(n: 8)
+    }
+    
     var x16: [Int] {
-        Array(repeating: self, count: 16)
+        x(n: 16)
+    }
+    
+    func x(n: Int) -> [Int] {
+        Array(repeating: self, count: n)
     }
 }
 
