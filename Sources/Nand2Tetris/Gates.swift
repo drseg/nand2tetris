@@ -27,6 +27,38 @@ func efficientXor(_ a: Int, _ b: Int) -> Int {
     return nand(nand(a, nandAB), nand(b, nandAB))
 }
 
+func mux(_ a: Int, _ b: Int, _ s: Int) -> Int {
+    or(and(a, not(s)), and(b, s))
+}
+
+func efficientMux(_ a: Int, _ b: Int, _ s: Int) -> Int {
+    let notBS = nand(b, s)
+    let notS = nand(s, s)
+    let notANotS = nand(a, notS)
+    
+    return nand(notANotS, notBS)
+}
+
+func demux(_ a: Int, _ s: Int) -> (Int, Int) {
+    (and(a, not(s)), and(a, s))
+}
+
+func not16(_ a: [Int]) -> [Int] {
+    a.map(not)
+}
+
+func and16(_ a: [Int], _ b: [Int]) -> [Int] {
+    zip(a, b).map(and)
+}
+
+func or16(_ a: [Int], _ b: [Int]) -> [Int] {
+    zip(a, b).map(or)
+}
+
+func mux16(_ a: [Int], _ b: [Int], _ s: Int) -> [Int] {
+    zip(a, b).map { mux($0, $1, s) }
+}
+
 extension Int {
     var asBool: Bool {
         self != 0

@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "ReflectiveEquality",
+        "repositoryURL": "https://github.com/drseg/equatable_by_reflection",
+        "state": {
+          "branch": "main",
+          "revision": "a12776a6d297ddc460ffefb9b4e9ad443a90cfab",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
