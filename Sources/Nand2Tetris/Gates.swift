@@ -2,8 +2,8 @@ var gatesUsed = 0
 
 // nand considered primitive, implemented using Swift builtins
 func nand(_ a: Int, _ b: Int) -> Int {
-    gatesUsed += 1
-    return (!(a.asBool && b.asBool)).asInt
+    gatesUsed.increment()
+    return (!(a.bool && b.bool)).int
 }
 
 func not(_ a: Int) -> Int {
@@ -39,7 +39,7 @@ func efficientMux(_ a: Int, _ b: Int, _ s: Int) -> Int {
     return nand(notANotS, notBS)
 }
 
-func demux(_ a: Int, _ s: Int) -> (Int, Int) {
+func deMux(_ a: Int, _ s: Int) -> (Int, Int) {
     (and(a, not(s)), and(a, s))
 }
 
@@ -75,10 +75,6 @@ func or8Way(_ a: [Int]) -> Int {
     ))
 }
 
-func orNWay(_ a: [Int]) -> Int {
-    a.reduce(0, or)
-}
-
 func mux4Way16(_ a: [Int], _ b: [Int], _ c: [Int], _ d: [Int], _ s1: Int, _ s2: Int) -> [Int] {
     mux16(mux16(a, b, s2), mux16(c, d, s2), s1)
 }
@@ -89,14 +85,46 @@ func mux8Way16(_ a: [Int], _ b: [Int], _ c: [Int], _ d: [Int], _ e: [Int], _ f: 
           s1)
 }
 
+func deMux4Way(_ a: Int, _ s1: Int, _ s2: Int) -> (Int, Int, Int, Int) {
+    let deMuxS2 = deMux(a, s2)
+    let deMuxS2S1 = (deMux(deMuxS2.0, s1),
+                     deMux(deMuxS2.1, s1))
+    
+    return (deMuxS2S1.0.0,
+            deMuxS2S1.1.0,
+            deMuxS2S1.0.1,
+            deMuxS2S1.1.1)
+}
+
+func deMux8Way(_ a: Int, _ s1: Int, _ s2: Int, _ s3: Int) -> (Int, Int, Int, Int, Int, Int, Int, Int) {
+    let deMux4WayS2S3 = deMux4Way(a, s2, s3)
+    let deMux4WayS2S3S1 = (deMux(deMux4WayS2S3.0, s1),
+                           deMux(deMux4WayS2S3.1, s1),
+                           deMux(deMux4WayS2S3.2, s1),
+                           deMux(deMux4WayS2S3.3, s1))
+    
+    return (deMux4WayS2S3S1.0.0,
+            deMux4WayS2S3S1.1.0,
+            deMux4WayS2S3S1.2.0,
+            deMux4WayS2S3S1.3.0,
+            deMux4WayS2S3S1.0.1,
+            deMux4WayS2S3S1.1.1,
+            deMux4WayS2S3S1.2.1,
+            deMux4WayS2S3S1.3.1)
+}
+
 extension Int {
-    var asBool: Bool {
+    var bool: Bool {
         self != 0
+    }
+    
+    mutating func increment() {
+        self = self + 1
     }
 }
 
 extension Bool {
-    var asInt: Int {
+    var int: Int {
         self ? 1 : 0
     }
 }

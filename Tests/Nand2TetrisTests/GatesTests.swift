@@ -102,20 +102,22 @@ final class OneBitTests: XCTestCase {
         efficientMux(1, 1, 1) => 1
     }
     
-    func test_demux() {
+    func test_deMux() {
         gatesNeeded = 5
 
-        demux(0, 0) => (0, 0)
-        demux(1, 0) => (1, 0)
-        demux(0, 1) => (0, 0)
-        demux(1, 1) => (0, 1)
+        deMux(0, 0) => (0, 0)
+        deMux(1, 0) => (1, 0)
+        deMux(0, 1) => (0, 0)
+        deMux(1, 1) => (0, 1)
     }
 }
 
-let onesAndZeros = 0.x(n: 8) + 1.x(n: 8)
-let zerosAndOnes = 1.x(n: 8) + 0.x(n: 8)
+class MultiTests: XCTestCase {
+    let onesAndZeros = 0.x(n: 8) + 1.x(n: 8)
+    let zerosAndOnes = 1.x(n: 8) + 0.x(n: 8)
+}
 
-final class MultiBitTests: XCTestCase {
+final class MultiBitTests: MultiTests {
     
     func test_not16() {
         let zeros = 0.x16
@@ -158,7 +160,7 @@ final class MultiBitTests: XCTestCase {
     }
 }
 
-final class MultiWayTests: XCTestCase {
+final class MultiWayTests: MultiTests {
     
     func test_or8way() {
         or8Way(0.x8) => 0
@@ -180,49 +182,84 @@ final class MultiWayTests: XCTestCase {
         mux4Way16(0.x16, 0.x16, 1.x16, 0.x16, 1, 0) => 1.x16
         mux4Way16(0.x16, 0.x16, 0.x16, 1.x16, 1, 1) => 1.x16
         
-        mux4Way16(onesAndZeros, onesAndZeros, zerosAndOnes, zerosAndOnes, 0, 1) => onesAndZeros
+        mux4Way16(onesAndZeros, onesAndZeros, zerosAndOnes, zerosAndOnes,
+                  0, 1)
+        => onesAndZeros
     }
     
     func test_mux8Way16() {
-        mux8Way16(1.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16,
-                  0, 0, 0)
+        mux8Way16(1.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,
+                  0,0,0)
         => 1.x16
         
-        mux8Way16(0.x16, 1.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16,
-                  0, 0, 1)
+        mux8Way16(0.x16,1.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,
+                  0,0,1)
         => 1.x16
         
-        mux8Way16(0.x16, 0.x16, 1.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16,
-                  0, 1, 0)
+        mux8Way16(0.x16,0.x16,1.x16,0.x16,0.x16,0.x16,0.x16,0.x16,
+                  0,1,0)
         => 1.x16
         
-        mux8Way16(0.x16, 0.x16, 0.x16, 1.x16, 0.x16, 0.x16, 0.x16, 0.x16,
-                  0, 1, 1)
+        mux8Way16(0.x16,0.x16,0.x16,1.x16,0.x16,0.x16,0.x16,0.x16,
+                  0,1,1)
         => 1.x16
         
-        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 1.x16, 0.x16, 0.x16, 0.x16,
-                  1, 0, 0)
+        mux8Way16(0.x16,0.x16,0.x16,0.x16,1.x16,0.x16,0.x16,0.x16,
+                  1,0,0)
         => 1.x16
         
-        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 1.x16, 0.x16, 0.x16,
-                  1, 0, 1)
+        mux8Way16(0.x16,0.x16,0.x16,0.x16,0.x16,1.x16,0.x16,0.x16,
+                  1,0,1)
         => 1.x16
         
-        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 1.x16, 0.x16,
-                  1, 1, 0)
+        mux8Way16(0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,1.x16,0.x16,
+                  1,1,0)
         => 1.x16
         
-        mux8Way16(0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 0.x16, 1.x16,
-                  1, 1, 1)
+        mux8Way16(0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,0.x16,1.x16,
+                  1,1,1)
         => 1.x16
     }
-}
-
-extension Array where Element == Int {
-    func randomCombination(length: Int) -> [Int] {
-        (0..<length).reduce(into: [Int]()) { result, _ in
-            result.append(randomElement()!)
-        }
+    
+    func test_deMux4Way() {
+        deMux4Way(1, 0, 0) => (1, 0, 0, 0)
+        deMux4Way(1, 0, 1) => (0, 1, 0, 0)
+        deMux4Way(1, 1, 0) => (0, 0, 1, 0)
+        deMux4Way(1, 1, 1) => (0, 0, 0, 1)
+    }
+    
+    func test_deMux8Way() {
+        deMux8Way(1,
+                  0, 0, 0)
+        => (1, 0, 0, 0, 0, 0, 0, 0)
+        
+        deMux8Way(1,
+                  0, 0, 1)
+        => (0, 1, 0, 0, 0, 0, 0, 0)
+        
+        deMux8Way(1,
+                  0, 1, 0)
+        => (0, 0, 1, 0, 0, 0, 0, 0)
+        
+        deMux8Way(1,
+                  0, 1, 1)
+        => (0, 0, 0, 1, 0, 0, 0, 0)
+        
+        deMux8Way(1,
+                  1, 0, 0)
+        => (0, 0, 0, 0, 1, 0, 0, 0)
+        
+        deMux8Way(1,
+                  1, 0, 1)
+        => (0, 0, 0, 0, 0, 1, 0, 0)
+        
+        deMux8Way(1,
+                  1, 1, 0)
+        => (0, 0, 0, 0, 0, 0, 1, 0)
+        
+        deMux8Way(1,
+                  1, 1, 1)
+        => (0, 0, 0, 0, 0, 0, 0, 1)
     }
 }
 
@@ -245,7 +282,7 @@ private var gatesNeeded = 0
 
 infix operator =>
 
-func =>(_ lhs: Any, _ rhs: Any) {
+func =>(_ actual: Any, _ expected: Any) {
     assertsInTest += 1
-    XCTAssertTrue(haveSameValue(lhs, rhs), "Expected \(rhs) but received \(lhs)")
+    assertSameValue(actual, expected)
 }
