@@ -12,7 +12,6 @@ let package = Package(
             targets: ["Nand2Tetris"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/drseg/equatable_by_reflection", .branch("main")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -22,6 +21,7 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "Nand2TetrisTests",
-            dependencies: ["Nand2Tetris", .product(name: "ReflectiveEquality", package: "equatable_by_reflection")])
+            dependencies: ["Nand2Tetris"]
+        )
     ]
 )
