@@ -6,7 +6,7 @@ func nand(_ a: Int, _ b: Int) -> Int {
     assert(b == 1 || b == 0)
     
     gatesUsed.increment()
-    return (!(a.bool && b.bool)).int
+    return a == 1 && b == 1 ? 0 : 1
 }
 
 func not(_ a: Int) -> Int {
@@ -105,22 +105,14 @@ func deMux8Way(_ a: Int, _ s1: Int, _ s2: Int, _ s3: Int) -> IntX8 {
 }
 
 extension Int {
-    var bool: Bool {
-        self == 1
-    }
-    
+
     mutating func increment() {
         self += 1
     }
 }
 
-extension Bool {
-    var int: Int {
-        self ? 1 : 0
-    }
-}
-
 extension Int {
+    
     var d: Double {
         Double(self)
     }
