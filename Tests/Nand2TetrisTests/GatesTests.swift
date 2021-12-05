@@ -1,8 +1,13 @@
 @testable import Nand2Tetris
 import XCTest
-import ReflectiveEquality
 
 final class OneBitTests: XCTestCase {
+    
+    override func setUp() {
+        gatesUsed = 0
+        assertsInTest = 0
+        gatesNeeded = 0
+    }
     
     override func tearDown() {
         if gatesUsed != 0 && assertsInTest != 0 && gatesNeeded != 0 {
@@ -18,10 +23,6 @@ final class OneBitTests: XCTestCase {
 """
             )
         }
-        
-        gatesUsed = 0
-        assertsInTest = 0
-        gatesNeeded = 0
     }
     
     func test_nand() {

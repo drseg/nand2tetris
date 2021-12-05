@@ -78,19 +78,8 @@ final class IntX16: CountConstrainedIntArray {
 
 extension Array where Element == Int {
     
-    var x2: IntX2 {
-        IntX2(self)
-    }
-    
-    var x4: IntX4 {
-        IntX4(self)
-    }
-    
-    var x8: IntX8 {
-        IntX8(self)
-    }
-    
-    var x16: IntX16 {
-        IntX16(self)
-    }
+    var x2: IntX2   { IntX2(self) }
+    var x4: IntX4   { IntX4(self) }
+    var x8: IntX8   { IntX8(self) }
+    var x16: IntX16 { IntX16(self) }
 }
