@@ -7,11 +7,11 @@ class CountConstrainedIntArray {
     }
     
     init(_ a: [Int]) {
-        self.underlyingArray = a
+        underlyingArray = a
         validate(count: a.count)
     }
     
-    func validate(count: Int) {
+    private func validate(count: Int) {
         assert(self.count == count,
                "Must have exactly \(count) elements")
         assert(allSatisfy { $0 == 1 || $0 == 0 },

@@ -110,10 +110,3 @@ extension Int {
         self += 1
     }
 }
-
-extension Int {
-    
-    var d: Double {
-        Double(self)
-    }
-}

@@ -3,28 +3,6 @@ import XCTest
 
 final class OneBitTests: XCTestCase {
     
-    override func setUp() {
-        gatesUsed = 0
-        assertsInTest = 0
-        gatesNeeded = 0
-    }
-    
-    override func tearDown() {
-        if gatesUsed != 0 && assertsInTest != 0 && gatesNeeded != 0 {
-            let gatesPerAssert = gatesUsed/assertsInTest
-            let efficiency = gatesPerAssert - gatesNeeded
-            let percentEfficiency = Int(round(gatesNeeded.d / gatesPerAssert.d * 100))
-            print(
-"""
-
-** Nand gates used: \(gatesPerAssert)
-** Efficiency: \(percentEfficiency)% (\(efficiency) extra gates)
-
-"""
-            )
-        }
-    }
-    
     func test_nand() {
         gatesNeeded = 1
         
@@ -110,6 +88,35 @@ final class OneBitTests: XCTestCase {
         deMux(1, 0) => [1, 0].x2
         deMux(0, 1) => [0, 0].x2
         deMux(1, 1) => [0, 1].x2
+    }
+    
+    override func setUp() {
+        gatesUsed = 0
+        assertsInTest = 0
+        gatesNeeded = 0
+    }
+    
+    override func tearDown() {
+        if gatesUsed != 0 && assertsInTest != 0 && gatesNeeded != 0 {
+            let gatesPerAssert = gatesUsed/assertsInTest
+            let efficiency = gatesPerAssert - gatesNeeded
+            let percentEfficiency = Int(round(gatesNeeded.d / gatesPerAssert.d * 100))
+            print(
+"""
+
+** Nand gates used: \(gatesPerAssert)
+** Efficiency: \(percentEfficiency)% (\(efficiency) extra gates)
+
+"""
+            )
+        }
+    }
+}
+
+extension Int {
+    
+    var d: Double {
+        Double(self)
     }
 }
 
@@ -286,7 +293,7 @@ private var gatesNeeded = 0
 
 infix operator =>
 
-func =><T: Equatable>(_ actual: T, _ expected: T) {
+private func =><T: Equatable>(_ actual: T, _ expected: T) {
     assertsInTest += 1
     XCTAssertEqual(actual, expected)
 }
