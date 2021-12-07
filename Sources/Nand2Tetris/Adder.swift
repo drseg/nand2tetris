@@ -12,7 +12,7 @@ func fullAdder(_ a: Int, _ b: Int, _ c: Int) -> IntX2 {
 }
 
 func add16(_ a: IntX16, _ b: IntX16) -> IntX16 {
-    zip(a.reversed(), b.reversed()).reduce(into: (sum: [Int](), carry: 0)) { (result, addends) in
+    zip(a,b).reversed().reduce(into: (sum: [Int](), carry: 0)) { (result, addends) in
         let addition = fullAdder(addends.0, addends.1, result.carry)
         result.sum += [addition.sum]
         result.carry = addition.carry
@@ -20,7 +20,7 @@ func add16(_ a: IntX16, _ b: IntX16) -> IntX16 {
 }
 
 func inc16(_ a: IntX16) -> IntX16 {
-    add16(a, [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1].x16)
+    add16(a, "0000000000000001".x16)
 }
 
 private extension IntX2 {

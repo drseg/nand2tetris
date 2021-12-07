@@ -83,3 +83,14 @@ extension Array where Element == Int {
     var x8: IntX8   { IntX8(self) }
     var x16: IntX16 { IntX16(self) }
 }
+
+extension StringProtocol {
+    
+    var int: Int    { Int(String(self))! }
+    var x2: IntX2   { xX.x2 }
+    var x4: IntX4   { xX.x4 }
+    var x8: IntX8   { xX.x8 }
+    var x16: IntX16 { xX.x16 }
+    
+    var xX: [Int] { map(String.init).compactMap(Int.init) }
+}
