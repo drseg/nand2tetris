@@ -35,10 +35,6 @@ private func isNegative(_ a: IntX16) -> Int {
     and(one(a[0]), a[0])
 }
 
-private func zero(_ a: IntX16) -> IntX16 {
-    and16(not16(a), a)
-}
-
 private func one(_ a: Int) -> Int {
     or(not(a), a)
 }

@@ -20,7 +20,13 @@ func add16(_ a: IntX16, _ b: IntX16) -> IntX16 {
 }
 
 func inc16(_ a: IntX16) -> IntX16 {
-    add16(a, "0000000000000001".x16)
+    let one = not16(add16(not16(zero(a)), not16(zero(a))))
+    
+    return add16(a, one)
+}
+
+func zero(_ a: IntX16) -> IntX16 {
+    and16(not16(a), a)
 }
 
 private extension IntX2 {
