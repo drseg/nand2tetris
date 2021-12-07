@@ -6,7 +6,7 @@ final class ALUTests: XCTestCase {
     let ALUStateTable =
 """
 Out = 0, both x and y are zeroed at input:
-||||       x              |       y        |zx|nx|zy|ny|f|no|      out       |zr|ng|
+|        |       x        |       y        |zx|nx|zy|ny|f|no|      out       |zr|ng|
 |\(#line)|0000000000000000|1111111111111111|1 |0 |1 |0 |1|0 |0000000000000000|1 |0 |
 |\(#line)|0000000000010001|0000000000000011|1 |0 |1 |0 |1|0 |0000000000000000|1 |0 |
 
@@ -121,7 +121,7 @@ extension ALUTests {
     }
     
     func isHeader<S: StringProtocol>(_ s: S) -> Bool {
-        s.replacingOccurrences(of: " ", with: "") == "||||x|y|zx|nx|zy|ny|f|no|out|zr|ng|"
+        s.replacingOccurrences(of: " ", with: "") == "||x|y|zx|nx|zy|ny|f|no|out|zr|ng|"
     }
     
     func makeReadable(_ out: IntX16) -> String {

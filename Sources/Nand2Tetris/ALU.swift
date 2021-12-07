@@ -24,17 +24,3 @@ private func negateIfN(_ a: IntX16, n: Int) -> IntX16 {
 private func zeroIfZ(_ a: IntX16, z: Int) -> IntX16 {
     mux16(a, zero(a), z)
 }
-
-private func isZero(_ a: IntX16) -> Int {
-    let first8 = Array(a[0..<8]).x8
-    let last8 = Array(a[8...]).x8
-    return not(or(or8Way(first8), or8Way(last8)))
-}
-
-private func isNegative(_ a: IntX16) -> Int {
-    and(one(a[0]), a[0])
-}
-
-private func one(_ a: Int) -> Int {
-    or(not(a), a)
-}

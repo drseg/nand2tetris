@@ -25,10 +25,6 @@ func inc16(_ a: IntX16) -> IntX16 {
     return add16(a, one)
 }
 
-func zero(_ a: IntX16) -> IntX16 {
-    and16(not16(a), a)
-}
-
 private extension IntX2 {
     var sum: Int { self[1] }
     var carry: Int { self[0] }
