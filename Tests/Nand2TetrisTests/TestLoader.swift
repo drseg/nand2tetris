@@ -2,53 +2,75 @@ import XCTest
 @testable import Nand2Tetris
 
 class TestLoaderTests: XCTestCase {
-    func loadTestRows(_ resource: String = "And", directory dir: String = "Gates", cellParser: ((_ offset: Int,_ element: Substring) -> String) = { _, element in String(element) }) -> [[String]] {
-        Nand2TetrisTests.loadTestRows(resource, directory: dir, cellParser: cellParser)
+    func load(_ resource: String = "And", directory dir: String = "Gates", cellParser: ((_ column: Int, _ element: Substring) -> String)? = nil) -> [(cells: [String], line: Int, filePath: String)] {
+        cellParser == nil
+        ? loadTest(resource, directory: dir)
+        : loadTest(resource, directory: dir, cellParser: cellParser!)
     }
     
     func testDoesNotLoadNothing() {
-        XCTAssertEqual(loadTestRows("cat", directory: "Gates"), [[]])
+        XCTAssertTrue(load("cat").isEmpty)
     }
     
     func testParsesRowsIgnoringHeader() {
-        let tableRows = loadTestRows()
+        let rows = load()
 
-        XCTAssertEqual(tableRows.count, 4)
-        XCTAssertEqual(tableRows[0], ["0","0","0"])
-        XCTAssertEqual(tableRows[1], ["0","1","0"])
-        XCTAssertEqual(tableRows[2], ["1","0","0"])
-        XCTAssertEqual(tableRows[3], ["1","1","1"])
+        XCTAssertEqual(rows.count, 4)
+        XCTAssertEqual(rows[0].cells, ["0","0","0"])
+        XCTAssertEqual(rows[1].cells, ["0","1","0"])
+        XCTAssertEqual(rows[2].cells, ["1","0","0"])
+        XCTAssertEqual(rows[3].cells, ["1","1","1"])
     }
     
     func testCellParserReceivesColumnIndex() {
-        let tableRows = loadTestRows { offset, _ in
-            "Column \(offset)"
-        }
+        let rows = load { column, _ in "Column \(column)" }
         
-        XCTAssertEqual(tableRows[0].count, 3)
-        XCTAssertEqual(tableRows[0][0], "Column 0")
-        XCTAssertEqual(tableRows[0][1], "Column 1")
-        XCTAssertEqual(tableRows[0][2], "Column 2")
+        XCTAssertEqual(rows[0].cells.count, 3)
+        XCTAssertEqual(rows[0].cells[0], "Column 0")
+        XCTAssertEqual(rows[0].cells[1], "Column 1")
+        XCTAssertEqual(rows[0].cells[2], "Column 2")
+    }
+    
+    func testLoaderOutputsCorrectLine() {
+        let rows = load()
+        XCTAssertEqual(rows[0].line, 2)
+        XCTAssertEqual(rows[1].line, 3)
+        XCTAssertEqual(rows[2].line, 4)
+    }
+    
+    func testLoaderOutputsFilepath() {
+        XCTAssertEqual(load()[0].filePath, "AcceptanceTests/Gates/And.cmp")
     }
 }
 
-func loadTestRows<T>(_ resource: String, directory dir: String, cellParser: ((_ offset: Int,_ element: Substring) -> T)) -> [[T]] {
-    loadTest(resource, directory: dir)?
-        .split(separator: "\n")
-        .dropFirst()
-        .map {
-            $0.split(separator: "|")
-                .enumerated()
-                .map(cellParser)
-        } ?? [[]]
+func loadTest(_ name: String, directory dir: String) -> [(cells: [String], line: Int, filePath: String)] {
+    loadTest(name, directory: dir) { _, element in String(element) }
 }
 
-private func loadTest(_ resource: String, directory dir: String) -> String? {
-    guard let url = Bundle.module.url(forResource: resource, withExtension: "cmp", subdirectory: "AcceptanceTests/\(dir)") else { return nil }
-    return try? String(contentsOf: url).trimmed
+func loadTest<T>(_ name: String, directory dir: String, cellParser: ((_ column: Int,_ element: Substring) -> T)) -> [(cells: [T], line: Int, filePath: String)] {
+    loadTest(name, directory: dir).rows.map { row, element in
+        let cells = element.split(separator: "|").enumerated().map(cellParser)
+        let filePath = "AcceptanceTests/\(dir)/\(name).cmp"
+        return (cells, row + 2, filePath)
+    }
+}
+
+private func loadTest(_ name: String, directory dir: String) -> String {
+    guard let url = url(testName: name, directory: dir) else { return "" }
+    return (try? String(contentsOf: url).trimmed) ?? ""
+}
+
+private func url(testName: String, directory dir: String) -> URL? {
+    Bundle.module.url(forResource: testName, withExtension: "cmp", subdirectory: "AcceptanceTests/\(dir)")
 }
 
 extension String {
+    var rows: EnumeratedSequence<ArraySlice<Substring>> {
+        split(separator: "\n")
+        .dropFirst()
+        .enumerated()
+    }
+    
     var trimmed: String {
         replacingOccurrences(of: " ", with: "")
             .replacingOccurrences(of: "\r", with: "")
