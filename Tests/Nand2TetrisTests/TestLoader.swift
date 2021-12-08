@@ -33,6 +33,7 @@ class TestLoaderTests: XCTestCase {
     
     func testLoaderOutputsCorrectLine() {
         let rows = load()
+        
         XCTAssertEqual(rows[0].line, 2)
         XCTAssertEqual(rows[1].line, 3)
         XCTAssertEqual(rows[2].line, 4)
@@ -49,9 +50,9 @@ func loadTest(_ name: String, directory dir: String) -> [(cells: [String], line:
 
 func loadTest<T>(_ name: String, directory dir: String, cellParser: ((_ column: Int,_ element: Substring) -> T)) -> [(cells: [T], line: Int, filePath: String)] {
     loadTest(name, directory: dir).rows.map { row, element in
-        let cells = element.split(separator: "|").enumerated().map(cellParser)
-        let filePath = "AcceptanceTests/\(dir)/\(name).cmp"
-        return (cells, row + 2, filePath)
+        (cells: element.split(separator: "|").enumerated().map(cellParser),
+         line: row + 2,
+         filePath: "AcceptanceTests/\(dir)/\(name).cmp")
     }
 }
 
