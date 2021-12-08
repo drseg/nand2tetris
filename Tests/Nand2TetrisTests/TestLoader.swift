@@ -1,8 +1,12 @@
 import XCTest
 @testable import Nand2Tetris
 
+typealias AcceptanceTest<T> = [(cells: [T], line: Int, filePath: String)]
+typealias CellParser<T> = (_ column: Int, _ element: Substring) -> T
+
 class TestLoaderTests: XCTestCase {
-    func load(_ resource: String = "And", directory dir: String = "Gates", cellParser: ((_ column: Int, _ element: Substring) -> String)? = nil) -> [(cells: [String], line: Int, filePath: String)] {
+    
+    func load(_ resource: String = "And", directory dir: String = "Gates", cellParser: CellParser<String>? = nil) -> AcceptanceTest<String> {
         cellParser == nil
         ? loadTest(resource, directory: dir)
         : loadTest(resource, directory: dir, cellParser: cellParser!)
@@ -44,11 +48,11 @@ class TestLoaderTests: XCTestCase {
     }
 }
 
-func loadTest(_ name: String, directory dir: String) -> [(cells: [String], line: Int, filePath: String)] {
+func loadTest(_ name: String, directory dir: String) -> AcceptanceTest<String> {
     loadTest(name, directory: dir) { _, element in String(element) }
 }
 
-func loadTest<T>(_ name: String, directory dir: String, cellParser: ((_ column: Int,_ element: Substring) -> T)) -> [(cells: [T], line: Int, filePath: String)] {
+func loadTest<T>(_ name: String, directory dir: String, cellParser: CellParser<T>) -> AcceptanceTest<T> {
     loadTest(name, directory: dir).rows.map { row, element in
         (cells: element.split(separator: "|").enumerated().map(cellParser),
          line: row + 2,
