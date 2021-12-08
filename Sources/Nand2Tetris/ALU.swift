@@ -14,6 +14,7 @@ func ALU(x: IntX16, y: IntX16, zx: Int, nx: Int, zy: Int, ny: Int, f: Int, no: I
     
     let ng = isNegative(noModified_fOut)
     let zr = isZero(noModified_fOut)
+    
     return (noModified_fOut, zr, ng)
 }
 

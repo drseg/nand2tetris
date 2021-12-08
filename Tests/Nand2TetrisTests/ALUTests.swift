@@ -3,6 +3,10 @@ import XCTest
 
 final class ALUTests: XCTestCase {
     
+    func testOutZero() {
+        
+    }
+    
     let ALUStateTable =
 """
 out = 0; both x and y are zeroed at input:
@@ -130,11 +134,16 @@ extension ALUTests {
     }
     
     func assert(_ tableRow: String) {
-        let parts = tableRow.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces)}
+        let parts = tableRow.split(separator: "|").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }
         
         let line = UInt(parts[0])!
+        
         let x = parts[1].x16, y = parts[2].x16
-        let zx = parts[3].int, nx = parts[4].int, zy = parts[5].int, ny = parts[6].int
+        let zx = parts[3].int, nx = parts[4].int
+        let zy = parts[5].int, ny = parts[6].int
+        
         let f = parts[7].int
         let no = parts[8].int
 
@@ -142,16 +151,13 @@ extension ALUTests {
         let zr = parts[10].int
         let ng = parts[11].int
         
-        let aluResult = ALU(x: x, y: y, zx: zx, nx: nx, zy: zy, ny: ny, f: f, no: no)
+        let result = ALU(x: x, y: y, zx: zx, nx: nx, zy: zy, ny: ny, f: f, no: no)
         
-        XCTAssertEqual(makeReadable(aluResult.out),
-                       makeReadable(out),
+        XCTAssertEqual(makeReadable(result.out), makeReadable(out),
                        "\nout comparison failure)", line: line)
-        XCTAssertEqual(aluResult.zr,
-                       zr,
+        XCTAssertEqual(result.zr, zr,
                        "\nzr comparison failure)", line: line)
-        XCTAssertEqual(aluResult.ng,
-                       ng,
+        XCTAssertEqual(result.ng, ng,
                        "\nng comparison failure)", line: line)
     }
     
