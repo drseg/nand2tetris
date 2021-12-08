@@ -21,7 +21,10 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "Nand2TetrisTests",
-            dependencies: ["Nand2Tetris"]
+            dependencies: ["Nand2Tetris"],
+            resources: [
+                .copy("AcceptanceTests")
+            ]
         )
     ]
 )
