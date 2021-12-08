@@ -51,13 +51,13 @@ func runAcceptanceTest(relativePath: String, factory: AssertionFactory) {
     tests.forEach { $0.run() }
 }
 
-private func makeTestsFromFile(relativePath: String, factory: AssertionFactory) -> [Test] {
+private func makeTestsFromFile(relativePath: String, factory addWhenTo: AssertionFactory) -> [Test] {
     testFile(relativePath: relativePath)
         .givenThenSentences
         .enumerated()
         .map { lineIndex, givenThens in
             Test(relativePath: relativePath,
-                 assertions: factory(givenThens),
+                 assertions: addWhenTo(givenThens),
                  lineIndex: lineIndex)
         }
 }
