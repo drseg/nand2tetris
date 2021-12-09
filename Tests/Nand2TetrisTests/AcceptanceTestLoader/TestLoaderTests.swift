@@ -2,21 +2,27 @@ import XCTest
 
 class TestLoaderTests: XCTestCase {
     
-    private func run(_ test: String, directory: String = "Gates", assertionFactory: @escaping AssertionFactory = { _ in [] }, shouldDoNothing: Bool = false) {
-        let e = expectation(description: "")
-        e.assertForOverFulfill = false
-        e.isInverted = shouldDoNothing
-        
-        AcceptanceTestRunner(name: test, directory: directory) {
-            e.fulfill()
-            return assertionFactory($0)
-        }.run()
-        
-        waitForExpectations(timeout: 0.01, handler: nil)
+    private func run(_ test: String, directory: String = "Gates", line: UInt = #line, assertionFactory: @escaping AssertionFactory = { _ in [] }) {
+        AcceptanceTestRunner(name: test,
+                             directory: directory,
+                             line: line,
+                             factory: assertionFactory)
+            .run()
     }
     
-    func testDoesNothingIfFileNotFound() {
-        run("cat", shouldDoNothing: true)
+    func testFailsIfFileNotFound() {
+        var failures = [String]()
+        
+        XCTExpectFailure {
+            failures.append($0.description)
+            return true
+        }
+
+        run("cat")
+        
+        XCTAssertEqual(failures.count, 2)
+        XCTAssertTrue(failures[0].contains("File not found"))
+        XCTAssertTrue(failures[1].contains("Parsing error"))
     }
     
     func testPassesWhenActualAndExpectedMatch() {
@@ -32,13 +38,11 @@ class TestLoaderTests: XCTestCase {
     }
     
     func testFailsWhenActualAndExpectedDiffer_WithCorrectMessage() throws {
-        let expectedMessage =
+        let message =
 """
 AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3
 """
-        XCTExpectFailure { issue in
-            issue.description.contains(expectedMessage)
-        }
+        XCTExpectFailure { $0.description.contains(message) }
         
         run("And") { givenThen in
             [(actual: givenThen[2],

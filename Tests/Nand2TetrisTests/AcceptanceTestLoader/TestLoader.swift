@@ -12,13 +12,20 @@ class AcceptanceTestRunner {
     private let relativePath: String
     private let factory: AssertionFactory
     
-    init(relativePath: String, factory: @escaping AssertionFactory) {
+    private let swiftFile: StaticString
+    private let swiftLine: UInt
+    
+    init(relativePath: String, file: StaticString = #file, line: UInt = #line, factory: @escaping AssertionFactory) {
         self.relativePath = relativePath
+        self.swiftFile = file
+        self.swiftLine = line
         self.factory = factory
     }
     
-    init(name: String, directory: String, factory: @escaping AssertionFactory) {
+    init(name: String, directory: String, file: StaticString = #file, line: UInt = #line, factory: @escaping AssertionFactory) {
         self.relativePath = "\(directory)/\(name)"
+        self.swiftFile = file
+        self.swiftLine = line
         self.factory = factory
     }
 
@@ -27,13 +34,20 @@ class AcceptanceTestRunner {
     }
     
     private var tests: [Test] {
-        testFile
-            .givenThenSentences
+        let givenThenSentences = testFile.givenThenSentences
+        
+        guard !givenThenSentences.isEmpty else {
+            XCTFail("Parsing error"); return []
+        }
+        
+        return givenThenSentences
             .enumerated()
             .map { lineIndex, givenThens in
                 Test(relativePath: relativePath,
                      assertions: factory(givenThens),
-                     lineIndex: lineIndex)
+                     lineIndex: lineIndex,
+                     file: swiftFile,
+                     line: swiftLine)
             }
     }
 
@@ -41,7 +55,7 @@ class AcceptanceTestRunner {
         guard
             let url = url,
             let tests = try? String(contentsOf: url)
-        else { return "" }
+        else { XCTFail("File not found"); return "" }
         
         return tests.whiteSpaceTrimmed
     }
@@ -57,7 +71,12 @@ private struct Test {
     
     private let assertions: [Assertion]
     
-    init(relativePath: String, assertions: [AssertionTuple], lineIndex: Int) {
+    private let swiftFile: StaticString
+    private let swiftLine: UInt
+    
+    init(relativePath: String, assertions: [AssertionTuple], lineIndex: Int, file: StaticString = #file, line: UInt = #line) {
+        self.swiftFile = file
+        self.swiftLine = line
         self.assertions = assertions.map {
             Assertion(assertionTuple: $0,
                       lineIndex: lineIndex,
@@ -66,7 +85,8 @@ private struct Test {
     }
     
     func run() {
-        assertions.forEach { $0.assert() }
+        assertions.forEach { $0.assert(swiftFile: swiftFile,
+                                       swiftLine: swiftLine) }
     }
 }
 
@@ -94,8 +114,8 @@ private struct Assertion {
         self.path = path
     }
     
-    func assert() {
-        XCTAssertEqual(actual.toString, expected.toString, failureMessage)
+    func assert(swiftFile: StaticString = #file, swiftLine: UInt = #line) {
+        XCTAssertEqual(actual.toString, expected.toString, failureMessage, file: swiftFile, line: swiftLine)
     }
 }
 
