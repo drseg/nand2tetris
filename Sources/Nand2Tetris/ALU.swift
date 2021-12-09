@@ -1,4 +1,4 @@
-func ALU(x: IntX16, y: IntX16, zx: Int, nx: Int, zy: Int, ny: Int, f: Int, no: Int) -> (out: IntX16, zr: Int, ng: Int) {
+func alu(x: IntX16, y: IntX16, zx: Int, nx: Int, zy: Int, ny: Int, f: Int, no: Int) -> (out: IntX16, zr: Int, ng: Int) {
     let xZX = zeroIfZ(x, z: zx)
     let yZY = zeroIfZ(y, z: zy)
     
