@@ -9,7 +9,7 @@ private let testFileExtension = "cmp"
 class AcceptanceTestRunner {
     
     private let relativePath: String
-    private let factory: ActualsFactory
+    private let getActuals: ActualsFactory
     private let firstExpectedColumn: Int?
     
     private let swiftFile: StaticString
@@ -28,7 +28,7 @@ class AcceptanceTestRunner {
         self.firstExpectedColumn = firstExpectedColumn
         self.swiftFile = swiftFile
         self.swiftLine = swiftLine
-        self.factory = factory
+        self.getActuals = factory
     }
 
     func run() {
@@ -42,28 +42,40 @@ class AcceptanceTestRunner {
             XCTFail("Parsing error"); return []
         }
         
-        return givenThenSentences
-            .enumerated()
-            .map(makeTests)
+        return makeTests(from: givenThenSentences)
     }
     
-    private func makeTests(_ line: Int, _ givenThens: [String]) -> Test {
-        let firstExpectedColumn = firstExpectedColumn ?? givenThens.count - 1
-        let actuals = factory(givenThens).map(\.toString)
-        let expecteds = Array(givenThens[firstExpectedColumn...])
-        
-        guard actuals.count == expecteds.count else {
-            XCTFail("Actual (\(actuals.count)) and Expected (\(expecteds.count)) counts differ")
-            return Test.null
+    private func makeTests(from givenThenSentences: [[String]]) -> [Test] {
+        givenThenSentences.enumerated().compactMap { line, givenThens in
+            let firstExpectedColumn = firstExpectedColumn ?? givenThens.count - 1
+            
+            guard firstExpectedColumn < givenThens.count else {
+                XCTFail("Expected column index is out of bounds")
+                return nil
+            }
+
+            let givens = Array(givenThens.prefix(upTo: firstExpectedColumn))
+            let actuals = getActuals(givens).map(\.toString)
+            let expecteds = Array(givenThens[firstExpectedColumn...])
+            
+            guard actuals.count != 0 else {
+                XCTFail("No actual values found")
+                return nil
+            }
+            
+            guard actuals.count == expecteds.count else {
+                XCTFail("Actual (\(actuals.count)) and Expected (\(expecteds.count)) counts differ")
+                return nil
+            }
+            
+            return Test(relativePath: relativePath,
+                        actuals: actuals,
+                        expecteds: expecteds,
+                        line: line,
+                        firstExpectedColumn: firstExpectedColumn,
+                        swiftFile: swiftFile,
+                        swiftLine: swiftLine)
         }
-        
-        return Test(relativePath: relativePath,
-                    actuals: actuals,
-                    expecteds: expecteds,
-                    line: line,
-                    firstExpectedColumn: firstExpectedColumn,
-                    swiftFile: swiftFile,
-                    swiftLine: swiftLine)
     }
     
     private var testFile: String {
@@ -88,14 +100,6 @@ private struct Test {
     
     private let swiftFile: StaticString
     private let swiftLine: UInt
-    
-    static var null: Test {
-        Test(relativePath: "",
-             actuals: [],
-             expecteds: [],
-             line: 0,
-             firstExpectedColumn: 0)
-    }
     
     init(relativePath: String, actuals: [String], expecteds: [String] = [], line: Int, firstExpectedColumn: Int, swiftFile: StaticString = #file, swiftLine: UInt = #line) {
         self.swiftFile = swiftFile
