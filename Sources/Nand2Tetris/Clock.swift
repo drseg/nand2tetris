@@ -35,7 +35,7 @@ private extension Int {
 
 private extension String {
     var isTock: Int {
-        contains("+") ? 1 : 0
+        last == "+" ? 1 : 0
     }
 }
 

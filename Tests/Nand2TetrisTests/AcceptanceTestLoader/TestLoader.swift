@@ -1,31 +1,33 @@
 import XCTest
 @testable import Nand2Tetris
 
-typealias AssertionFactory = (_ givenThen: [String]) -> [AssertionTuple]
-typealias AssertionTuple = (actual: Stringable, expected: Stringable, columnIndex: Int)
+typealias ActualsFactory = (_ givenThen: [String]) -> [Stringable]
 
-private let root = "AcceptanceTests"
-private let fileExtension = "cmp"
+private let testRoot = "AcceptanceTests"
+private let testFileExtension = "cmp"
 
 class AcceptanceTestRunner {
     
     private let relativePath: String
-    private let factory: AssertionFactory
+    private let factory: ActualsFactory
+    private let firstExpectedColumn: Int?
     
     private let swiftFile: StaticString
     private let swiftLine: UInt
     
-    init(relativePath: String, file: StaticString = #file, line: UInt = #line, factory: @escaping AssertionFactory) {
-        self.relativePath = relativePath
-        self.swiftFile = file
-        self.swiftLine = line
-        self.factory = factory
+    convenience init(name: String, directory: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+        self.init("\(directory)/\(name)",
+                  firstExpectedColumn: firstExpectedColumn,
+                  swiftFile: swiftFile,
+                  swiftLine: swiftLine,
+                  factory: factory)
     }
     
-    init(name: String, directory: String, file: StaticString = #file, line: UInt = #line, factory: @escaping AssertionFactory) {
-        self.relativePath = "\(directory)/\(name)"
-        self.swiftFile = file
-        self.swiftLine = line
+    init(_ relativePath: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+        self.relativePath = relativePath
+        self.firstExpectedColumn = firstExpectedColumn
+        self.swiftFile = swiftFile
+        self.swiftLine = swiftLine
         self.factory = factory
     }
 
@@ -42,15 +44,28 @@ class AcceptanceTestRunner {
         
         return givenThenSentences
             .enumerated()
-            .map { lineIndex, givenThens in
-                Test(relativePath: relativePath,
-                     assertions: factory(givenThens),
-                     lineIndex: lineIndex,
-                     file: swiftFile,
-                     line: swiftLine)
-            }
+            .map(makeTests)
     }
-
+    
+    private func makeTests(_ line: Int, _ givenThens: [String]) -> Test {
+        let firstExpectedColumn = firstExpectedColumn ?? givenThens.count - 1
+        let actuals = factory(givenThens).map(\.toString)
+        let expecteds = Array(givenThens[firstExpectedColumn...])
+        
+        guard actuals.count == expecteds.count else {
+            XCTFail("Actual (\(actuals.count)) and Expected (\(expecteds.count)) counts differ")
+            return Test.null
+        }
+        
+        return Test(relativePath: relativePath,
+                    actuals: actuals,
+                    expecteds: expecteds,
+                    line: line,
+                    firstExpectedColumn: firstExpectedColumn,
+                    swiftFile: swiftFile,
+                    swiftLine: swiftLine)
+    }
+    
     private var testFile: String {
         guard
             let url = url,
@@ -62,8 +77,8 @@ class AcceptanceTestRunner {
 
     private var url: URL? {
         Bundle.module.url(forResource: relativePath,
-                          withExtension: fileExtension,
-                          subdirectory: root + "/")
+                          withExtension: testFileExtension,
+                          subdirectory: testRoot + "/")
     }
 }
 
@@ -74,12 +89,23 @@ private struct Test {
     private let swiftFile: StaticString
     private let swiftLine: UInt
     
-    init(relativePath: String, assertions: [AssertionTuple], lineIndex: Int, file: StaticString = #file, line: UInt = #line) {
-        self.swiftFile = file
-        self.swiftLine = line
-        self.assertions = assertions.map {
-            Assertion(assertionTuple: $0,
-                      lineIndex: lineIndex,
+    static var null: Test {
+        Test(relativePath: "",
+             actuals: [],
+             expecteds: [],
+             line: 0,
+             firstExpectedColumn: 0)
+    }
+    
+    init(relativePath: String, actuals: [String], expecteds: [String] = [], line: Int, firstExpectedColumn: Int, swiftFile: StaticString = #file, swiftLine: UInt = #line) {
+        self.swiftFile = swiftFile
+        self.swiftLine = swiftLine
+        
+        self.assertions = zip(actuals, expecteds).enumerated().map {
+            Assertion(actual: $0.element.0,
+                      expected: $0.element.1,
+                      column: firstExpectedColumn + $0.offset,
+                      line: line,
                       path: relativePath)
         }
     }
@@ -95,22 +121,22 @@ private struct Assertion {
     private let actual: Stringable
     private let expected: Stringable
     
-    private let columnIndex: Int
-    private let lineIndex: Int
+    private let column: Int
+    private let line: Int
     private let path: String
     
     private var failureMessage: String {
-        "\n\(root)/\(path).\(fileExtension): comparison failure at " +
-        "line \(lineIndex+2) " +
-        "column \(columnIndex+1)"
+        "\n\(testRoot)/\(path).\(testFileExtension): comparison failure at " +
+        "line \(line+2) " +
+        "column \(column+1)"
     }
     
-    init(assertionTuple: AssertionTuple, lineIndex: Int, path: String) {
-        self.actual = assertionTuple.actual
-        self.expected = assertionTuple.expected
-        self.columnIndex = assertionTuple.columnIndex
+    init(actual: Stringable, expected: Stringable, column: Int, line: Int, path: String) {
+        self.actual = actual
+        self.expected = expected
+        self.column = column
         
-        self.lineIndex = lineIndex
+        self.line = line
         self.path = path
     }
     

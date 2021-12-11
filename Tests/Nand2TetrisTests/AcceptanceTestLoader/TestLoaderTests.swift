@@ -2,10 +2,11 @@ import XCTest
 
 class TestLoaderTests: XCTestCase {
     
-    private func run(_ test: String, directory: String = "Gates", line: UInt = #line, assertionFactory: @escaping AssertionFactory = { _ in [] }) {
+    private func run(_ test: String, directory: String = "Gates", firstExpectedColumnIndex: Int? = nil, line: UInt = #line, assertionFactory: @escaping ActualsFactory = { _ in [] }) {
         AcceptanceTestRunner(name: test,
                              directory: directory,
-                             line: line,
+                             firstExpectedColumn: firstExpectedColumnIndex,
+                             swiftLine: line,
                              factory: assertionFactory)
             .run()
     }
@@ -25,14 +26,8 @@ class TestLoaderTests: XCTestCase {
     }
     
     func testPassesWhenActualAndExpectedMatch() {
-        func and(_ a: String, _ b: String) -> String {
-            a == "1" && b == "1" ? "1" : "0"
-        }
-        
         run("And") { givenThen in
-            [(actual: givenThen[2],
-              expected: and(givenThen[0], givenThen[1]),
-              columnIndex: 2)]
+            [givenThen[2]]
         }
     }
     
@@ -43,10 +38,12 @@ AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3
 """
         XCTExpectFailure { $0.description.contains(message) }
         
-        run("And") { givenThen in
-            [(actual: givenThen[2],
-              expected: "0",
-              columnIndex: 2)]
-        }
+        run("And") { _ in [0] }
+    }
+    
+    func testFailsWhenActualAndExpectedCountDiffer() throws {
+        let message = "Actual (0) and Expected (3) counts differ"
+        XCTExpectFailure { $0.description.contains(message) }
+        run("And", firstExpectedColumnIndex: 0)
     }
 }
