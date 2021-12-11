@@ -1,17 +1,41 @@
+typealias ClockedOutput = Stringable
+
+protocol Clocked {
+    func run(_ newValue: Int) -> ClockedOutput
+}
+
 struct Clock {
-    private let observer: ClockObserver
+    private let observer: Clocked
+    private (set) var outputs: [ClockedOutput] = [ClockedOutput]()
     
-    init(_ observer: ClockObserver) {
+    init(_ observer: Clocked) {
         self.observer = observer
     }
     
-    func run(iterations: Int) {
-        (1...iterations).forEach { i in
-            observer.update(i.isMultiple(of: 2) ? 0 : 1)
+    mutating func run(iterations: Int) {
+        iterations.times {
+            outputs.append(observer.run($0.isEven))
         }
+    }
+    
+    mutating func run(cycle: String) {
+        outputs.append(observer.run(cycle.isTock))
     }
 }
 
-protocol ClockObserver {
-    func update(_ newValue: Int)
+private extension Int {
+    var isEven: Int {
+        isMultiple(of: 2) ? 0 : 1
+    }
+    
+    func times(_ block: (Int) -> ()) {
+        (1...self).forEach(block)
+    }
 }
+
+private extension String {
+    var isTock: Int {
+        contains("+") ? 1 : 0
+    }
+}
+
