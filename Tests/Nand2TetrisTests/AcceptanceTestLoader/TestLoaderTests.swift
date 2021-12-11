@@ -12,7 +12,6 @@ class TestLoaderTests: XCTestCase {
     
     func testFailsIfFileNotFound() {
         var failures = [String]()
-        
         XCTExpectFailure {
             failures.append($0.description)
             return true
