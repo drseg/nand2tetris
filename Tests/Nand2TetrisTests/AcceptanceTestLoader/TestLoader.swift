@@ -8,6 +8,8 @@ private let testFileExtension = "cmp"
 
 class AcceptanceTestRunner {
     
+    var shouldSuppressValidationFailures = false
+    
     private let relativePath: String
     private let getActuals: ActualsFactory
     private let firstExpectedColumn: Int?
@@ -32,7 +34,8 @@ class AcceptanceTestRunner {
     }
 
     func run() {
-        tests.forEach { $0.run() }
+        tests.forEach { $0.run(in: swiftFile,
+                               at: swiftLine) }
     }
     
     private var tests: [Test] {
@@ -46,16 +49,16 @@ class AcceptanceTestRunner {
     }
     
     private func makeTests(from givenThenSentences: [[String]]) -> [Test] {
-        givenThenSentences.enumerated().compactMap { line, givenThens in
-            let firstExpectedColumn = firstExpectedColumn ?? givenThens.count - 1
+        givenThenSentences.enumerated().compactMap { line, givenThenRow in
+            let firstExpectedColumn = firstExpectedColumn ?? givenThenRow.count - 1
             
-            guard firstExpectedColumn < givenThens.count else {
+            guard firstExpectedColumn < givenThenRow.count else {
                 return columnOutOfBounds()
             }
 
-            let givens = Array(givenThens.prefix(upTo: firstExpectedColumn))
-            let actuals = getActuals(givens).map(\.toString)
-            let expecteds = Array(givenThens[firstExpectedColumn...])
+            let givens = givenThenRow.prefix(upTo: firstExpectedColumn)
+            let actuals = getActuals(Array(givens)).map(\.toString)
+            let expecteds = givenThenRow[firstExpectedColumn...]
             
             guard actuals.count != 0 else {
                 return noActualsFound()
@@ -65,13 +68,11 @@ class AcceptanceTestRunner {
                 return conflictingCount(actuals.count, expecteds.count)
             }
             
-            return Test(relativePath: relativePath,
-                        actuals: actuals,
+            return Test(actuals: actuals,
                         expecteds: expecteds,
-                        line: line,
                         firstExpectedColumn: firstExpectedColumn,
-                        swiftFile: swiftFile,
-                        swiftLine: swiftLine)
+                        filePath: relativePath,
+                        fileLine: line)
         }
     }
     
@@ -111,7 +112,9 @@ class AcceptanceTestRunner {
     }
     
     private func fail<T>(_ message: String, _ output: T) -> T {
-        XCTFail(message)
+        if !shouldSuppressValidationFailures {
+            XCTFail(message)
+        }
         return output
     }
 }
@@ -120,25 +123,19 @@ private struct Test {
     
     private let assertions: [Assertion]
     
-    private let swiftFile: StaticString
-    private let swiftLine: UInt
-    
-    init(relativePath: String, actuals: [String], expecteds: [String] = [], line: Int, firstExpectedColumn: Int, swiftFile: StaticString = #file, swiftLine: UInt = #line) {
-        self.swiftFile = swiftFile
-        self.swiftLine = swiftLine
-        
+    init<T: Collection, U: Collection>(actuals: T, expecteds: U, firstExpectedColumn: Int, filePath: String, fileLine: Int) where T.Element == String, U.Element == String {
         self.assertions = zip(actuals, expecteds).enumerated().map {
             Assertion(actual: $0.element.0,
                       expected: $0.element.1,
                       column: firstExpectedColumn + $0.offset,
-                      line: line,
-                      path: relativePath)
+                      line: fileLine,
+                      path: filePath)
         }
     }
     
-    func run() {
-        assertions.forEach { $0.assert(swiftFile: swiftFile,
-                                       swiftLine: swiftLine) }
+    func run(in swiftFile: StaticString, at swiftLine: UInt) {
+        assertions.forEach { $0.assert(in: swiftFile,
+                                       at: swiftLine) }
     }
 }
 
@@ -148,12 +145,12 @@ private struct Assertion {
     private let expected: Stringable
     
     private let column: Int
-    private let line: Int
-    private let path: String
+    private let fileLine: Int
+    private let filePath: String
     
     private var failureMessage: String {
-        "\n\(testRoot)/\(path).\(testFileExtension): comparison failure at " +
-        "line \(line+2) " +
+        "\n\(testRoot)/\(filePath).\(testFileExtension): comparison failure at " +
+        "line \(fileLine+2) " +
         "column \(column+1)"
     }
     
@@ -162,11 +159,11 @@ private struct Assertion {
         self.expected = expected
         self.column = column
         
-        self.line = line
-        self.path = path
+        self.fileLine = line
+        self.filePath = path
     }
     
-    func assert(swiftFile: StaticString = #file, swiftLine: UInt = #line) {
+    func assert(in swiftFile: StaticString, at swiftLine: UInt) {
         XCTAssertEqual(actual.toString, expected.toString, failureMessage, file: swiftFile, line: swiftLine)
     }
 }

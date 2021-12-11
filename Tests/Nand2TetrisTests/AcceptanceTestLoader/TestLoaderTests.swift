@@ -2,13 +2,31 @@ import XCTest
 
 class TestLoaderTests: XCTestCase {
     
-    private func run(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, assertionFactory: @escaping ActualsFactory = { _ in [] }) {
-        AcceptanceTestRunner(name: test,
-                             directory: directory,
-                             firstExpectedColumn: firstExpectedColumn,
-                             swiftLine: line,
-                             factory: assertionFactory)
-            .run()
+    private var runner: AcceptanceTestRunner!
+    
+    private func run(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
+        makeRunner(test,
+                   directory: directory,
+                   firstExpectedColumn: firstExpectedColumn,
+                   line: line,
+                   actualsFactory: actualsFactory)
+        runner.run()
+    }
+    
+    private func makeSuppressedRunner(_ test: String, firstExpectedColumn: Int? = nil, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
+        makeRunner(test,
+                   firstExpectedColumn: firstExpectedColumn,
+                   actualsFactory: actualsFactory)
+        runner.shouldSuppressValidationFailures = true
+    }
+    
+    private func makeRunner(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
+        runner = AcceptanceTestRunner(name: test,
+                                      directory: directory,
+                                      firstExpectedColumn: firstExpectedColumn,
+                                      swiftFile: #file,
+                                      swiftLine: line,
+                                      factory: actualsFactory)
     }
     
     private func expectFailureMessage(_ message: String, whenRunning test: () -> ()) {
@@ -29,13 +47,10 @@ class TestLoaderTests: XCTestCase {
         }
     }
     
-    private func and(_ a: String, _ b: String) -> String {
-        a == b && a == "1" ? "1" : "0"
-    }
-    
     func testFailsIfFileNotFound() {
         expectFailureMessages(["File not found", "Parsing error"]) {
             run("cat")
+            run("And", directory: "cat")
         }
     }
     
@@ -57,24 +72,38 @@ class TestLoaderTests: XCTestCase {
         }
     }
     
-    func testFactoryOnlyReceivesGivensInTestSentence() {
-        expectFailureMessage("No actual values found") {
-            run("And") {
-                XCTAssertEqual($0.count, 2)
-                return []
-            }
-        }
-    }
-    
-    func testPassesWhenActualAndExpectedMatch() {
-        run("And") { [self.and($0[0], $0[1])] }
-    }
-    
-    func testFailsWhenActualAndExpectedDiffer_WithCorrectMessage() throws {
+    func testFailsWhenActualAndExpectedDiffer() throws {
         let message = "AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3"
         expectFailureMessage(message) {
             run("And") { _ in [0] }
         }
+    }
+    
+    func testPassesWhenAllActualsAndExpectedsMatch() {
+        func and(_ a: String, _ b: String) -> String {
+            a == b && a == "1" ? "1" : "0"
+        }
+        
+        run("And") { [and($0[0], $0[1])] }
+    }
+    
+    func testCanSuppressValidationFailures() {
+        makeSuppressedRunner("")
+        runner.run()
+    }
+    
+    func testFactoryOnlyReceivesColumnsUpToExpectedColumn() {
+        func assert(numberOfFactoryArgs: Int, upToIndex i: Int) {
+            makeSuppressedRunner("And", firstExpectedColumn: i) {
+                XCTAssertEqual($0.count, numberOfFactoryArgs)
+                return []
+            }
+            runner.run()
+        }
+        
+        assert(numberOfFactoryArgs: 0, upToIndex: 0)
+        assert(numberOfFactoryArgs: 1, upToIndex: 1)
+        assert(numberOfFactoryArgs: 2, upToIndex: 2)
     }
 }
 
