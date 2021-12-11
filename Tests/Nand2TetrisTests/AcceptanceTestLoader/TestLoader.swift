@@ -1,7 +1,7 @@
 import XCTest
 @testable import Nand2Tetris
 
-typealias ActualsFactory = (_ givenThen: [String]) -> [Stringable]
+typealias ActualsFactory = (_ givens: [String]) -> [Stringable]
 
 private let testRoot = "AcceptanceTests"
 private let testFileExtension = "cmp"
@@ -39,7 +39,7 @@ class AcceptanceTestRunner {
         let givenThenSentences = testFile.givenThenSentences
         
         guard !givenThenSentences.isEmpty else {
-            XCTFail("Parsing error"); return []
+            return parsingError()
         }
         
         return makeTests(from: givenThenSentences)
@@ -50,8 +50,7 @@ class AcceptanceTestRunner {
             let firstExpectedColumn = firstExpectedColumn ?? givenThens.count - 1
             
             guard firstExpectedColumn < givenThens.count else {
-                XCTFail("Expected column index is out of bounds")
-                return nil
+                return columnOutOfBounds()
             }
 
             let givens = Array(givenThens.prefix(upTo: firstExpectedColumn))
@@ -59,13 +58,11 @@ class AcceptanceTestRunner {
             let expecteds = Array(givenThens[firstExpectedColumn...])
             
             guard actuals.count != 0 else {
-                XCTFail("No actual values found")
-                return nil
+                return noActualsFound()
             }
             
             guard actuals.count == expecteds.count else {
-                XCTFail("Actual (\(actuals.count)) and Expected (\(expecteds.count)) counts differ")
-                return nil
+                return conflictingCount(actuals.count, expecteds.count)
             }
             
             return Test(relativePath: relativePath,
@@ -82,7 +79,7 @@ class AcceptanceTestRunner {
         guard
             let url = url,
             let tests = try? String(contentsOf: url)
-        else { XCTFail("File not found"); return "" }
+        else { return fileNotFound() }
         
         return tests.whiteSpaceTrimmed
     }
@@ -91,6 +88,31 @@ class AcceptanceTestRunner {
         Bundle.module.url(forResource: relativePath,
                           withExtension: testFileExtension,
                           subdirectory: testRoot + "/")
+    }
+    
+    private func columnOutOfBounds() -> Test? {
+        fail("Expected column index is out of bounds", nil)
+    }
+    
+    private func noActualsFound() -> Test? {
+        fail("No actual values found", nil)
+    }
+    
+    private func conflictingCount(_ actual: Int, _ expected: Int) -> Test? {
+        fail("Actual (\(actual)) and Expected (\(expected)) counts differ", nil)
+    }
+    
+    private func fileNotFound() -> String {
+        fail("File not found", "")
+    }
+    
+    private func parsingError() -> [Test] {
+        fail("Parsing error", [])
+    }
+    
+    private func fail<T>(_ message: String, _ output: T) -> T {
+        XCTFail(message)
+        return output
     }
 }
 

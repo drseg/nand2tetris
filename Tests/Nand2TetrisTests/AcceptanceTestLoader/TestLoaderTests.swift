@@ -19,17 +19,13 @@ class TestLoaderTests: XCTestCase {
         var failures = [String]()
         XCTExpectFailure { issue in
             failures.append(issue.description)
-            return messages.contains { s in
-                issue.description.contains(s)
-            }
+            return messages.contains(partOf: issue.description)
         }
         
         test()
         
-        failures.forEach { issue in
-            XCTAssertTrue(messages.contains {
-                issue.contains($0)
-            })
+        failures.forEach {
+            XCTAssertTrue(messages.contains(partOf: $0))
         }
     }
     
@@ -79,5 +75,12 @@ class TestLoaderTests: XCTestCase {
         expectFailureMessage(message) {
             run("And") { _ in [0] }
         }
+    }
+}
+
+extension Array where Element == String {
+    
+    func contains(partOf s: String) -> Bool {
+        contains { s.contains($0) }
     }
 }
