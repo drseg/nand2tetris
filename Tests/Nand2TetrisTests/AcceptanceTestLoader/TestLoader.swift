@@ -8,8 +8,8 @@ private let testFileExtension = "cmp"
 
 class ATR {
     
-    var testString: String { fatalError("Subclasses must implement") }
-    var testName: String { fatalError("Subclasses must implement") }
+    fileprivate var testString: String { fatalError("Subclasses must implement") }
+    fileprivate var testName: String { fatalError("Subclasses must implement") }
     
     var shouldSuppressValidationFailures = false
         
@@ -84,7 +84,7 @@ class ATR {
         fail("Parsing error", [])
     }
     
-    func fail<T>(_ message: String, _ output: T) -> T {
+    fileprivate func fail<T>(_ message: String, _ output: T) -> T {
         if !shouldSuppressValidationFailures {
             XCTFail(message)
         }
@@ -114,9 +114,11 @@ class FileBasedATR: ATR {
     
     override var testString: String {
         guard
-            let url = Bundle.module.url(forResource: relativePath,
-                                        withExtension: testFileExtension,
-                                        subdirectory: testRoot + "/"),
+            let url = Bundle
+                .module
+                .url(forResource: relativePath,
+                     withExtension: testFileExtension,
+                     subdirectory: testRoot + "/"),
             let tests = try? String(contentsOf: url)
         else { return fileNotFound() }
         
