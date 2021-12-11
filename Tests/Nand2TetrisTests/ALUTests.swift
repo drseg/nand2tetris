@@ -4,7 +4,7 @@ import XCTest
 final class ALUTests: XCTestCase {
     
     func testALU() {
-        AcceptanceTestRunner("ALU/ALU", firstExpectedColumn: 8) {
+        FileBasedATR("ALU/ALU", firstExpectedColumn: 8) {
             let x = $0[0].x16, y = $0[1].x16
             let zx = $0[2].int, nx = $0[3].int
             let zy = $0[4].int, ny = $0[5].int

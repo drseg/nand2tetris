@@ -6,40 +6,30 @@ typealias ActualsFactory = (_ givens: [String]) -> [Stringable]
 private let testRoot = "AcceptanceTests"
 private let testFileExtension = "cmp"
 
-class AcceptanceTestRunner {
+class ATR {
     
     var shouldSuppressValidationFailures = false
-    
-    private let relativePath: String
+        
     private let getActuals: ActualsFactory
     private let firstExpectedColumn: Int?
     
     private let swiftFile: StaticString
     private let swiftLine: UInt
     
-    convenience init(name: String, directory: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
-        self.init("\(directory)/\(name)",
-                  firstExpectedColumn: firstExpectedColumn,
-                  swiftFile: swiftFile,
-                  swiftLine: swiftLine,
-                  factory: factory)
-    }
-    
-    init(_ relativePath: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
-        self.relativePath = relativePath
+    init(firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
         self.firstExpectedColumn = firstExpectedColumn
         self.swiftFile = swiftFile
         self.swiftLine = swiftLine
         self.getActuals = factory
     }
-
+    
     func run() {
-        tests.forEach { $0.run(in: swiftFile,
-                               at: swiftLine) }
+        getTests().forEach { $0.run(in: swiftFile,
+                                    at: swiftLine) }
     }
     
-    private var tests: [Test] {
-        let givenThenSentences = testFile.givenThenSentences
+    private func getTests() -> [Test] {
+        let givenThenSentences = testString.givenThenSentences
         
         guard !givenThenSentences.isEmpty else {
             return parsingError()
@@ -71,24 +61,17 @@ class AcceptanceTestRunner {
             return Test(actuals: actuals,
                         expecteds: expecteds,
                         firstExpectedColumn: firstExpectedColumn,
-                        filePath: relativePath,
+                        filePath: testName,
                         fileLine: line)
         }
     }
     
-    private var testFile: String {
-        guard
-            let url = url,
-            let tests = try? String(contentsOf: url)
-        else { return fileNotFound() }
-        
-        return tests.whiteSpaceTrimmed
+    var testString: String {
+        fatalError("Subclasses must implement")
     }
-
-    private var url: URL? {
-        Bundle.module.url(forResource: relativePath,
-                          withExtension: testFileExtension,
-                          subdirectory: testRoot + "/")
+    
+    var testName: String {
+        fatalError("Subclasses must implement")
     }
     
     private func columnOutOfBounds() -> Test? {
@@ -103,19 +86,55 @@ class AcceptanceTestRunner {
         fail("Actual (\(actual)) and Expected (\(expected)) counts differ", nil)
     }
     
-    private func fileNotFound() -> String {
-        fail("File not found", "")
-    }
-    
     private func parsingError() -> [Test] {
         fail("Parsing error", [])
     }
     
-    private func fail<T>(_ message: String, _ output: T) -> T {
+    func fail<T>(_ message: String, _ output: T) -> T {
         if !shouldSuppressValidationFailures {
             XCTFail(message)
         }
         return output
+    }
+}
+
+class FileBasedATR: ATR {
+    
+    private let relativePath: String
+    
+    convenience init(name: String, directory: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+        self.init("\(directory)/\(name)",
+                  firstExpectedColumn: firstExpectedColumn,
+                  swiftFile: swiftFile,
+                  swiftLine: swiftLine,
+                  factory: factory)
+    }
+    
+    init(_ relativePath: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+        self.relativePath = relativePath
+        super.init(firstExpectedColumn: firstExpectedColumn,
+                   swiftFile: swiftFile,
+                   swiftLine: swiftLine,
+                   factory: factory)
+    }
+    
+    override var testString: String {
+        guard
+            let url = Bundle.module.url(forResource: relativePath,
+                                        withExtension: testFileExtension,
+                                        subdirectory: testRoot + "/"),
+            let tests = try? String(contentsOf: url)
+        else { return fileNotFound() }
+        
+        return tests.whiteSpaceTrimmed
+    }
+    
+    override var testName: String {
+        relativePath
+    }
+
+    private func fileNotFound() -> String {
+        fail("File not found", "")
     }
 }
 

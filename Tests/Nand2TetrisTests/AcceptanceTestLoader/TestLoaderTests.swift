@@ -2,7 +2,7 @@ import XCTest
 
 class TestLoaderTests: XCTestCase {
     
-    private var runner: AcceptanceTestRunner!
+    private var runner: ATR!
     
     private func run(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
         makeRunner(test,
@@ -21,7 +21,7 @@ class TestLoaderTests: XCTestCase {
     }
     
     private func makeRunner(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
-        runner = AcceptanceTestRunner(name: test,
+        runner = FileBasedATR(name: test,
                                       directory: directory,
                                       firstExpectedColumn: firstExpectedColumn,
                                       swiftFile: #file,
@@ -49,8 +49,13 @@ class TestLoaderTests: XCTestCase {
     
     func testFailsIfFileNotFound() {
         expectFailureMessages(["File not found", "Parsing error"]) {
-            run("cat")
-            run("And", directory: "cat")
+            run("Cat", directory: "Gates")
+        }
+    }
+    
+    func testFailsIfDirectoryNotFound() {
+        expectFailureMessages(["File not found", "Parsing error"]) {
+            run("And", directory: "Cat")
         }
     }
     
