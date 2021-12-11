@@ -8,6 +8,9 @@ private let testFileExtension = "cmp"
 
 class ATR {
     
+    var testString: String { fatalError("Subclasses must implement") }
+    var testName: String { fatalError("Subclasses must implement") }
+    
     var shouldSuppressValidationFailures = false
         
     private let getActuals: ActualsFactory
@@ -24,8 +27,7 @@ class ATR {
     }
     
     func run() {
-        getTests().forEach { $0.run(in: swiftFile,
-                                    at: swiftLine) }
+        getTests().forEach { $0.run(in: swiftFile, at: swiftLine) }
     }
     
     private func getTests() -> [Test] {
@@ -64,14 +66,6 @@ class ATR {
                         filePath: testName,
                         fileLine: line)
         }
-    }
-    
-    var testString: String {
-        fatalError("Subclasses must implement")
-    }
-    
-    var testName: String {
-        fatalError("Subclasses must implement")
     }
     
     private func columnOutOfBounds() -> Test? {
@@ -153,8 +147,7 @@ private struct Test {
     }
     
     func run(in swiftFile: StaticString, at swiftLine: UInt) {
-        assertions.forEach { $0.assert(in: swiftFile,
-                                       at: swiftLine) }
+        assertions.forEach { $0.assert(in: swiftFile, at: swiftLine) }
     }
 }
 
