@@ -19,7 +19,7 @@ class ClockTests: XCTestCase, ClockObserver {
         XCTAssertEqual(clockUpdates.count, 10)
         
         clockUpdates.enumerated().forEach { i, clock in
-            XCTAssertEqual(clock, i == 0 || i % 2 == 0 ? 1 : 0)
+            XCTAssertEqual(clock, (i + 1) % 2 == 0 ? 0 : 1)
         }
     }
 }
