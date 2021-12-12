@@ -31,11 +31,9 @@ class Register {
     }
     
     func update(_ input: IntX16, _ load: Int, _ cycle: Int) -> IntX16 {
-        input
-            .enumerated()
-            .reduce([Int]()) {
-                $0 + [bitArray[$1.offset].update($1.element, load, cycle)]
-            }.x16
+        zip(input, bitArray).reduce([Int]()) {
+            $0 + [$1.1.update($1.0, load, cycle)]
+        }.x16
     }
 }
 

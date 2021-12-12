@@ -48,7 +48,7 @@ class RegisterTests: XCTestCase {
         XCTAssertEqual("0111111111111111".x16.dec, 32767)
     }
 
-    func testRegisterAcceptance() throws {
+    func testAcceptance() throws {
         let register = Register()
 
         try FileBasedATR("Registers/Register") {
