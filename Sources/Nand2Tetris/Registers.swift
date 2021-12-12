@@ -1,19 +1,25 @@
-class Bit {
+class DataFlipFlop {
     
-    private var input = 0
-    private var load = 0
     private var lastOut = 0
     private var lastNotOut = 1
     
-    func update(_ input: Int, _ load: Int, _ cycle: Int) -> Int {
-        let clockAndLoad = and(load, not(cycle))
-        let nandInputCL = nand(clockAndLoad, input)
-        let nandNotInputCL = nand(clockAndLoad, not(input))
+    func update(_ input: Int, _ cycle: Int) -> Int {
+        let nandCycleInput = nand(cycle, input)
+        let nandCycleNotInput = nand(cycle, not(input))
         
-        lastNotOut = nand(nandNotInputCL, nandNotInputCL == 0 ? 1 : lastOut)
-        lastOut = nand(nandInputCL, lastNotOut)
+        lastNotOut = nand(nandCycleNotInput, nandCycleNotInput == 0 ? 1 : lastOut)
+        lastOut = nand(nandCycleInput, lastNotOut)
         
         return lastOut
+    }
+}
+
+class Bit {
+
+    private let dff = DataFlipFlop()
+    
+    func update(_ input: Int, _ load: Int, _ cycle: Int) -> Int {
+        dff.update(input, and(load, not(cycle)))
     }
 }
 
