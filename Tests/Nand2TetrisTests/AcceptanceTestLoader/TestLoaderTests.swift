@@ -4,111 +4,83 @@ class TestLoaderTests: XCTestCase {
     
     private var runner: ATR!
     
-    private func run(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
+    private func run(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) throws {
         makeRunner(test,
                    directory: directory,
                    firstExpectedColumn: firstExpectedColumn,
-                   line: line,
                    actualsFactory: actualsFactory)
-        runner.run()
+        
+        try runner.run(swiftFile: #file, swiftLine: line)
     }
     
-    private func makeSuppressedRunner(_ test: String, firstExpectedColumn: Int? = nil, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
-        makeRunner(test,
-                   firstExpectedColumn: firstExpectedColumn,
-                   actualsFactory: actualsFactory)
-        runner.shouldSuppressValidationFailures = true
-    }
-    
-    private func makeRunner(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, line: UInt = #line, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
+    private func makeRunner(_ test: String, directory: String = "Gates", firstExpectedColumn: Int? = nil, actualsFactory: @escaping ActualsFactory = { _ in [] }) {
         runner = FileBasedATR(name: test,
                                       directory: directory,
                                       firstExpectedColumn: firstExpectedColumn,
-                                      swiftFile: #file,
-                                      swiftLine: line,
                                       factory: actualsFactory)
     }
     
-    private func expectFailureMessage(_ message: String, whenRunning test: () -> ()) {
-        expectFailureMessages([message], whenRunning: test)
+    private func assertFailureMessage(_ message: String, whenRunning test: () throws -> ()) {
+        XCTExpectFailure { $0.description.contains(message) }
+        try? test()
     }
     
-    private func expectFailureMessages(_ messages: [String], whenRunning test: () -> ()) {
-        var failures = [String]()
-        XCTExpectFailure { issue in
-            failures.append(issue.description)
-            return messages.contains(partOf: issue.description)
-        }
-        
-        test()
-        
-        failures.forEach {
-            XCTAssertTrue(messages.contains(partOf: $0))
+    private func assertThrows(_ message: String, whenRunning test: () throws -> ()) {
+        XCTAssertThrowsError(try test()) { error in
+            XCTAssertEqual((error as! ATR.ATRError).message, message)
         }
     }
     
-    func testFailsIfFileNotFound() {
-        expectFailureMessages(["File not found", "Parsing error"]) {
-            run("Cat", directory: "Gates")
-        }
+    private func and(_ a: String, _ b: String) -> String {
+        a == b && a == "1" ? "1" : "0"
     }
     
-    func testFailsIfDirectoryNotFound() {
-        expectFailureMessages(["File not found", "Parsing error"]) {
-            run("And", directory: "Cat")
+    func testThrowsIfFileNotFound() throws {
+        assertThrows("File not found") {
+            try run("Cat", directory: "Gates")
         }
     }
-    
-    func testFailsWhenNoActualsFound() {
-        expectFailureMessage("No actual values found") {
-            run("And")
+
+    func testThrowsIfDirectoryNotFound() throws {
+        assertThrows("File not found") {
+            try run("And", directory: "Cat")
         }
     }
-    
-    func testFailsWhenIncorrectExpectedColumnIsGiven() {
-        expectFailureMessage("Actual (1) and Expected (3) counts differ") {
-            run("And", firstExpectedColumn: 0) { _ in ["1"] }
+
+    func testThrowsWhenNoActualsFound() throws {
+        assertThrows("No actual values found") {
+            try run("And")
         }
     }
-    
-    func testFailsWhenOutOfBoundsExpectedColumnIsGiven() {
-        expectFailureMessage("Expected column index is out of bounds") {
-            run("And", firstExpectedColumn: 3) { _ in ["1"] }
+
+    func testThrowsWhenIncorrectExpectedColumnIsGiven() throws {
+        assertThrows("Actual (1) and Expected (3) counts differ") {
+            try run("And", firstExpectedColumn: 0) { _ in ["1"] }
         }
     }
-    
+
+    func testThrowsWhenOutOfBoundsExpectedColumnIsGiven() throws {
+        assertThrows("Expected column index is out of bounds") {
+            try run("And", firstExpectedColumn: 3) { _ in ["1"] }
+        }
+    }
+
     func testFailsWhenActualAndExpectedDiffer() throws {
         let message = "AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3"
-        expectFailureMessage(message) {
-            run("And") { _ in [0] }
+        assertFailureMessage(message) {
+            try run("And") { _ in [0] }
         }
     }
     
-    func testPassesWhenAllActualsAndExpectedsMatch() {
-        func and(_ a: String, _ b: String) -> String {
-            a == b && a == "1" ? "1" : "0"
-        }
-        
-        run("And") { [and($0[0], $0[1])] }
+    func testPassesWhenAllActualsAndExpectedsMatch() throws {
+        try run("And") { [self.and($0[0], $0[1])] }
     }
     
-    func testCanSuppressValidationFailures() {
-        makeSuppressedRunner("")
-        runner.run()
-    }
-    
-    func testFactoryOnlyReceivesColumnsUpToExpectedColumn() {
-        func assert(numberOfFactoryArgs: Int, upToIndex i: Int) {
-            makeSuppressedRunner("And", firstExpectedColumn: i) {
-                XCTAssertEqual($0.count, numberOfFactoryArgs)
-                return []
-            }
-            runner.run()
+    func testFactoryOnlyReceivesColumnsUpToExpectedColumn() throws {
+        try run("And", firstExpectedColumn: 2) {
+            XCTAssertEqual($0.count, 2)
+            return [self.and($0[0], $0[1])]
         }
-        
-        assert(numberOfFactoryArgs: 0, upToIndex: 0)
-        assert(numberOfFactoryArgs: 1, upToIndex: 1)
-        assert(numberOfFactoryArgs: 2, upToIndex: 2)
     }
 }
 

@@ -8,87 +8,111 @@ private let testFileExtension = "cmp"
 
 class ATR {
     
-    fileprivate var testString: String { fatalError("Subclasses must implement") }
-    fileprivate var testName: String { fatalError("Subclasses must implement") }
+    struct ATRError: Error {
+        let message: String
+    }
     
-    var shouldSuppressValidationFailures = false
-        
+    fileprivate var testString: String {
+        get throws { throw subclassesMustImplement() }
+    }
+    
+    fileprivate var testName: String {
+        get throws { throw subclassesMustImplement() }
+    }
+            
     private let getActuals: ActualsFactory
     private let firstExpectedColumn: Int?
     
-    private let swiftFile: StaticString
-    private let swiftLine: UInt
-    
-    init(firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+    init(firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
         self.firstExpectedColumn = firstExpectedColumn
-        self.swiftFile = swiftFile
-        self.swiftLine = swiftLine
         self.getActuals = factory
     }
     
-    func run() {
-        getTests().forEach { $0.run(in: swiftFile, at: swiftLine) }
+    func run(swiftFile: StaticString = #file, swiftLine: UInt = #line) throws {
+        try getTests().forEach { $0.run(in: swiftFile, at: swiftLine) }
     }
     
-    private func getTests() -> [Test] {
-        let givenThenSentences = testString.givenThenSentences
-        
-        guard !givenThenSentences.isEmpty else {
-            return parsingError()
-        }
-        
-        return makeTests(from: givenThenSentences)
+    private func getTests() throws -> [Test] {
+        try makeTests(from: givenThenSentences(in: testString))
     }
     
-    private func makeTests(from givenThenSentences: [[String]]) -> [Test] {
-        givenThenSentences.enumerated().compactMap { line, givenThenRow in
-            let firstExpectedColumn = firstExpectedColumn ?? givenThenRow.count - 1
+    private func makeTests(from givenThenSentences: [[String]]) throws -> [Test] {
+        try givenThenSentences.enumerated().compactMap { line, givenThenRow in
+            let firstExpectedColumn = try calculateFirstExpectedColumn(givenThenRow.count)
             
-            guard firstExpectedColumn < givenThenRow.count else {
-                return columnOutOfBounds()
-            }
-
             let givens = givenThenRow.prefix(upTo: firstExpectedColumn)
-            let actuals = getActuals(Array(givens)).map(\.toString)
-            let expecteds = givenThenRow[firstExpectedColumn...]
-            
-            guard actuals.count != 0 else {
-                return noActualsFound()
-            }
-            
-            guard actuals.count == expecteds.count else {
-                return conflictingCount(actuals.count, expecteds.count)
-            }
+            let actuals = try getActuals(from: givens)
+            let expecteds = try getExpecteds(in: givenThenRow,
+                                             from: firstExpectedColumn,
+                                             count: actuals.count)
             
             return Test(actuals: actuals,
                         expecteds: expecteds,
                         firstExpectedColumn: firstExpectedColumn,
-                        filePath: testName,
+                        filePath: try testName,
                         fileLine: line)
         }
     }
     
-    private func columnOutOfBounds() -> Test? {
-        fail("Expected column index is out of bounds", nil)
+    private func givenThenSentences(in s: String) throws -> [[String]] {
+        let sentences = s.split(separator: "\r\n")
+            .dropFirst()
+            .toStrings
+            .map(\.components)
+        
+        try checkIsNotEmpty(s)
+        
+        return sentences
     }
     
-    private func noActualsFound() -> Test? {
-        fail("No actual values found", nil)
+    fileprivate func calculateFirstExpectedColumn(_ columnCount: Int) throws -> Int {
+        let column = firstExpectedColumn ?? columnCount - 1
+        try checkIsValid(column, columnCount)
+        return column
     }
     
-    private func conflictingCount(_ actual: Int, _ expected: Int) -> Test? {
-        fail("Actual (\(actual)) and Expected (\(expected)) counts differ", nil)
+    fileprivate func getActuals(from givens: Array<String>.SubSequence) throws -> [String] {
+        let actuals = getActuals(Array(givens)).map(\.toString)
+        try checkIsNonZero(actuals.count)
+        return actuals
     }
     
-    private func parsingError() -> [Test] {
-        fail("Parsing error", [])
+    fileprivate func getExpecteds(in givenThenRow: [String], from firstExpectedColumn: Int, count: Int) throws -> Array<String>.SubSequence {
+        let expecteds = givenThenRow.suffix(from: firstExpectedColumn)
+        try checkCountsMatch(count, expecteds.count)
+        return expecteds
     }
     
-    fileprivate func fail<T>(_ message: String, _ output: T) -> T {
-        if !shouldSuppressValidationFailures {
-            XCTFail(message)
+    private func subclassesMustImplement() -> ATRError {
+        error("Subclasses must implement")
+    }
+    
+    private func checkIsValid(_ expected: Int, _ given: Int) throws {
+        guard expected < given else {
+            throw error("Expected column index is out of bounds")
         }
-        return output
+    }
+    
+    private func checkIsNonZero(_ c: Int) throws {
+        guard c != 0 else {
+            throw error("No actual values found")
+        }
+    }
+    
+    private func checkCountsMatch(_ lhs: Int, _ rhs: Int) throws {
+        guard lhs == rhs else {
+            throw error("Actual (\(lhs)) and Expected (\(rhs)) counts differ")
+        }
+    }
+    
+    private func checkIsNotEmpty(_ s: String) throws {
+        guard !s.isEmpty else {
+            throw error("Parsing error")
+        }
+    }
+    
+    fileprivate func error(_ message: String) -> ATRError {
+        ATRError(message: message)
     }
 }
 
@@ -96,41 +120,35 @@ class FileBasedATR: ATR {
     
     private let relativePath: String
     
-    convenience init(name: String, directory: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+    convenience init(name: String, directory: String, firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
         self.init("\(directory)/\(name)",
                   firstExpectedColumn: firstExpectedColumn,
-                  swiftFile: swiftFile,
-                  swiftLine: swiftLine,
                   factory: factory)
     }
     
-    init(_ relativePath: String, firstExpectedColumn: Int? = nil, swiftFile: StaticString = #file, swiftLine: UInt = #line, factory: @escaping ActualsFactory) {
+    init(_ relativePath: String, firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
         self.relativePath = relativePath
         super.init(firstExpectedColumn: firstExpectedColumn,
-                   swiftFile: swiftFile,
-                   swiftLine: swiftLine,
                    factory: factory)
     }
     
     override var testString: String {
-        guard
-            let url = Bundle
-                .module
-                .url(forResource: relativePath,
-                     withExtension: testFileExtension,
-                     subdirectory: testRoot + "/"),
-            let tests = try? String(contentsOf: url)
-        else { return fileNotFound() }
-        
-        return tests.whiteSpaceTrimmed
+        get throws {
+            guard let url = Bundle.module.url(forResource: relativePath,
+                                              withExtension: testFileExtension,
+                                              subdirectory: testRoot + "/")
+            else { throw fileNotFound() }
+            
+            return try String(contentsOf: url).whiteSpaceTrimmed
+        }
     }
     
     override var testName: String {
         relativePath
     }
-
-    private func fileNotFound() -> String {
-        fail("File not found", "")
+    
+    private func fileNotFound() -> ATRError {
+        error("File not found")
     }
 }
 
@@ -162,12 +180,6 @@ private struct Assertion {
     private let fileLine: Int
     private let filePath: String
     
-    private var failureMessage: String {
-        "\n\(testRoot)/\(filePath).\(testFileExtension): comparison failure at " +
-        "line \(fileLine+2) " +
-        "column \(column+1)"
-    }
-    
     init(actual: Stringable, expected: Stringable, column: Int, line: Int, path: String) {
         self.actual = actual
         self.expected = expected
@@ -180,16 +192,15 @@ private struct Assertion {
     func assert(in swiftFile: StaticString, at swiftLine: UInt) {
         XCTAssertEqual(actual.toString, expected.toString, failureMessage, file: swiftFile, line: swiftLine)
     }
+    
+    private var failureMessage: String {
+        "\n\(testRoot)/\(filePath).\(testFileExtension): comparison failure at " +
+        "line \(fileLine+2) " +
+        "column \(column+1)"
+    }
 }
 
 private extension String {
-    
-    var givenThenSentences: [[String]] {
-        split(separator: "\r\n")
-            .dropFirst()
-            .toStrings
-            .map(\.components)
-    }
     
     var components: [String] {
         split(separator: "|").toStrings
