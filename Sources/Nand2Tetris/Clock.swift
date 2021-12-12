@@ -33,9 +33,3 @@ private extension Int {
     }
 }
 
-private extension String {
-    var isTock: Int {
-        last == "+" ? 1 : 0
-    }
-}
-

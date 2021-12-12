@@ -13,7 +13,7 @@ class CountConstrainedIntArray {
     
     private func validate(count: Int) {
         assert(self.count == count,
-               "Must have exactly \(count) elements")
+               "Must have exactly \(self.count) elements")
         assert(allSatisfy { $0 == 1 || $0 == 0 },
                "Elements must only be 1 or 0" )
     }

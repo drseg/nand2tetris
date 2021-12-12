@@ -27,7 +27,7 @@ class TestLoaderTests: XCTestCase {
     
     private func assertThrows(_ message: String, whenRunning test: () throws -> ()) {
         XCTAssertThrowsError(try test()) { error in
-            XCTAssertEqual((error as! ATR.ATRError).message, message)
+            XCTAssertEqual((error as! ATRError).message, message)
         }
     }
     

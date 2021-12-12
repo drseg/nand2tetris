@@ -6,27 +6,27 @@ typealias ActualsFactory = (_ givens: [String]) -> [Stringable]
 private let testRoot = "AcceptanceTests"
 private let testFileExtension = "cmp"
 
-class ATR {
+struct ATRError: Error {
     
-    struct ATRError: Error {
-        let message: String
-    }
+    let message: String
     
-    fileprivate var testString: String {
-        get throws { throw subclassesMustImplement() }
+    init(_ message: String) {
+        self.message = message
     }
+}
+
+protocol ATR {
     
-    fileprivate var testName: String {
-        get throws { throw subclassesMustImplement() }
-    }
-            
-    private let getActuals: ActualsFactory
-    private let firstExpectedColumn: Int?
+    var testString: String { get throws }
+    var testName: String { get throws }
     
-    init(firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
-        self.firstExpectedColumn = firstExpectedColumn
-        self.getActuals = factory
-    }
+    var actualsFactory: ActualsFactory { get }
+    var firstExpectedColumn: Int? { get }
+    
+    func run(swiftFile: StaticString, swiftLine: UInt) throws
+}
+
+extension ATR {
     
     func run(swiftFile: StaticString = #file, swiftLine: UInt = #line) throws {
         try getTests().forEach { $0.run(in: swiftFile, at: swiftLine) }
@@ -65,58 +65,53 @@ class ATR {
         return sentences
     }
     
-    fileprivate func calculateFirstExpectedColumn(_ columnCount: Int) throws -> Int {
+    private func calculateFirstExpectedColumn(_ columnCount: Int) throws -> Int {
         let column = firstExpectedColumn ?? columnCount - 1
         try checkIsValid(column, columnCount)
         return column
     }
     
-    fileprivate func getActuals(from givens: Array<String>.SubSequence) throws -> [String] {
-        let actuals = getActuals(Array(givens)).map(\.toString)
+    private func getActuals(from givens: Array<String>.SubSequence) throws -> [String] {
+        let actuals = actualsFactory(Array(givens)).map(\.toString)
         try checkIsNonZero(actuals.count)
         return actuals
     }
     
-    fileprivate func getExpecteds(in givenThenRow: [String], from firstExpectedColumn: Int, count: Int) throws -> Array<String>.SubSequence {
+    private func getExpecteds(in givenThenRow: [String], from firstExpectedColumn: Int, count: Int) throws -> Array<String>.SubSequence {
         let expecteds = givenThenRow.suffix(from: firstExpectedColumn)
         try checkCountsMatch(count, expecteds.count)
         return expecteds
     }
     
-    private func subclassesMustImplement() -> ATRError {
-        error("Subclasses must implement")
-    }
-    
     private func checkIsValid(_ expected: Int, _ given: Int) throws {
         guard expected < given else {
-            throw error("Expected column index is out of bounds")
+            throw ATRError("Expected column index is out of bounds")
         }
     }
     
     private func checkIsNonZero(_ c: Int) throws {
         guard c != 0 else {
-            throw error("No actual values found")
+            throw ATRError("No actual values found")
         }
     }
     
     private func checkCountsMatch(_ lhs: Int, _ rhs: Int) throws {
         guard lhs == rhs else {
-            throw error("Actual (\(lhs)) and Expected (\(rhs)) counts differ")
+            throw ATRError("Actual (\(lhs)) and Expected (\(rhs)) counts differ")
         }
     }
     
     private func checkIsNotEmpty(_ s: String) throws {
         guard !s.isEmpty else {
-            throw error("Parsing error")
+            throw ATRError("Parsing error")
         }
-    }
-    
-    fileprivate func error(_ message: String) -> ATRError {
-        ATRError(message: message)
     }
 }
 
 class FileBasedATR: ATR {
+    
+    let actualsFactory: ActualsFactory
+    let firstExpectedColumn: Int?
     
     private let relativePath: String
     
@@ -128,11 +123,11 @@ class FileBasedATR: ATR {
     
     init(_ relativePath: String, firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
         self.relativePath = relativePath
-        super.init(firstExpectedColumn: firstExpectedColumn,
-                   factory: factory)
+        self.firstExpectedColumn = firstExpectedColumn
+        self.actualsFactory = factory
     }
     
-    override var testString: String {
+    var testString: String {
         get throws {
             guard let url = Bundle.module.url(forResource: relativePath,
                                               withExtension: testFileExtension,
@@ -143,12 +138,12 @@ class FileBasedATR: ATR {
         }
     }
     
-    override var testName: String {
+    var testName: String {
         relativePath
     }
     
     private func fileNotFound() -> ATRError {
-        error("File not found")
+        ATRError("File not found")
     }
 }
 
