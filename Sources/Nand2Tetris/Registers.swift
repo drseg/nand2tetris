@@ -17,33 +17,62 @@ class Bit {
     }
 }
 
-class Register: Clocked {
-
-    var input = "0000000000000000".x16
-    var load = 0
-
-    func update(_ input: Int16, _ load: Int) {
-        self.input = input.x16
-        self.load = load
+class Register {
+    
+    private var bitArray: [Bit]
+    
+    init() {
+        self.bitArray = [Bit]()
+        (0..<16).forEach { _ in bitArray.append(Bit()) }
     }
 
-    func run(_ newValue: Int) -> ClockedOutput {
-        let clockAndLoad = and(load, newValue)
-
-        return input
+    func update(_ input: Int16, _ load: Int, _ cycle: Int) -> IntX16 {
+        update(input.x16, load, cycle)
+    }
+    
+    func update(_ input: IntX16, _ load: Int, _ cycle: Int) -> IntX16 {
+        input
+            .enumerated()
+            .reduce([Int]()) {
+                $0 + [bitArray[$1.offset].update($1.element, load, cycle)]
+            }.x16
     }
 }
 
 extension Int16 {
     
     var x16: IntX16 {
-        self >= 0
+        guard self != -32768 else {
+            return not16((Int16.max).bin.x16)
+        }
+        
+        return self >= 0
         ? bin.x16
         : inc16(not16((self * -1).bin.x16))
     }
     
     var bin: String {
         String(self, radix: 2).leftPad(with: "0", length: 16)
+    }
+}
+
+extension IntX16 {
+    
+    var dec: Int {
+        return first! == 1
+        ? toInt - Int(UInt16.max) - 1
+        : toInt
+    }
+    
+    private var toInt: Int {
+        Int(toString, radix: 2)!
+    }
+}
+
+extension Int16: Stringable {
+    
+    var toString: String {
+        return String(self)
     }
 }
 

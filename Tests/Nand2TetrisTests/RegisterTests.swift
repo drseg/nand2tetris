@@ -24,45 +24,39 @@ class RegisterTests: XCTestCase {
         register = Register()
     }
     
-    func testRegisterDefaults() {
-        XCTAssertEqual(register.input, "0000000000000000".x16)
-        XCTAssertEqual(register.load, 0)
-    }
-    
     func testRegisterCanAcceptInt16Input() {
-        register.update(32123, 1)
-        XCTAssertEqual(register.input, "0111110101111011".x16)
-        XCTAssertEqual(register.load, 1)
+        XCTAssertEqual(register.update(32123, 1, 0), "0111110101111011".x16)
     }
     
     func testRegisterCanAcceptNegativeInput() {
-        register.update(-32123, 1)
-        XCTAssertEqual(register.input, "1000001010000101".x16)
-        XCTAssertEqual(register.load, 1)
+        XCTAssertEqual(register.update(-32123, 1, 0), "1000001010000101".x16)
     }
     
-    func testRegisterDefaultOutput() {
-        XCTAssertEqual(register.run(0).toString, "0000000000000000")
+    func testNegativeInputSpecialCase() {
+        XCTAssertEqual(register.update(-32768, 1, 0), "1000000000000000".x16)
     }
     
-//    func testRegisterLoad() {
-//        register.update(1, 1)
-//        XCTAssertEqual(register.run(0).toString, "0000000000000000")
-//        XCTAssertEqual(register.run(1).toString, "0000000000000001")
-//    }
+    func testCanConvertNegativeIntX16BackToInt16() {
+        XCTAssertEqual("1111111111111111".x16.dec, -1)
+    }
+    
+    func testCanConvertNegativeMax() {
+        XCTAssertEqual("1000000000000000".x16.dec, -32768)
+    }
+    
+    func testCanConvertPositiveIntX16() {
+        XCTAssertEqual("0111111111111111".x16.dec, 32767)
+    }
 
-    func testRegisterAcceptance() {
-//        let register = Register()
-//        let clock = Clock(register)
-//
-//        FileBasedATR("Registers/Register") {
-//            let time = $0[0]
-//            let input = Int16($0[1])!
-//            let load = $0[2]
-//
-//            register.update(input, load)
-//
-//            return [""]
-//        }
+    func testRegisterAcceptance() throws {
+        let register = Register()
+
+        try FileBasedATR("Registers/Register") {
+            let time = $0[0].isTock
+            let input = Int16($0[1])!
+            let load = $0[2].int
+            
+            return [register.update(input, load, time).dec]
+        }.run()
     }
 }
