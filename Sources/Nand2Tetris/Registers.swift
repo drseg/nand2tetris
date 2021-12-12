@@ -67,13 +67,6 @@ extension IntX16 {
     }
 }
 
-extension Int16: Stringable {
-    
-    var toString: String {
-        return String(self)
-    }
-}
-
 extension String {
     
     var isTock: Int {
@@ -83,9 +76,6 @@ extension String {
     
     func leftPad(with character: Character, length: UInt) -> String {
         let maxLength = Int(length) - count
-        guard maxLength > 0 else {
-            return self
-        }
         return String(repeating: String(character), count: maxLength) + self
     }
 }
