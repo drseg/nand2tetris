@@ -1,15 +1,15 @@
 class DataFlipFlop {
     
-    private var lastQ = 0
-    private var lastNotQ = 1
+    private var Q = 0
+    private var notQ = 1
     
     func callAsFunction(_ D: Int, _ C: Int) -> Int {
-        let nandCycleNotInput = nand(C, not(D))
+        let nandCNotD = nand(C, not(D))
         
-        lastNotQ = nand(nandCycleNotInput, nandCycleNotInput == 0 ? 1 : lastQ)
-        lastQ = nand(nand(C, D), lastNotQ)
+        notQ = nand(nandCNotD, nandCNotD == 0 ? 1 : Q)
+        Q = nand(nand(C, D), notQ)
         
-        return lastQ
+        return Q
     }
 }
 
@@ -18,7 +18,7 @@ class Bit {
     private let dff = DataFlipFlop()
     
     func callAsFunction(_ input: Int, _ load: Int, _ clock: Int) -> Int {
-        dff(input, and(load, not(clock)))
+        dff(input, and(load, clock))
     }
 }
 
@@ -55,7 +55,7 @@ extension Int16 {
     }
     
     var bin: String {
-        String(self, radix: 2).leftPad(with: "0", length: 16)
+        String(self, radix: 2).leftPad(length: 16)
     }
 }
 
@@ -73,14 +73,9 @@ extension IntX16 {
 }
 
 extension String {
-    
-    var isTock: Int {
-        last == "+" ? 1 : 0
-    }
-    
-    func leftPad(with character: Character, length: UInt) -> String {
-        let maxLength = Int(length) - count
-        return String(repeating: String(character), count: maxLength) + self
+        
+    func leftPad(length: Int) -> String {
+        String(repeating: "0", count: length - count) + self
     }
 }
 

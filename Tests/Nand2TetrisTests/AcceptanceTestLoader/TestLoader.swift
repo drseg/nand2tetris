@@ -108,14 +108,14 @@ extension ATR {
     }
 }
 
-class FileBasedATR: ATR {
+struct FileBasedATR: ATR {
     
     let actualsFactory: ActualsFactory
     let firstExpectedColumn: Int?
     
     private let relativePath: String
     
-    convenience init(name: String, directory: String, firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
+    init(name: String, directory: String, firstExpectedColumn: Int? = nil, factory: @escaping ActualsFactory) {
         self.init("\(directory)/\(name)",
                   firstExpectedColumn: firstExpectedColumn,
                   factory: factory)
@@ -195,6 +195,13 @@ private struct Assertion {
     }
 }
 
+extension String {
+    
+    var clockSignal: Int {
+        last == "+" ? 0 : 1
+    }
+}
+
 private extension String {
     
     var components: [String] {
@@ -213,4 +220,10 @@ private extension Sequence where Element: StringProtocol {
             $0.components(separatedBy: "").joined()
         }
     }
+}
+
+infix operator =>
+
+func =><T: Equatable>(_ actual: T, _ expected: T) {
+    XCTAssertEqual(actual, expected)
 }

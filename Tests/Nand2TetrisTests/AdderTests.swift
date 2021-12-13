@@ -72,7 +72,3 @@ final class AdderTests: XCTestCase {
            => "1111111111111100".x16
     }
 }
-
-private func =><T: Equatable>(_ actual: T, _ expected: T) {
-    XCTAssertEqual(actual, expected)
-}

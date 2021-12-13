@@ -7,11 +7,11 @@ class BitTests: XCTestCase {
         let bit = Bit()
         
         try FileBasedATR("Registers/Bit") {
-            let cycle = $0[0].isTock
+            let signal = $0[0].clockSignal
             let input = $0[1].int
             let load = $0[2].int
             
-            return [bit(input, load, cycle)]
+            return [bit(input, load, signal)]
         }.run()
     }
 }
@@ -25,38 +25,38 @@ class RegisterTests: XCTestCase {
     }
     
     func testRegisterCanAcceptInt16Input() {
-        XCTAssertEqual(register(32123, 1, 0), "0111110101111011".x16)
+        register(32123, 1, 1) => "0111110101111011".x16
     }
     
     func testRegisterCanAcceptNegativeInput() {
-        XCTAssertEqual(register(-32123, 1, 0), "1000001010000101".x16)
+        register(-32123, 1, 1) => "1000001010000101".x16
     }
     
     func testMinInput() {
-        XCTAssertEqual(register(-32768, 1, 0), "1000000000000000".x16)
+        register(-32768, 1, 1) => "1000000000000000".x16
     }
     
     func testCanConvertNegativeIntX16BackToInt16() {
-        XCTAssertEqual("1111111111111111".x16.dec, -1)
+        "1111111111111111".x16.dec => -1
     }
     
     func testCanConvertMin() {
-        XCTAssertEqual("1000000000000000".x16.dec, -32768)
+        "1000000000000000".x16.dec => -32768
     }
     
     func testCanConvertMax() {
-        XCTAssertEqual("0111111111111111".x16.dec, 32767)
+        "0111111111111111".x16.dec => 32767
     }
 
     func testAcceptance() throws {
         let register = Register()
 
         try FileBasedATR("Registers/Register") {
-            let time = $0[0].isTock
+            let signal = $0[0].clockSignal
             let input = Int16($0[1])!
             let load = $0[2].int
             
-            return [register(input, load, time).dec]
+            return [register(input, load, signal).dec]
         }.run()
     }
 }
