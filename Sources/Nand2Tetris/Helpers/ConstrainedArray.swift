@@ -61,6 +61,11 @@ final class IntX2: CountConstrainedIntArray {
     override var count: Int { 2 }
 }
 
+final class IntX3: CountConstrainedIntArray {
+    
+    override var count: Int { 3 }
+}
+
 final class IntX4: CountConstrainedIntArray {
     
     override var count: Int { 4 }
@@ -79,6 +84,7 @@ final class IntX16: CountConstrainedIntArray {
 extension Array where Element == Int {
     
     var x2: IntX2   { IntX2(self) }
+    var x3: IntX3   { IntX3(self) }
     var x4: IntX4   { IntX4(self) }
     var x8: IntX8   { IntX8(self) }
     var x16: IntX16 { IntX16(self) }
@@ -88,6 +94,7 @@ extension StringProtocol {
     
     var int: Int    { Int(String(self))! }
     var x2: IntX2   { xX.x2 }
+    var x3: IntX3   { xX.x3 }
     var x4: IntX4   { xX.x4 }
     var x8: IntX8   { xX.x8 }
     var x16: IntX16 { xX.x16 }

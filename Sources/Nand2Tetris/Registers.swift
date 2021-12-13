@@ -42,6 +42,38 @@ class Register {
     }
 }
 
+class RAM8 {
+    
+    private var registers = [Register]()
+    
+    init() {
+        (0..<8).forEach { _ in registers.append(Register()) }
+    }
+    
+    func callAsFunction(_ word: IntX16, _ load: Int, _ address: IntX3, _ clock: Int) -> IntX16 {
+        let loadMap = deMux8Way(load, address[0], address[1], address[2])
+        let clockMap = deMux8Way(clock, address[0], address[1], address[2])
+        let wordMap = deMux8Way16(word, address[0], address[1], address[2])
+        
+        let outputs = registers.enumerated().reduce([String]()) {
+            $0 + [$1.element(wordMap[$1.offset], loadMap[$1.offset], clockMap[$1.offset]).toString]
+        }.map(\.x16)
+        
+        return mux8Way16(outputs[0], outputs[1], outputs[2], outputs[3], outputs[4], outputs[5], outputs[6], outputs[7], address[0], address[1], address[2])
+    }
+}
+
+func deMux8Way16(_ a: IntX16, _ s1: Int, _ s2: Int, _ s3: Int) -> [IntX16] {
+    var arrays = (0..<8).map { _ in [Int]() }
+    a.forEach { bit in
+        deMux8Way(bit, s1, s2, s3).enumerated().forEach { deMuxedBit in
+            arrays[deMuxedBit.offset].append(deMuxedBit.element)
+        }
+    }
+    
+    return arrays.map(\.x16)
+}
+
 extension Int16 {
     
     var x16: IntX16 {
@@ -52,6 +84,15 @@ extension Int16 {
         return self < 0
         ? inc16(not16((-self).bin.x16))
         : bin.x16
+    }
+    
+    var x3: IntX3 {
+        Array(
+            Int16(
+                String(self).leftPad(length: 16))!
+                .x16
+                .suffix(from: 13)
+        ).x3
     }
     
     var bin: String {
