@@ -1,16 +1,15 @@
 class DataFlipFlop {
     
-    private var lastOut = 0
-    private var lastNotOut = 1
+    private var lastQ = 0
+    private var lastNotQ = 1
     
-    func update(_ input: Int, _ cycle: Int) -> Int {
-        let nandCycleInput = nand(cycle, input)
-        let nandCycleNotInput = nand(cycle, not(input))
+    func callAsFunction(_ D: Int, _ C: Int) -> Int {
+        let nandCycleNotInput = nand(C, not(D))
         
-        lastNotOut = nand(nandCycleNotInput, nandCycleNotInput == 0 ? 1 : lastOut)
-        lastOut = nand(nandCycleInput, lastNotOut)
+        lastNotQ = nand(nandCycleNotInput, nandCycleNotInput == 0 ? 1 : lastQ)
+        lastQ = nand(nand(C, D), lastNotQ)
         
-        return lastOut
+        return lastQ
     }
 }
 
@@ -18,27 +17,27 @@ class Bit {
 
     private let dff = DataFlipFlop()
     
-    func update(_ input: Int, _ load: Int, _ cycle: Int) -> Int {
-        dff.update(input, and(load, not(cycle)))
+    func callAsFunction(_ input: Int, _ load: Int, _ clock: Int) -> Int {
+        dff(input, and(load, not(clock)))
     }
 }
 
 class Register {
     
-    private var bitArray: [Bit]
+    private var bits: [Bit]
     
     init() {
-        self.bitArray = [Bit]()
-        (0..<16).forEach { _ in bitArray.append(Bit()) }
+        self.bits = [Bit]()
+        (0..<16).forEach { _ in bits.append(Bit()) }
     }
 
-    func update(_ input: Int16, _ load: Int, _ cycle: Int) -> IntX16 {
-        update(input.x16, load, cycle)
+    func callAsFunction(_ input: Int16, _ load: Int, _ clock: Int) -> IntX16 {
+        self(input.x16, load, clock)
     }
     
-    func update(_ input: IntX16, _ load: Int, _ cycle: Int) -> IntX16 {
-        zip(input, bitArray).reduce([Int]()) {
-            $0 + [$1.1.update($1.0, load, cycle)]
+    func callAsFunction(_ input: IntX16, _ load: Int, _ clock: Int) -> IntX16 {
+        zip(input, bits).reduce([Int]()) {
+            $0 + [$1.1($1.0, load, clock)]
         }.x16
     }
 }
@@ -46,13 +45,13 @@ class Register {
 extension Int16 {
     
     var x16: IntX16 {
-        guard self != -32768 else {
-            return not16((Int16.max).bin.x16)
+        guard self != Int16.min else {
+            return not16(Int16.max.bin.x16)
         }
         
-        return self >= 0
-        ? bin.x16
-        : inc16(not16((self * -1).bin.x16))
+        return self < 0
+        ? inc16(not16((-self).bin.x16))
+        : bin.x16
     }
     
     var bin: String {
@@ -78,7 +77,6 @@ extension String {
     var isTock: Int {
         last == "+" ? 1 : 0
     }
-    
     
     func leftPad(with character: Character, length: UInt) -> String {
         let maxLength = Int(length) - count

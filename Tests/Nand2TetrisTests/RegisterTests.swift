@@ -11,7 +11,7 @@ class BitTests: XCTestCase {
             let input = $0[1].int
             let load = $0[2].int
             
-            return [bit.update(input, load, cycle)]
+            return [bit(input, load, cycle)]
         }.run()
     }
 }
@@ -25,26 +25,26 @@ class RegisterTests: XCTestCase {
     }
     
     func testRegisterCanAcceptInt16Input() {
-        XCTAssertEqual(register.update(32123, 1, 0), "0111110101111011".x16)
+        XCTAssertEqual(register(32123, 1, 0), "0111110101111011".x16)
     }
     
     func testRegisterCanAcceptNegativeInput() {
-        XCTAssertEqual(register.update(-32123, 1, 0), "1000001010000101".x16)
+        XCTAssertEqual(register(-32123, 1, 0), "1000001010000101".x16)
     }
     
-    func testNegativeInputSpecialCase() {
-        XCTAssertEqual(register.update(-32768, 1, 0), "1000000000000000".x16)
+    func testMinInput() {
+        XCTAssertEqual(register(-32768, 1, 0), "1000000000000000".x16)
     }
     
     func testCanConvertNegativeIntX16BackToInt16() {
         XCTAssertEqual("1111111111111111".x16.dec, -1)
     }
     
-    func testCanConvertNegativeMax() {
+    func testCanConvertMin() {
         XCTAssertEqual("1000000000000000".x16.dec, -32768)
     }
     
-    func testCanConvertPositiveIntX16() {
+    func testCanConvertMax() {
         XCTAssertEqual("0111111111111111".x16.dec, 32767)
     }
 
@@ -56,7 +56,7 @@ class RegisterTests: XCTestCase {
             let input = Int16($0[1])!
             let load = $0[2].int
             
-            return [register.update(input, load, time).dec]
+            return [register(input, load, time).dec]
         }.run()
     }
 }
