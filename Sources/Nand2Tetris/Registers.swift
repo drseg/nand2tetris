@@ -37,7 +37,11 @@ final class Register {
     }
 }
 
-final class RAM8 {
+protocol RAM {
+    func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String
+}
+
+final class RAM8: RAM {
     
     private let registers = [Register](count: 8, eachElement: Register())
     
@@ -56,7 +60,7 @@ final class RAM8 {
     }
 }
 
-class CheatingRAM {
+class CheatingRAM: RAM {
     
     var words: [String]
     
@@ -74,21 +78,23 @@ class CheatingRAM {
     }
 }
 
-final class RAM64 {
-    
-    private let ram8s = [CheatingRAM](count: 8, eachElement: CheatingRAM(8))
-    
+protocol RAMx8: RAM {
+    var subRAM: [RAM] { get }
+    var addressLength: Int { get }
+}
+
+extension RAMx8 {
     func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
         let wordMap = deMux8Way16(word, address[0], address[1], address[2])
         
-        let ram8Address = String(address.suffix(3))
+        let ramAddress = String(address.suffix(addressLength))
         
-        let out = ram8s.enumerated().reduce([String]()) {
+        let out = subRAM.enumerated().reduce([String]()) {
             $0 + [$1.element(wordMap[$1.offset],
                              loadMap[$1.offset],
-                             ram8Address,
+                             ramAddress,
                              clockMap[$1.offset])]
         }
         
@@ -96,51 +102,22 @@ final class RAM64 {
     }
 }
 
-final class RAM512 {
-    
-    private let ram64s = [RAM64](count: 8, eachElement: RAM64())
-    
-    func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String {
-        let loadMap = deMux8Way(load, address[0], address[1], address[2])
-        let clockMap = deMux8Way(clock, address[0], address[1], address[2])
-        let wordMap = deMux8Way16(word, address[0], address[1], address[2])
-        
-        let ram64Address = String(address.suffix(6))
-        
-        let out = ram64s.enumerated().reduce([String]()) {
-            $0 + [$1.element(wordMap[$1.offset],
-                             loadMap[$1.offset],
-                             ram64Address,
-                             clockMap[$1.offset])]
-        }
-        
-        return mux8Way16(out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], address[0], address[1], address[2])
-    }
+final class RAM64: RAMx8 {
+    let addressLength = 3
+    var subRAM: [RAM] = [CheatingRAM](count: 8, eachElement: CheatingRAM(8))
 }
 
-final class RAM4K {
-    
-    private let ram512s = [CheatingRAM](count: 8, eachElement: CheatingRAM(512))
-    
-    func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String {
-        let loadMap = deMux8Way(load, address[0], address[1], address[2])
-        let clockMap = deMux8Way(clock, address[0], address[1], address[2])
-        let wordMap = deMux8Way16(word, address[0], address[1], address[2])
-        
-        let ram512Address = String(address.suffix(9))
-        
-        let out = ram512s.enumerated().reduce([String]()) {
-            $0 + [$1.element(wordMap[$1.offset],
-                             loadMap[$1.offset],
-                             ram512Address,
-                             clockMap[$1.offset])]
-        }
-        
-        return mux8Way16(out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], address[0], address[1], address[2])
-    }
+final class RAM512: RAMx8 {
+    let addressLength = 6
+    var subRAM: [RAM] = [RAM64](count: 8, eachElement: RAM64())
 }
 
-final class RAM16K {
+final class RAM4K: RAMx8 {
+    let addressLength = 9
+    var subRAM: [RAM] = [CheatingRAM](count: 8, eachElement: CheatingRAM(512))
+}
+
+final class RAM16K: RAM {
     
     private let ram4Ks = [RAM4K](count: 4, eachElement: RAM4K())
     
