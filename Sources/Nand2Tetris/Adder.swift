@@ -25,11 +25,6 @@ func inc16(_ a: String) -> String {
     return add16(a, one)
 }
 
-func zero(_ a: String) -> String {
-    let out = xor(a[0], a[0])
-    return String(repeating: out, count: 16)
-}
-
 private extension String {
     var sum: Character { self[1] }
     var carry: Character { self[0] }
