@@ -41,6 +41,24 @@ protocol RAM {
     func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String
 }
 
+final class FastRAM: RAM {
+    
+    var words: [String]
+    
+    init(_ bits: Int) {
+        words = [String](count: bits, eachElement: "0000000000000000")
+    }
+    
+    func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String {
+        let address = Int(address.toDecimal)!
+        if load == "1" && clock == "1" {
+            words[address] = word
+        }
+        
+        return words[address]
+    }
+}
+
 final class RAM8: RAM {
     
     private let registers = [Register](count: 8, eachElement: Register())
@@ -60,30 +78,14 @@ final class RAM8: RAM {
     }
 }
 
-class CheatingRAM: RAM {
-    
-    var words: [String]
-    
-    init(_ bits: Int) {
-        words = [String](count: bits, eachElement: "0000000000000000")
-    }
-    
-    func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String {
-        let address = Int(address.toDecimal)!
-        if load == "1" && clock == "1" {
-            words[address] = word
-        }
-        
-        return words[address]
-    }
-}
-
 protocol RAMx8: RAM {
+    
     var subRAM: [RAM] { get }
     var addressLength: Int { get }
 }
 
 extension RAMx8 {
+    
     func callAsFunction(_ word: String, _ load: Character, _ address: String, _ clock: Character) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
@@ -103,18 +105,21 @@ extension RAMx8 {
 }
 
 final class RAM64: RAMx8 {
+    
     let addressLength = 3
-    var subRAM: [RAM] = [CheatingRAM](count: 8, eachElement: CheatingRAM(8))
+    var subRAM: [RAM] = [FastRAM](count: 8, eachElement: FastRAM(8))
 }
 
 final class RAM512: RAMx8 {
+    
     let addressLength = 6
     var subRAM: [RAM] = [RAM64](count: 8, eachElement: RAM64())
 }
 
 final class RAM4K: RAMx8 {
+    
     let addressLength = 9
-    var subRAM: [RAM] = [CheatingRAM](count: 8, eachElement: CheatingRAM(512))
+    var subRAM: [RAM] = [FastRAM](count: 8, eachElement: FastRAM(512))
 }
 
 final class RAM16K: RAM {
