@@ -25,8 +25,7 @@ func xor(_ a: Character, _ b: Character) -> Character {
 
 func mux(_ a: Character, _ b: Character, _ s: Character) -> Character {
     let notBS = nand(b, s)
-    let notS = nand(s, s)
-    let notANotS = nand(a, notS)
+    let notANotS = nand(a, nand(s, s))
     
     return nand(notANotS, notBS)
 }

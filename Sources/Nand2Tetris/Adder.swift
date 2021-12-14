@@ -7,16 +7,16 @@ func fullAdder(_ a: Character, _ b: Character, _ c: Character) -> String {
     let addABC = halfAdder(addAB.sum, c)
     
     return String(carry: or(addABC.carry, addAB.carry),
-                 sum: addABC.sum)
+                  sum: addABC.sum)
 }
 
 func add16(_ a: String, _ b: String) -> String {
     String(
-        zip(a,b).reversed().reduce(into: (sum: "", carry: Character("0"))) { (result, addends) in
+        zip(a,b).reversed().reduce(into: (sum: "", carry: "0".toChar)) { (result, addends) in
             let addition = fullAdder(addends.0, addends.1, result.carry)
-            result.sum.append(addition.sum)
+            result.sum = String(addition.sum) + result.sum
             result.carry = addition.carry
-        }.0.reversed()
+        }.0
     )
 }
 
