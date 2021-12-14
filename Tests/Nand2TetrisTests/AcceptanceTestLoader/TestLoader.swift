@@ -17,16 +17,19 @@ struct ATRError: Error {
 
 protocol ATR {
     
+    func run(swiftFile: StaticString, swiftLine: UInt) throws
+}
+
+protocol ATRImplementation: ATR {
+    
     var testString: String { get throws }
     var testName: String { get throws }
     
     var actualsFactory: ActualsFactory { get }
     var firstExpectedColumn: Int? { get }
-    
-    func run(swiftFile: StaticString, swiftLine: UInt) throws
 }
 
-extension ATR {
+extension ATRImplementation {
     
     func run(swiftFile: StaticString = #file, swiftLine: UInt = #line) throws {
         try getTests().forEach { $0.run(in: swiftFile, at: swiftLine) }
@@ -108,7 +111,7 @@ extension ATR {
     }
 }
 
-struct FileBasedATR: ATR {
+struct FileBasedATR: ATRImplementation {
     
     let actualsFactory: ActualsFactory
     let firstExpectedColumn: Int?

@@ -1,6 +1,6 @@
 class CountConstrainedIntArray {
     
-    fileprivate let underlyingArray: [Int]
+    let underlyingArray: [Int]
     
     var count: Int {
         fatalError("Subclasses must implement")
@@ -71,9 +71,19 @@ final class IntX4: CountConstrainedIntArray {
     override var count: Int { 4 }
 }
 
+final class IntX6: CountConstrainedIntArray {
+    
+    override var count: Int { 6 }
+}
+
 final class IntX8: CountConstrainedIntArray {
     
     override var count: Int { 8 }
+}
+
+final class IntX9: CountConstrainedIntArray {
+    
+    override var count: Int { 9 }
 }
 
 final class IntX16: CountConstrainedIntArray {
@@ -86,7 +96,9 @@ extension Array where Element == Int {
     var x2: IntX2   { IntX2(self) }
     var x3: IntX3   { IntX3(self) }
     var x4: IntX4   { IntX4(self) }
+    var x6: IntX6   { IntX6(self) }
     var x8: IntX8   { IntX8(self) }
+    var x9: IntX9   { IntX9(self) }
     var x16: IntX16 { IntX16(self) }
 }
 
@@ -96,7 +108,9 @@ extension StringProtocol {
     var x2: IntX2   { xX.x2 }
     var x3: IntX3   { xX.x3 }
     var x4: IntX4   { xX.x4 }
+    var x6: IntX6   { xX.x6 }
     var x8: IntX8   { xX.x8 }
+    var x9: IntX9   { xX.x9 }
     var x16: IntX16 { xX.x16 }
     
     var xX: [Int] { map(String.init).compactMap(Int.init) }
