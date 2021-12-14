@@ -1,8 +1,8 @@
-func halfAdder(_ a: Character, _ b: Character) -> String {
+func halfAdder(_ a: Char, _ b: Char) -> String {
     String(carry: and(a, b), sum: xor(a, b))
 }
 
-func fullAdder(_ a: Character, _ b: Character, _ c: Character) -> String {
+func fullAdder(_ a: Char, _ b: Char, _ c: Char) -> String {
     let addAB = halfAdder(a, b)
     let addABC = halfAdder(addAB.sum, c)
     
@@ -26,10 +26,10 @@ func inc16(_ a: String) -> String {
 }
 
 private extension String {
-    var sum: Character { self[1] }
-    var carry: Character { self[0] }
+    var carry: Char { self[0] }
+    var sum: Char { self[1] }
     
-    init(carry: Character, sum: Character) {
+    init(carry: Char, sum: Char) {
         self.init([carry, sum])
     }
 }

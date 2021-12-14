@@ -1,4 +1,4 @@
-func alu(x: String, y: String, zx: Character, nx: Character, zy: Character, ny: Character, f: Character, no: Character) -> (out: String, zr: Character, ng: Character) {
+func alu(x: String, y: String, zx: Char, nx: Char, zy: Char, ny: Char, f: Char, no: Char) -> (out: String, zr: Char, ng: Char) {
     let xZX = zeroIfZ(x, z: zx)
     let yZY = zeroIfZ(y, z: zy)
     
@@ -18,10 +18,10 @@ func alu(x: String, y: String, zx: Character, nx: Character, zy: Character, ny: 
     return (noModified_fOut, zr, ng)
 }
 
-private func negateIfN(_ a: String, n: Character) -> String {
+private func negateIfN(_ a: String, n: Char) -> String {
     mux16(a, not16(a), n)
 }
 
-private func zeroIfZ(_ a: String, z: Character) -> String {
+private func zeroIfZ(_ a: String, z: Char) -> String {
     mux16(a, zero(a), z)
 }

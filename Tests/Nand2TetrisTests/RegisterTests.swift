@@ -62,13 +62,35 @@ class RegisterTests: XCTestCase {
     }
 }
 
-class Ram8Tests: XCTestCase {
+
+protocol RAMTest {
     
-    var ram8: RAM8!
+    var ram: RAM { get }
+    var addressLength: Int { get }
+    var testFilePath: String { get }
     
-    override func setUp() {
-        ram8 = RAM8()
+    func runAcceptanceTest() throws
+}
+
+extension RAMTest {
+    
+    func runAcceptanceTest() throws {
+        try FileBasedATR(testFilePath) {
+            let signal = $0[0].clockSignal
+            let input = $0[1].toBinary(16)
+            let load = $0[2].toChar
+            let address = $0[3].toBinary(addressLength)
+            
+            return [self.ram(input, load, address, signal).toDecimal]
+        }.run()
     }
+}
+
+class RAM8Tests: XCTestCase, RAMTest {
+    
+    let ram: RAM = RAM8()
+    let addressLength = 3
+    let testFilePath = "Registers/RAM8"
     
     func testMultiDemux() {
         deMux8Way16(max, "0", "0", "1")
@@ -76,77 +98,50 @@ class Ram8Tests: XCTestCase {
     }
     
     func testAcceptance() throws {
-        try FileBasedATR("Registers/RAM8") {
-            let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
-            let load = $0[2].toChar
-            let address = $0[3].toBinary(3)
-            
-            return [self.ram8(input, load, address, signal).toDecimal]
-        }.run()
+        try runAcceptanceTest()
     }
 }
 
-class Ram64Tests: XCTestCase {
+class RAM64Tests: XCTestCase, RAMTest {
+    
+    let ram: RAM = RAM64()
+    let addressLength = 6
+    let testFilePath = "Registers/RAM64"
     
     func testAcceptance() throws {
-        let ram64 = RAM64()
-        
-        try FileBasedATR("Registers/RAM64") {
-            let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
-            let load = $0[2].toChar
-            let address = $0[3].toBinary(6)
-            
-            return [ram64(input, load, address, signal).toDecimal]
-        }.run()
+        try runAcceptanceTest()
     }
 }
 
-class Ram512Tests: XCTestCase {
+class RAM512Tests: XCTestCase, RAMTest {
+    
+    let ram: RAM = RAM512()
+    let addressLength = 9
+    let testFilePath = "Registers/RAM512"
     
     func testAcceptance() throws {
-        let ram512 = RAM512()
-        
-        try FileBasedATR("Registers/RAM512") {
-            let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
-            let load = $0[2].toChar
-            let address = $0[3].toBinary(9)
-            
-            return [ram512(input, load, address, signal).toDecimal]
-        }.run()
+        try runAcceptanceTest()
     }
 }
 
-class Ram4KTests: XCTestCase {
+class RAM4KTests: XCTestCase, RAMTest {
+    
+    let ram: RAM = RAM4K()
+    let addressLength = 12
+    let testFilePath = "Registers/RAM4K"
     
     func testAcceptance() throws {
-        let ram4K = RAM4K()
-
-        try FileBasedATR("Registers/RAM4K") {
-            let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
-            let load = $0[2].toChar
-            let address = $0[3].toBinary(12)
-
-            return [ram4K(input, load, address, signal).toDecimal]
-        }.run()
+        try runAcceptanceTest()
     }
 }
 
-class Ram16KTests: XCTestCase {
+class RAM16KTests: XCTestCase, RAMTest {
+    
+    let ram: RAM = RAM16K()
+    let addressLength = 14
+    let testFilePath = "Registers/RAM16K"
     
     func testAcceptance() throws {
-        let ram16K = RAM16K()
-
-        try FileBasedATR("Registers/RAM16K") {
-            let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
-            let load = $0[2].toChar
-            let address = $0[3].toBinary(14)
-
-            return [ram16K(input, load, address, signal).toDecimal]
-        }.run()
+        try runAcceptanceTest()
     }
 }
