@@ -105,11 +105,63 @@ final class CheatingRAM512 {
     
     func callAsFunction(_ word: IntX16, _ load: Int, _ address: IntX9, _ clock: Int) -> IntX16 {
         if load == 1 && clock == 1 {
-            words[address.dec] = word.underlyingArray
+            words[address.toDecimal] = word.underlyingArray
         }
         
-        return words[address.dec].x16
+        return words[address.toDecimal].x16
     }
+}
+
+final class RAM4K {
+    
+    private let ram512s = [CheatingRAM512](count: 8, eachElement: CheatingRAM512())
+    
+    func callAsFunction(_ word: IntX16, _ load: Int, _ address: IntX12, _ clock: Int) -> IntX16 {
+        let loadMap = deMux8Way(load, address[0], address[1], address[2])
+        let clockMap = deMux8Way(clock, address[0], address[1], address[2])
+        let wordMap = deMux8Way16(word, address[0], address[1], address[2])
+        
+        let ram512Address = Array(address.suffix(from: 3)).x9
+        
+        let out = ram512s.enumerated().reduce([String]()) {
+            $0 + [$1.element(wordMap[$1.offset],
+                             loadMap[$1.offset],
+                             ram512Address,
+                             clockMap[$1.offset]).toString]
+        }.map(\.x16)
+        
+        return mux8Way16(out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], address[0], address[1], address[2])
+    }
+}
+
+final class RAM16K {
+    
+    private let ram4Ks = [RAM4K](count: 4, eachElement: RAM4K())
+    
+    func callAsFunction(_ word: IntX16, _ load: Int, _ address: IntX14, _ clock: Int) -> IntX16 {
+        let loadMap = deMux4Way(load, address[0], address[1])
+        let clockMap = deMux4Way(clock, address[0], address[1])
+        let wordMap = deMux4Way16(word, address[0], address[1])
+        
+        let ram4KAddress = Array(address.suffix(from: 2)).x12
+        
+        let out = ram4Ks.enumerated().reduce([String]()) {
+            $0 + [$1.element(wordMap[$1.offset],
+                             loadMap[$1.offset],
+                             ram4KAddress,
+                             clockMap[$1.offset]).toString]
+        }.map(\.x16)
+        
+        return mux4Way16(out[0], out[1], out[2], out[3], address[0], address[1])
+    }
+}
+
+func deMux4Way16(_ a: IntX16, _ s1: Int, _ s2: Int) -> [IntX16] {
+    a.reduce(into: [[Int]](count: 4, eachElement: [Int]())) { out, bit in
+        deMux4Way(bit, s1, s2).enumerated().forEach { deMuxedBit in
+            out[deMuxedBit.offset].append(deMuxedBit.element)
+        }
+    }.map(\.x16)
 }
 
 func deMux8Way16(_ a: IntX16, _ s1: Int, _ s2: Int, _ s3: Int) -> [IntX16] {
@@ -122,26 +174,20 @@ func deMux8Way16(_ a: IntX16, _ s1: Int, _ s2: Int, _ s3: Int) -> [IntX16] {
 
 extension Int16 {
     
-    var x3: IntX3 {
-        xX(length: 3).x3
-    }
-    
-    var x6: IntX6 {
-        xX(length: 6).x6
-    }
-    
-    var x9: IntX9 {
-        xX(length: 9).x9
-    }
+    var x3: IntX3   { xX(length: 3).x3 }
+    var x6: IntX6   { xX(length: 6).x6 }
+    var x9: IntX9   { xX(length: 9).x9 }
+    var x12: IntX12 { xX(length: 12).x12 }
+    var x14: IntX14 { xX(length: 14).x14 }
     
     var x16: IntX16 {
         guard self != Int16.min else {
-            return not16(Int16.max.bin.x16)
+            return not16(Int16.max.toBinary.x16)
         }
         
         return self < 0
-        ? inc16(not16((-self).bin.x16))
-        : bin.x16
+        ? inc16(not16((-self).toBinary.x16))
+        : toBinary.x16
     }
     
     func xX(length: Int) -> [Int] {
@@ -152,17 +198,19 @@ extension Int16 {
         )
     }
     
-    var bin: String {
+    var toBinary: String {
         String(self, radix: 2).leftPad(length: 16)
     }
 }
 
 extension CountConstrainedIntArray {
     
-    var dec: Int {
-        return first! == 1
-        ? toInt - Int(UInt16.max) - 1
-        : toInt
+    var toDecimal: Int {
+        let x16 = toString.leftPad(length: 16).x16
+        
+        return x16.first! == 1
+        ? x16.toInt - Int(UInt16.max) - 1
+        : x16.toInt
     }
     
     private var toInt: Int {

@@ -37,15 +37,15 @@ class RegisterTests: XCTestCase {
     }
     
     func testCanConvertNegativeIntX16BackToInt16() {
-        "1111111111111111".x16.dec => -1
+        "1111111111111111".x16.toDecimal => -1
     }
     
     func testCanConvertMin() {
-        "1000000000000000".x16.dec => -32768
+        "1000000000000000".x16.toDecimal => -32768
     }
     
     func testCanConvertMax() {
-        "0111111111111111".x16.dec => 32767
+        "0111111111111111".x16.toDecimal => 32767
     }
 
     func testAcceptance() throws {
@@ -56,7 +56,7 @@ class RegisterTests: XCTestCase {
             let input = Int16($0[1])!.x16
             let load = $0[2].int
             
-            return [register(input, load, signal).dec]
+            return [register(input, load, signal).toDecimal]
         }.run()
     }
 }
@@ -81,7 +81,7 @@ class Ram8Tests: XCTestCase {
             let load = $0[2].int
             let address = Int16($0[3])!.x3
             
-            return [self.ram8(input, load, address, signal).dec]
+            return [self.ram8(input, load, address, signal).toDecimal]
         }.run()
     }
 }
@@ -109,13 +109,13 @@ class Ram64Tests: XCTestCase {
     func testAcceptance() throws {
         let ram64 = RAM64()
         
-        try FileBasedATR("Registers/RAM8") {
+        try FileBasedATR("Registers/RAM64") {
             let signal = $0[0].clockSignal
             let input = Int16($0[1])!.x16
             let load = $0[2].int
             let address = Int16($0[3])!.x6
             
-            return [ram64(input, load, address, signal).dec]
+            return [ram64(input, load, address, signal).toDecimal]
         }.run()
     }
 }
@@ -123,15 +123,49 @@ class Ram64Tests: XCTestCase {
 class Ram512Tests: XCTestCase {
     
     func testAcceptance() throws {
-        let ram512 = CheatingRAM512()
+        throw XCTSkip("RAM512 is too slow")
         
-        try FileBasedATR("Registers/RAM8") {
+        let ram512 = RAM512()
+        
+        try FileBasedATR("Registers/RAM512") {
             let signal = $0[0].clockSignal
             let input = Int16($0[1])!.x16
             let load = $0[2].int
             let address = Int16($0[3])!.x9
             
-            return [ram512(input, load, address, signal).dec]
+            return [ram512(input, load, address, signal).toDecimal]
+        }.run()
+    }
+}
+
+class Ram4KTests: XCTestCase {
+    
+    func testAcceptance() throws {
+        let ram4K = RAM4K()
+
+        try FileBasedATR("Registers/RAM4K") {
+            let signal = $0[0].clockSignal
+            let input = Int16($0[1])!.x16
+            let load = $0[2].int
+            let address = Int16($0[3])!.x12
+
+            return [ram4K(input, load, address, signal).toDecimal]
+        }.run()
+    }
+}
+
+class Ram16KTests: XCTestCase {
+    
+    func testAcceptance() throws {
+        let ram16K = RAM16K()
+
+        try FileBasedATR("Registers/RAM16K") {
+            let signal = $0[0].clockSignal
+            let input = Int16($0[1])!.x16
+            let load = $0[2].int
+            let address = Int16($0[3])!.x14
+
+            return [ram16K(input, load, address, signal).toDecimal]
         }.run()
     }
 }

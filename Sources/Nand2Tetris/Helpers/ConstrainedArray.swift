@@ -86,6 +86,16 @@ final class IntX9: CountConstrainedIntArray {
     override var count: Int { 9 }
 }
 
+final class IntX12: CountConstrainedIntArray {
+    
+    override var count: Int { 12 }
+}
+
+final class IntX14: CountConstrainedIntArray {
+    
+    override var count: Int { 14 }
+}
+
 final class IntX16: CountConstrainedIntArray {
     
     override var count: Int { 16 }
@@ -99,6 +109,8 @@ extension Array where Element == Int {
     var x6: IntX6   { IntX6(self) }
     var x8: IntX8   { IntX8(self) }
     var x9: IntX9   { IntX9(self) }
+    var x12: IntX12 { IntX12(self) }
+    var x14: IntX14 { IntX14(self) }
     var x16: IntX16 { IntX16(self) }
 }
 
@@ -111,6 +123,8 @@ extension StringProtocol {
     var x6: IntX6   { xX.x6 }
     var x8: IntX8   { xX.x8 }
     var x9: IntX9   { xX.x9 }
+    var x12: IntX12 { xX.x12 }
+    var x14: IntX14 { xX.x14 }
     var x16: IntX16 { xX.x16 }
     
     var xX: [Int] { map(String.init).compactMap(Int.init) }
