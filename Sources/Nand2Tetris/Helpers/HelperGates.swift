@@ -17,7 +17,7 @@ func isNegative(_ a: String) -> Character {
 }
 
 extension String {
-    var c: Character {
+    var toChar: Character {
         Character(self)
     }
 }
