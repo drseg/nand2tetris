@@ -1,5 +1,6 @@
 @testable import Nand2Tetris
 import XCTest
+import Nand2TetrisTestLoader
 
 final class ALUTests: XCTestCase {
     

@@ -12,19 +12,17 @@ let package = Package(
             targets: ["Nand2Tetris"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/drseg/Nand2TetrisTestLoader.git", .branch("main"))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "Nand2Tetris",
-            dependencies: []),
+            dependencies: ["Nand2TetrisTestLoader"]),
         .testTarget(
             name: "Nand2TetrisTests",
-            dependencies: ["Nand2Tetris"],
-            resources: [
-                .copy("AcceptanceTests")
-            ]
+            dependencies: ["Nand2Tetris", "Nand2TetrisTestLoader"]
         )
     ]
 )

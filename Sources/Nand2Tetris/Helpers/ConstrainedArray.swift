@@ -1,3 +1,5 @@
+import Nand2TetrisTestLoader
+
 class CountConstrainedIntArray {
     
     let underlyingArray: [Int]
@@ -130,16 +132,8 @@ extension StringProtocol {
     var xX: [Int] { map(String.init).compactMap(Int.init) }
 }
 
-protocol Stringable {
-    var toString: String { get }
-}
-
 extension Int: Stringable {
-    var toString: String { String(self) }
-}
-
-extension String: Stringable {
-    var toString: String { self }
+    public var toString: String { String(self) }
 }
 
 extension CountConstrainedIntArray: Stringable {

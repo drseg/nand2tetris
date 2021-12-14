@@ -1,4 +1,5 @@
 import XCTest
+import Nand2TetrisTestLoader
 @testable import Nand2Tetris
 
 class BitTests: XCTestCase {

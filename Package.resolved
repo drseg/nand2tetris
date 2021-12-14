@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Nand2TetrisTestLoader",
+        "repositoryURL": "https://github.com/drseg/Nand2TetrisTestLoader.git",
+        "state": {
+          "branch": "main",
+          "revision": "9e33ac8e08ec099ab520efd18b5267b2b2f195ef",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
