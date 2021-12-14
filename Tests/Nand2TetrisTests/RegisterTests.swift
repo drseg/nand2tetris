@@ -88,24 +88,6 @@ class Ram8Tests: XCTestCase {
 
 class Ram64Tests: XCTestCase {
     
-    private var ram64: RAM64!
-    
-    override func setUp() {
-        ram64 = RAM64()
-    }
-    
-    func testSingleOutput() {
-        ram64("0000000000000000".x16, 1, "000000".x6, 1)
-        => "0000000000000000".x16
-    }
-    
-    func testSequentialOutput() {
-        let _ = ram64("1111111111111111".x16, 1, "000001".x6, 1)
-        
-        ram64("0000000000000000".x16, 0, "000001".x6, 0)
-        => "1111111111111111".x16
-    }
-    
     func testAcceptance() throws {
         let ram64 = RAM64()
         

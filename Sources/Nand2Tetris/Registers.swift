@@ -12,6 +12,7 @@ final class DataFlipFlop {
         return Q
     }
 }
+
 final class Bit {
 
     private let dff = DataFlipFlop()
@@ -55,9 +56,22 @@ final class RAM8 {
     }
 }
 
+final class CheatingRAM8 {
+    
+    var words = [[Int]](count: 8, eachElement: [Int](repeating: 0, count: 16))
+    
+    func callAsFunction(_ word: IntX16, _ load: Int, _ address: IntX3, _ clock: Int) -> IntX16 {
+        if load == 1 && clock == 1 {
+            words[address.toDecimal] = word.underlyingArray
+        }
+        
+        return words[address.toDecimal].x16
+    }
+}
+
 final class RAM64 {
     
-    private let ram8s = [RAM8](count: 8, eachElement: RAM8())
+    private let ram8s = [CheatingRAM8](count: 8, eachElement: CheatingRAM8())
     
     func callAsFunction(_ word: IntX16, _ load: Int, _ address: IntX6, _ clock: Int) -> IntX16 {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
