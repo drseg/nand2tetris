@@ -54,7 +54,7 @@ final class FastRAM: RAM {
     }
     
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
-        let address = address.toDecimal.decimalToInt
+        let address = Int(address.toDecimal)!
         if load == "1" && clock == "1" {
             words[address] = word
         }
@@ -154,37 +154,29 @@ final class RAM16K: RAM {
 extension String {
     
     func toBinary(_ length: Int) -> String {
-        guard Int16(self) != Int16.min else {
-            return not16(String(Int16.max).bin(length))
-        }
-        
-        return Int16(self)! < 0
-        ? inc16(not16((String(self.dropFirst())).bin(length)))
-        : bin(length)
+        String(binaryAdjusted(length: length), radix: 2)
+            .leftPad(length)
     }
     
-    private func bin(_ length: Int) -> String {
-        assert(length <= 16)
-        return String(decimalToInt, radix: 2).leftPad(length: length)
+    func binaryAdjusted(length: Int) -> Int {
+        let addend = 2 << (length - 1) - 1
+        let intValue = Int(self)!
+        
+        return intValue < 0
+        ? intValue + 1 + addend
+        : intValue
     }
     
     var toDecimal: String {
-        let s = leftPad(length: 16)
+        let padded = leftPad(16)
+        let intValue = Int(padded, radix: 2)!
         
-        return s[0] == "1"
-        ? String(s.binaryToInt - Int(UInt16.max) - 1)
-        : String(s.binaryToInt)
-    }
-    
-    private var binaryToInt: Int {
-        Int(self, radix: 2)!
-    }
-    
-    var decimalToInt: Int {
-        Int(self)!
+        return padded[0] == "1"
+        ? String(intValue - Int(UInt16.max) - 1)
+        : String(intValue)
     }
 
-    private func leftPad(length: Int) -> String {
+    func leftPad(_ length: Int) -> String {
         String(repeating: "0", count: length - count) + self
     }
 }

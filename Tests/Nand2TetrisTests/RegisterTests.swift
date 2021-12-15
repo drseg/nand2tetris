@@ -17,6 +17,17 @@ class BitTests: XCTestCase {
     }
 }
 
+class BinaryDecimalConversionTests: XCTestCase {
+    
+    func testTwosComplement() {
+        XCTAssertEqual("-1".toBinary(16), "1111111111111111")
+        XCTAssertEqual("-1".toBinary(8), "11111111")
+        
+        XCTAssertEqual("1".toBinary(16), "0000000000000001")
+        XCTAssertEqual("1".toBinary(8), "00000001")
+    }
+}
+
 class RegisterTests: XCTestCase {
     
     var register: Register!
