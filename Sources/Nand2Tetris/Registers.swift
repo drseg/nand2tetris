@@ -158,25 +158,32 @@ extension String {
             .leftPad(length)
     }
     
-    func binaryAdjusted(length: Int) -> Int {
-        let addend = 2 << (length - 1) - 1
+    private func binaryAdjusted(length: Int) -> Int {
         let intValue = Int(self)!
         
         return intValue < 0
-        ? intValue + 1 + addend
+        ? intValue + 1 + intMax(length)
         : intValue
     }
     
     var toDecimal: String {
-        let padded = leftPad(16)
+        toDecimal(16)
+    }
+    
+    func toDecimal(_ length: Int) -> String {
+        let padded = leftPad(length)
         let intValue = Int(padded, radix: 2)!
         
         return padded[0] == "1"
-        ? String(intValue - Int(UInt16.max) - 1)
+        ? String(intValue - intMax(length) - 1)
         : String(intValue)
     }
+    
+    private func intMax(_ bits: Int) -> Int {
+        2 << (bits - 1) - 1
+    }
 
-    func leftPad(_ length: Int) -> String {
+    private func leftPad(_ length: Int) -> String {
         String(repeating: "0", count: length - count) + self
     }
 }
