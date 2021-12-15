@@ -27,10 +27,6 @@ final class Register {
     
     private let bits = [Bit](count: 16, forEach: Bit())
     
-    func callAsFunction(decimalInput: String, _ load: Char, _ clock: Char) -> String {
-        callAsFunction(decimalInput.toBinary(16), load, clock)
-    }
-    
     func callAsFunction(_ input: String, _ load: Char, _ clock: Char) -> String {
         zip(input, bits).reduce(into: "") {
             $0.append($1.1($1.0, load, clock))
@@ -54,7 +50,7 @@ final class FastRAM: RAM {
     }
     
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
-        let address = Int(address.toDecimal)!
+        let address = Int(address.toDecimal())!
         if load == "1" && clock == "1" {
             words[address] = word
         }
@@ -154,7 +150,8 @@ final class RAM16K: RAM {
 extension String {
     
     func toBinary(_ length: Int) -> String {
-        String(twosComplement(length: length), radix: 2)
+        twosComplement(length: length)
+            .toBinary
             .leftPad(length)
     }
     
@@ -166,11 +163,7 @@ extension String {
         : intValue
     }
     
-    var toDecimal: String {
-        toDecimal(16)
-    }
-    
-    func toDecimal(_ length: Int) -> String {
+    func toDecimal(_ length: Int = 16) -> String {
         let padded = leftPad(length)
         let intValue = Int(padded, radix: 2)!
         
@@ -185,6 +178,13 @@ extension String {
 
     private func leftPad(_ length: Int) -> String {
         String(repeating: "0", count: length - count) + self
+    }
+}
+
+extension Int {
+    
+    var toBinary: String {
+        String(self, radix: 2)
     }
 }
 

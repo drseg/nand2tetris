@@ -36,28 +36,16 @@ class RegisterTests: XCTestCase {
         register = Register()
     }
     
-    func testRegisterCanAcceptInt16Input() {
-        register(decimalInput: "32123", "1", "1") => "0111110101111011"
-    }
-    
-    func testRegisterCanAcceptNegativeInput() {
-        register(decimalInput: "-32123", "1", "1") => "1000001010000101"
-    }
-    
-    func testMinInput() {
-        register(decimalInput: "-32768", "1", "1") => "1000000000000000"
-    }
-    
     func testCanConvertNegativeIntX16BackToInt16() {
-        max.toDecimal => "-1"
+        max.toDecimal() => "-1"
     }
     
     func testCanConvertMin() {
-        "1000000000000000".toDecimal => "-32768"
+        "1000000000000000".toDecimal() => "-32768"
     }
     
     func testCanConvertMax() {
-        "0111111111111111".toDecimal => "32767"
+        "0111111111111111".toDecimal() => "32767"
     }
 
     func testAcceptance() throws {
@@ -68,7 +56,7 @@ class RegisterTests: XCTestCase {
             let input = $0[1].toBinary(16)
             let load = $0[2].toChar
 
-            return [register(input, load, signal).toDecimal]
+            return [register(input, load, signal).toDecimal()]
         }.run()
     }
 }
@@ -92,7 +80,7 @@ extension RAMTest {
             let load = $0[2].toChar
             let address = $0[3].toBinary(addressLength)
             
-            return [self.ram(input, load, address, signal).toDecimal]
+            return [self.ram(input, load, address, signal).toDecimal()]
         }.run()
     }
 }
