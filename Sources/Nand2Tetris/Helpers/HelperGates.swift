@@ -17,8 +17,13 @@ func isNegative(_ a: String) -> Character {
 }
 
 extension String {
+    
     var toChar: Character {
         Character(self)
+    }
+    
+    var clockSignal: Character {
+        last == "+" ? "0" : "1"
     }
 }
 

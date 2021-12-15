@@ -1,5 +1,6 @@
+// Data Flip Flops cannot be perfectly represeted in code as they depend on a feedback loop between the final two nand gates. This is a reasonable approximation of a standard 5 gate implementation
 final class DataFlipFlop {
-    
+ 
     private var Q = "0".toChar
     private var notQ = "1".toChar
     
@@ -53,7 +54,7 @@ final class FastRAM: RAM {
     }
     
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
-        let address = address.toDecimal.decimalToint
+        let address = address.toDecimal.decimalToInt
         if load == "1" && clock == "1" {
             words[address] = word
         }
@@ -70,10 +71,9 @@ final class RAM8: RAM {
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
-        let wordMap = deMux8Way16(word, address[0], address[1], address[2])
         
         let out = registers.enumerated().reduce([String]()) {
-            $0 + [$1.element(wordMap[$1.offset],
+            $0 + [$1.element(word,
                              loadMap[$1.offset],
                              clockMap[$1.offset])]
         }
@@ -93,13 +93,12 @@ extension RAMx8 {
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
-        let wordMap = deMux8Way16(word, address[0], address[1], address[2])
         
         let ramAddress = String(address.suffix(addressLength))
         
         let out = subRAM.enumerated().reduce(into: [String]()) {
             $0.append(
-                $1.element(wordMap[$1.offset],
+                $1.element(word,
                            loadMap[$1.offset],
                            ramAddress,
                            clockMap[$1.offset])
@@ -136,13 +135,12 @@ final class RAM16K: RAM {
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
         let loadMap = deMux4Way(load, address[0], address[1])
         let clockMap = deMux4Way(clock, address[0], address[1])
-        let wordMap = deMux4Way16(word, address[0], address[1])
         
         let ram4KAddress = String(address.suffix(12))
         
         let out = ram4Ks.enumerated().reduce(into: [String]()) {
             $0.append(
-                $1.element(wordMap[$1.offset],
+                $1.element(word,
                            loadMap[$1.offset],
                            ram4KAddress,
                            clockMap[$1.offset])
@@ -150,22 +148,6 @@ final class RAM16K: RAM {
         }
         
         return mux4Way16(out[0], out[1], out[2], out[3], address[0], address[1])
-    }
-}
-
-func deMux4Way16(_ a: String, _ s1: Char, _ s2: Char) -> [String] {
-    a.reduce(into: [String](count: 4, forEach: "")) { out, bit in
-        deMux4Way(bit, s1, s2).enumerated().forEach { deMuxedBit in
-            out[deMuxedBit.offset].append(deMuxedBit.element)
-        }
-    }
-}
-
-func deMux8Way16(_ a: String, _ s1: Char, _ s2: Char, _ s3: Char) -> [String] {
-    a.reduce(into: [String](count: 8, forEach: "")) { out, bit in
-        deMux8Way(bit, s1, s2, s3).enumerated().forEach { deMuxedBit in
-            out[deMuxedBit.offset].append(deMuxedBit.element)
-        }
     }
 }
 
@@ -182,13 +164,14 @@ extension String {
     }
     
     private func bin(_ length: Int) -> String {
-        String(Int(self)!, radix: 2).leftPad(length: length)
+        assert(length <= 16)
+        return String(decimalToInt, radix: 2).leftPad(length: length)
     }
     
     var toDecimal: String {
         let s = leftPad(length: 16)
         
-        return s.first! == "1"
+        return s[0] == "1"
         ? String(s.binaryToInt - Int(UInt16.max) - 1)
         : String(s.binaryToInt)
     }
@@ -197,7 +180,7 @@ extension String {
         Int(self, radix: 2)!
     }
     
-    var decimalToint: Int {
+    var decimalToInt: Int {
         Int(self)!
     }
 

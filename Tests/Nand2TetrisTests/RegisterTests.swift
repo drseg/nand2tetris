@@ -92,11 +92,6 @@ class RAM8Tests: XCTestCase, RAMTest {
     let addressLength = 3
     let testFilePath = "Registers/RAM8"
     
-    func testMultiDemux() {
-        deMux8Way16(max, "0", "0", "1")
-        => [min, max, min, min, min, min, min, min]
-    }
-    
     func testAcceptance() throws {
         try runAcceptanceTest()
     }
