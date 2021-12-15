@@ -154,11 +154,11 @@ final class RAM16K: RAM {
 extension String {
     
     func toBinary(_ length: Int) -> String {
-        String(binaryAdjusted(length: length), radix: 2)
+        String(twosComplement(length: length), radix: 2)
             .leftPad(length)
     }
     
-    private func binaryAdjusted(length: Int) -> Int {
+    private func twosComplement(length: Int) -> Int {
         let intValue = Int(self)!
         
         return intValue < 0
