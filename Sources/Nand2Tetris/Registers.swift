@@ -81,7 +81,6 @@ final class RAM8: RAM {
 protocol RAMx8: RAM {
     
     var subRAM: [RAM] { get }
-    var addressLength: Int { get }
 }
 
 extension RAMx8 {
@@ -90,7 +89,7 @@ extension RAMx8 {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
         
-        let ramAddress = String(address.suffix(addressLength))
+        let ramAddress = String(address.suffix(address.count - 3))
         
         let out = subRAM.enumerated().reduce(into: [String]()) {
             $0.append(
@@ -107,26 +106,22 @@ extension RAMx8 {
 
 final class RAM64: RAMx8 {
     
-    let addressLength = 3
     var subRAM: [RAM] = [FastRAM](count: 8, forEach: FastRAM(8))
 }
 
 final class RAM512: RAMx8 {
     
-    let addressLength = 6
     var subRAM: [RAM] = [RAM64](count: 8, forEach: RAM64())
 }
 
 final class RAM4K: RAMx8 {
     
-    let addressLength = 9
     var subRAM: [RAM] = [FastRAM](count: 8, forEach: FastRAM(512))
 }
 
 final class RAM16K: RAM {
     
-    private let ram4Ks = [RAM4K](count: 4,
-                                 forEach: RAM4K())
+    private let ram4Ks = [RAM4K](count: 4, forEach: RAM4K())
     
     func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
         let loadMap = deMux4Way(load, address[0], address[1])
@@ -147,44 +142,42 @@ final class RAM16K: RAM {
     }
 }
 
-extension String {
+extension BinaryInteger {
     
-    func toBinary(_ length: Int) -> String {
-        twosComplement(length: length)
-            .toBinary
-            .leftPad(length)
-    }
-    
-    private func twosComplement(length: Int) -> Int {
-        let intValue = Int(self)!
-        
-        return intValue < 0
-        ? intValue + 1 + intMax(length)
-        : intValue
-    }
-    
-    func toDecimal(_ length: Int = 16) -> String {
-        let padded = leftPad(length)
-        let intValue = Int(padded, radix: 2)!
-        
-        return padded[0] == "1"
-        ? String(intValue - intMax(length) - 1)
-        : String(intValue)
-    }
-    
-    private func intMax(_ bits: Int) -> Int {
-        2 << (bits - 1) - 1
-    }
-
-    private func leftPad(_ length: Int) -> String {
-        String(repeating: "0", count: length - count) + self
+    func toBinary(_ bitWidth: Int = 16) -> String {
+        String(self, radix: 2).leftPad(bitWidth)
     }
 }
 
-extension Int {
+extension String {
     
-    var toBinary: String {
-        String(self, radix: 2)
+    func toBinary(_ bitWidth: Int = 16) -> String {
+        twosComplement(bitWidth).toBinary(bitWidth)
+    }
+    
+    private func twosComplement(_ bitWidth: Int) -> Int {
+        let intValue = Int(self)!
+        
+        return intValue < 0
+        ? intValue + intMax(bitWidth) + 1
+        : intValue
+    }
+    
+    func toDecimal(_ bitWidth: Int = 16) -> String {
+        let padded = leftPad(bitWidth)
+        let intValue = Int(padded, radix: 2)!
+        
+        return padded[0] == "1"
+        ? String(intValue - intMax(bitWidth) - 1)
+        : String(intValue)
+    }
+    
+    private func intMax(_ bitWidth: Int) -> Int {
+        2 << (bitWidth - 1) - 1
+    }
+
+    func leftPad(_ length: Int) -> String {
+        String(repeating: "0", count: length - count) + self
     }
 }
 

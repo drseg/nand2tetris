@@ -2,6 +2,33 @@ import XCTest
 import Nand2TetrisTestLoader
 @testable import Nand2Tetris
 
+class BinaryDecimalConversionTests: XCTestCase {
+    
+    func testTwosComplement() {
+        "-1".toBinary(16) => "1111111111111111"
+        "-1".toBinary(8) => "11111111"
+        
+        "1".toBinary(16) => "0000000000000001"
+        "1".toBinary(8) => "00000001"
+        
+        "1111111111111111".toDecimal() => "-1"
+        "1000000000000000".toDecimal() => "-32768"
+        
+        "0000000000000001".toDecimal() => "1"
+        "0111111111111111".toDecimal() => "32767"
+        
+        "11111111".toDecimal(8) => "-1"
+        "00000001".toDecimal(8) => "1"
+        
+        "01".toDecimal(2) => "1"
+        "10".toDecimal(2) => "-2"
+        
+        (Int8.min...Int8.max).forEach {
+            XCTAssertEqual("\($0)".toBinary(8).toDecimal(8), "\($0)")
+        }
+    }
+}
+
 class BitTests: XCTestCase {
     
     func testAcceptance() throws {
@@ -17,50 +44,20 @@ class BitTests: XCTestCase {
     }
 }
 
-class BinaryDecimalConversionTests: XCTestCase {
-    
-    func testTwosComplement() {
-        XCTAssertEqual("-1".toBinary(16), "1111111111111111")
-        XCTAssertEqual("-1".toBinary(8), "11111111")
-        
-        XCTAssertEqual("1".toBinary(16), "0000000000000001")
-        XCTAssertEqual("1".toBinary(8), "00000001")
-    }
-}
-
 class RegisterTests: XCTestCase {
-    
-    var register: Register!
-    
-    override func setUp() {
-        register = Register()
-    }
-    
-    func testCanConvertNegativeIntX16BackToInt16() {
-        max.toDecimal() => "-1"
-    }
-    
-    func testCanConvertMin() {
-        "1000000000000000".toDecimal() => "-32768"
-    }
-    
-    func testCanConvertMax() {
-        "0111111111111111".toDecimal() => "32767"
-    }
 
     func testAcceptance() throws {
         let register = Register()
 
         try FileBasedATR("Registers/Register") {
             let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
+            let input = $0[1].toBinary()
             let load = $0[2].toChar
 
             return [register(input, load, signal).toDecimal()]
         }.run()
     }
 }
-
 
 protocol RAMTest {
     
@@ -76,7 +73,7 @@ extension RAMTest {
     func runAcceptanceTest() throws {
         try FileBasedATR(testFilePath) {
             let signal = $0[0].clockSignal
-            let input = $0[1].toBinary(16)
+            let input = $0[1].toBinary()
             let load = $0[2].toChar
             let address = $0[3].toBinary(addressLength)
             
