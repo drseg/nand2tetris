@@ -53,7 +53,9 @@ extension ATRImplementation {
         swiftFile: StaticString = #file,
         swiftLine: UInt = #line
     ) throws {
-        try getTests().forEach { $0.run(in: swiftFile, at: swiftLine) }
+        try getTests().forEach {
+            $0.run(in: swiftFile, at: swiftLine)
+        }
     }
     
     private func getTests() throws -> [Test] {
@@ -66,7 +68,9 @@ extension ATRImplementation {
         try givenThenSentences
             .enumerated()
             .compactMap { line, givenThenRow in
-                let firstExpectedColumn = try calculateFirstExpectedColumn(givenThenRow.count)
+                let firstExpectedColumn = try calculateFirstExpectedColumn(
+                    givenThenRow.count
+                )
                 
                 let givens = givenThenRow.prefix(upTo: firstExpectedColumn)
                 let actuals = try getActuals(from: givens)
@@ -177,9 +181,11 @@ public struct FileBasedATR: ATRImplementation {
     
     var testString: String {
         get throws {
-            guard let url = Bundle.module.url(forResource: relativePath,
-                                              withExtension: testFileExtension,
-                                              subdirectory: testRoot + "/")
+            guard let url = Bundle
+                    .module
+                    .url(forResource: relativePath,
+                         withExtension: testFileExtension,
+                         subdirectory: testRoot + "/")
             else { throw fileNotFound() }
             
             return try String(contentsOf: url).whitespaceTrimmed
@@ -269,8 +275,6 @@ private extension String {
 private extension Sequence where Element: StringProtocol {
     
     var toStrings: [String] {
-        map {
-            $0.components(separatedBy: "").joined()
-        }
+        map { $0.components(separatedBy: "").joined() }
     }
 }
