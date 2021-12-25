@@ -6,14 +6,24 @@ final class ALUTests: XCTestCase {
     
     func testALU() throws {
         try FileBasedATR("ALU/ALU", firstExpectedColumn: 8) {
-            let x = $0[0], y = $0[1]
-            let zx = $0[2].toChar, nx = $0[3].toChar
-            let zy = $0[4].toChar, ny = $0[5].toChar
+            let x = $0[0]
+            let y = $0[1]
+            let zx = $0[2].toChar
+            let nx = $0[3].toChar
+            let zy = $0[4].toChar
+            let ny = $0[5].toChar
 
             let f = $0[6].toChar
             let no = $0[7].toChar
             
-            let actual = alu(x: x, y: y, zx: zx, nx: nx, zy: zy, ny: ny, f: f, no: no)
+            let actual = alu(x: x,
+                             y: y,
+                             zx: zx,
+                             nx: nx,
+                             zy: zy,
+                             ny: ny,
+                             f: f,
+                             no: no)
             
             return [actual.out, actual.zr, actual.ng]
         }.run()

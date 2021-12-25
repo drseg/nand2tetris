@@ -12,11 +12,14 @@ func fullAdder(_ a: Char, _ b: Char, _ c: Char) -> String {
 
 func add16(_ a: String, _ b: String) -> String {
     String(
-        zip(a,b).reversed().reduce(into: (sum: "", carry: "0".toChar)) { (result, addends) in
-            let addition = fullAdder(addends.0, addends.1, result.carry)
-            result.sum = String(addition.sum) + result.sum
-            result.carry = addition.carry
-        }.0
+        zip(a,b)
+            .reversed()
+            .reduce(into: (sum: "", carry: "0".toChar)) {
+                (result, addends) in
+                let addition = fullAdder(addends.0, addends.1, result.carry)
+                result.sum = String(addition.sum) + result.sum
+                result.carry = addition.carry
+            }.0
     )
 }
 

@@ -18,7 +18,11 @@ final class Bit {
 
     private let dff = DataFlipFlop()
     
-    func callAsFunction(_ input: Char, _ load: Char, _ clock: Char) -> Char {
+    func callAsFunction(
+        _ input: Char,
+        _ load: Char,
+        _ clock: Char
+    ) -> Char {
         dff(input, and(load, clock))
     }
 }
@@ -27,7 +31,11 @@ final class Register {
     
     private let bits = [Bit](count: 16, forEach: Bit())
     
-    func callAsFunction(_ input: String, _ load: Char, _ clock: Char) -> String {
+    func callAsFunction(
+        _ input: String,
+        _ load: Char,
+        _ clock: Char
+    ) -> String {
         zip(input, bits).reduce(into: "") {
             $0.append($1.1($1.0, load, clock))
         }
@@ -36,7 +44,12 @@ final class Register {
 
 protocol RAM {
     
-    func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String
+    func callAsFunction(
+        _ word: String,
+        _ load: Char,
+        _ address: String,
+        _ clock: Char
+    ) -> String
 }
 
 final class FastRAM: RAM {
@@ -49,7 +62,12 @@ final class FastRAM: RAM {
                                              count: 16))
     }
     
-    func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
+    func callAsFunction(
+        _ word: String,
+        _ load: Char,
+        _ address: String,
+        _ clock: Char
+    ) -> String {
         let address = Int(address.toDecimal())!
         if load == "1" && clock == "1" {
             words[address] = word
@@ -64,7 +82,12 @@ final class RAM8: RAM {
     private let registers = [Register](count: 8,
                                        forEach: Register())
     
-    func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
+    func callAsFunction(
+        _ word: String,
+        _ load: Char,
+        _ address: String,
+        _ clock: Char
+    ) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
         
@@ -74,7 +97,17 @@ final class RAM8: RAM {
                              clockMap[$1.offset])]
         }
         
-        return mux8Way16(out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], address[0], address[1], address[2])
+        return mux8Way16(out[0],
+                         out[1],
+                         out[2],
+                         out[3],
+                         out[4],
+                         out[5],
+                         out[6],
+                         out[7],
+                         address[0],
+                         address[1],
+                         address[2])
     }
 }
 
@@ -85,7 +118,12 @@ protocol RAMx8: RAM {
 
 extension RAMx8 {
     
-    func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
+    func callAsFunction(
+        _ word: String,
+        _ load: Char,
+        _ address: String,
+        _ clock: Char
+    ) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let clockMap = deMux8Way(clock, address[0], address[1], address[2])
         
@@ -100,7 +138,17 @@ extension RAMx8 {
             )
         }
         
-        return mux8Way16(out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], address[0], address[1], address[2])
+        return mux8Way16(out[0],
+                         out[1],
+                         out[2],
+                         out[3],
+                         out[4],
+                         out[5],
+                         out[6],
+                         out[7],
+                         address[0],
+                         address[1],
+                         address[2])
     }
 }
 
@@ -123,7 +171,12 @@ final class RAM16K: RAM {
     
     private let ram4Ks = [RAM4K](count: 4, forEach: RAM4K())
     
-    func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
+    func callAsFunction(
+        _ word: String,
+        _ load: Char,
+        _ address: String,
+        _ clock: Char
+    ) -> String {
         let loadMap = deMux4Way(load, address[0], address[1])
         let clockMap = deMux4Way(clock, address[0], address[1])
         
@@ -138,7 +191,12 @@ final class RAM16K: RAM {
             )
         }
         
-        return mux4Way16(out[0], out[1], out[2], out[3], address[0], address[1])
+        return mux4Way16(out[0],
+                         out[1],
+                         out[2],
+                         out[3],
+                         address[0],
+                         address[1])
     }
 }
 

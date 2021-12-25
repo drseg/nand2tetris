@@ -1,4 +1,13 @@
-func alu(x: String, y: String, zx: Char, nx: Char, zy: Char, ny: Char, f: Char, no: Char) -> (out: String, zr: Char, ng: Char) {
+func alu(
+    x: String,
+    y: String,
+    zx: Char,
+    nx: Char,
+    zy: Char,
+    ny: Char,
+    f: Char,
+    no: Char
+) -> (out: String, zr: Char, ng: Char) {
     let xZX = zeroIfZ(x, z: zx)
     let yZY = zeroIfZ(y, z: zy)
     
