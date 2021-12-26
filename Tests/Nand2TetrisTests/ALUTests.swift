@@ -4,7 +4,7 @@ import Nand2TetrisTestLoader
 
 final class ALUTests: XCTestCase {
     func testALU() throws {
-        try FileBasedATR("ALU/ALU", firstExpectedColumn: 8) {
+        try FileBasedATR("ALU/ALU", firstOutputColumn: 8) {
             let x = $0[0]
             let y = $0[1]
             let zx = $0[2].toChar

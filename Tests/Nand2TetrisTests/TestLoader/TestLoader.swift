@@ -34,7 +34,7 @@ protocol ATRImplementation: ATR {
     var testName: String { get throws }
     
     var actualsFactory: ActualsFactory { get }
-    var firstExpectedColumn: Int? { get }
+    var firstOutputColumn: Int? { get }
 }
 
 extension ATRImplementation {
@@ -58,7 +58,7 @@ extension ATRImplementation {
             .enumerated()
             .compactMap { line, row in
                 let firstOutputColumn: Int = try {
-                    let column = firstExpectedColumn ?? row.count - 1
+                    let column = self.firstOutputColumn ?? row.count - 1
                     try checkIsValid(column, row.count)
                     return column
                 }()
@@ -135,7 +135,7 @@ extension ATRImplementation {
 
 public struct FileBasedATR: ATRImplementation {
     let actualsFactory: ActualsFactory
-    let firstExpectedColumn: Int?
+    let firstOutputColumn: Int?
     
     private let relativePath: String
     var testName: String { relativePath }
@@ -147,17 +147,17 @@ public struct FileBasedATR: ATRImplementation {
         factory: @escaping ActualsFactory
     ) {
         self.init("\(directory)/\(name)",
-                  firstExpectedColumn: firstOutputColumn,
+                  firstOutputColumn: firstOutputColumn,
                   factory: factory)
     }
     
     public init(
         _ relativePath: String,
-        firstExpectedColumn: Int? = nil,
+        firstOutputColumn: Int? = nil,
         factory: @escaping ActualsFactory
     ) {
         self.relativePath = relativePath
-        self.firstExpectedColumn = firstExpectedColumn
+        self.firstOutputColumn = firstOutputColumn
         self.actualsFactory = factory
     }
     
