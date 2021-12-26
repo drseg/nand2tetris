@@ -2,37 +2,22 @@ import XCTest
 @testable import Nand2TetrisTestLoader
 
 class TestLoaderTests: XCTestCase {
-    
-    private var runner: ATR!
-    
     private func run(
         _ test: String,
         directory: String = "Gates",
-        firstExpectedColumn: Int? = nil,
+        firstOutputColumn: Int? = nil,
         line: UInt = #line,
         actualsFactory: @escaping ActualsFactory = { _ in [] }
     ) throws {
-        makeRunner(test,
-                   directory: directory,
-                   firstExpectedColumn: firstExpectedColumn,
-                   actualsFactory: actualsFactory)
-        
-        try runner.run(swiftFile: #file, swiftLine: line)
+        try FileBasedATR(name: test,
+                         directory: directory,
+                         firstOutputColumn: firstOutputColumn,
+                         factory: actualsFactory)
+            .run(swiftFile: #filePath,
+                 swiftLine: line)
     }
     
-    private func makeRunner(
-        _ test: String,
-        directory: String = "Gates",
-        firstExpectedColumn: Int? = nil,
-        actualsFactory: @escaping ActualsFactory = { _ in [] }
-    ) {
-        runner = FileBasedATR(name: test,
-                                      directory: directory,
-                                      firstExpectedColumn: firstExpectedColumn,
-                                      factory: actualsFactory)
-    }
-    
-    private func assertFailureMessage(
+    private func assertFailure(
         _ message: String,
         whenRunning test: () throws -> ()
     ) {
@@ -71,40 +56,33 @@ class TestLoaderTests: XCTestCase {
         }
     }
 
-    func testThrowsWhenIncorrectExpectedColumnIsGiven() throws {
+    func testThrowsWhenIncorrectOutputColumnIsGiven() throws {
         assertThrows("Actual (1) and Expected (3) counts differ") {
-            try run("And", firstExpectedColumn: 0) { _ in ["1"] }
+            try run("And", firstOutputColumn: 0) { _ in ["1"] }
         }
     }
 
-    func testThrowsWhenOutOfBoundsExpectedColumnIsGiven() throws {
+    func testThrowsWhenOutOfBoundsOutputColumnIsGiven() throws {
         assertThrows("Expected column index is out of bounds") {
-            try run("And", firstExpectedColumn: 3) { _ in ["1"] }
+            try run("And", firstOutputColumn: 3) { _ in ["1"] }
+        }
+    }
+    
+    func testFactoryOnlyReceivesInputColumns() throws {
+        try run("And", firstOutputColumn: 2) {
+            XCTAssertEqual($0.count, 2)
+            return [self.and($0[0], $0[1])]
         }
     }
 
     func testFailsWhenActualAndExpectedDiffer() throws {
         let message = "AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3"
-        assertFailureMessage(message) {
+        assertFailure(message) {
             try run("And") { _ in ["0"] }
         }
     }
     
     func testPassesWhenAllActualsAndExpectedsMatch() throws {
         try run("And") { [self.and($0[0], $0[1])] }
-    }
-    
-    func testFactoryOnlyReceivesColumnsUpToExpectedColumn() throws {
-        try run("And", firstExpectedColumn: 2) {
-            XCTAssertEqual($0.count, 2)
-            return [self.and($0[0], $0[1])]
-        }
-    }
-}
-
-extension Array where Element == String {
-    
-    func contains(partOf s: String) -> Bool {
-        contains { s.contains($0) }
     }
 }

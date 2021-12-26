@@ -123,7 +123,6 @@ func deMux8Way(
 }
 
 extension String {
-    
     subscript(_ i: Int) -> Char {
         prefix(i + 1).last!
     }

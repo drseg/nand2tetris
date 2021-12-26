@@ -18,7 +18,6 @@ private let testRoot = "AcceptanceTests"
 private let testFileExtension = "cmp"
 
 struct ATRError: Error {
-    
     let message: String
     
     init(_ message: String) {
@@ -27,19 +26,16 @@ struct ATRError: Error {
 }
 
 public protocol ATR {
-    
     func run(swiftFile: StaticString, swiftLine: UInt) throws
 }
 
 extension ATR {
-    
     public func run() throws {
         try run(swiftFile: #file, swiftLine: #line)
     }
 }
 
 protocol ATRImplementation: ATR {
-    
     var testString: String { get throws }
     var testName: String { get throws }
     
@@ -48,7 +44,6 @@ protocol ATRImplementation: ATR {
 }
 
 extension ATRImplementation {
-    
     public func run(
         swiftFile: StaticString = #file,
         swiftLine: UInt = #line
@@ -67,20 +62,20 @@ extension ATRImplementation {
     ) throws -> [Test] {
         try givenThenSentences
             .enumerated()
-            .compactMap { line, givenThenRow in
-                let firstExpectedColumn = try calculateFirstExpectedColumn(
-                    givenThenRow.count
+            .compactMap { line, row in
+                let firstOutputColumn = try calculateFirstOutputColumn(
+                    row.count
                 )
                 
-                let givens = givenThenRow.prefix(upTo: firstExpectedColumn)
+                let givens = row.prefix(upTo: firstOutputColumn)
                 let actuals = try getActuals(from: givens)
-                let expecteds = try getExpecteds(in: givenThenRow,
-                                                 from: firstExpectedColumn,
+                let expecteds = try getExpecteds(in: row,
+                                                 from: firstOutputColumn,
                                                  count: actuals.count)
                 
                 return Test(actuals: actuals,
                             expecteds: expecteds,
-                            firstExpectedColumn: firstExpectedColumn,
+                            firstExpectedColumn: firstOutputColumn,
                             filePath: try testName,
                             fileLine: line)
             }
@@ -97,7 +92,7 @@ extension ATRImplementation {
         return sentences
     }
     
-    private func calculateFirstExpectedColumn(
+    private func calculateFirstOutputColumn(
         _ columnCount: Int
     ) throws -> Int {
         let column = firstExpectedColumn ?? columnCount - 1
@@ -151,7 +146,6 @@ extension ATRImplementation {
 }
 
 public struct FileBasedATR: ATRImplementation {
-    
     let actualsFactory: ActualsFactory
     let firstExpectedColumn: Int?
     
@@ -161,11 +155,11 @@ public struct FileBasedATR: ATRImplementation {
     public init(
         name: String,
         directory: String,
-        firstExpectedColumn: Int? = nil,
+        firstOutputColumn: Int? = nil,
         factory: @escaping ActualsFactory
     ) {
         self.init("\(directory)/\(name)",
-                  firstExpectedColumn: firstExpectedColumn,
+                  firstExpectedColumn: firstOutputColumn,
                   factory: factory)
     }
     
@@ -198,7 +192,6 @@ public struct FileBasedATR: ATRImplementation {
 }
 
 private struct Test {
-    
     private let assertions: [Assertion]
     
     init<T: Collection, U: Collection>(
@@ -223,7 +216,6 @@ private struct Test {
 }
 
 private struct Assertion {
-    
     private let actual: Stringable
     private let expected: Stringable
     
@@ -262,7 +254,6 @@ private struct Assertion {
 }
 
 private extension String {
-    
     var components: [String] {
         split(separator: "|").toStrings
     }
@@ -273,7 +264,6 @@ private extension String {
 }
 
 private extension Sequence where Element: StringProtocol {
-    
     var toStrings: [String] {
         map { $0.components(separatedBy: "").joined() }
     }

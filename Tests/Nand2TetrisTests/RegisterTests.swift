@@ -3,26 +3,37 @@ import Nand2TetrisTestLoader
 @testable import Nand2Tetris
 
 class BinaryDecimalConversionTests: XCTestCase {
-    
-    func testTwosComplement() {
-        "-1".toBinary(16) => "1111111111111111"
-        "-1".toBinary(8) => "11111111"
-        
-        "1".toBinary(16) => "0000000000000001"
-        "1".toBinary(8) => "00000001"
+    func testTwosComplement16() {
+        "-1".toBinary() => "1111111111111111"
+        "1".toBinary() => "0000000000000001"
         
         "1111111111111111".toDecimal() => "-1"
         "1000000000000000".toDecimal() => "-32768"
         
         "0000000000000001".toDecimal() => "1"
         "0111111111111111".toDecimal() => "32767"
+    }
+    
+    func testTwosComplement8() {
+        "-1".toBinary(8) => "11111111"
+        "1".toBinary(8) => "00000001"
         
         "11111111".toDecimal(8) => "-1"
+        "10000000".toDecimal(8) => "-128"
+        
         "00000001".toDecimal(8) => "1"
+        "01111111".toDecimal(8) => "127"
+    }
+    
+    func testTwosComplement2() {
+        "-1".toBinary(2) => "11"
+        "1".toBinary(2) => "01"
         
         "01".toDecimal(2) => "1"
-        "10".toDecimal(2) => "-2"
-        
+        "11".toDecimal(2) => "-1"
+    }
+    
+    func testTwosComplementAcceptance() {
         (Int8.min...Int8.max).forEach {
             XCTAssertEqual("\($0)".toBinary(8).toDecimal(8), "\($0)")
         }
@@ -30,7 +41,6 @@ class BinaryDecimalConversionTests: XCTestCase {
 }
 
 class BitTests: XCTestCase {
-    
     func testAcceptance() throws {
         let bit = Bit()
         
@@ -45,7 +55,6 @@ class BitTests: XCTestCase {
 }
 
 class RegisterTests: XCTestCase {
-
     func testAcceptance() throws {
         let register = Register()
 
@@ -60,7 +69,6 @@ class RegisterTests: XCTestCase {
 }
 
 protocol RAMTest {
-    
     var ram: RAM { get }
     var addressLength: Int { get }
     var testFilePath: String { get }
@@ -69,21 +77,22 @@ protocol RAMTest {
 }
 
 extension RAMTest {
-    
     func runAcceptanceTest() throws {
-        try FileBasedATR(testFilePath) {
+        try FileBasedATR(testFilePath) { [self] in
             let signal = $0[0].clockSignal
             let input = $0[1].toBinary()
             let load = $0[2].toChar
             let address = $0[3].toBinary(addressLength)
             
-            return [self.ram(input, load, address, signal).toDecimal()]
+            return [ram(input,
+                        load,
+                        address,
+                        signal).toDecimal()]
         }.run()
     }
 }
 
 class RAM8Tests: XCTestCase, RAMTest {
-    
     let ram: RAM = RAM8()
     let addressLength = 3
     let testFilePath = "Registers/RAM8"
@@ -94,7 +103,6 @@ class RAM8Tests: XCTestCase, RAMTest {
 }
 
 class RAM64Tests: XCTestCase, RAMTest {
-    
     let ram: RAM = RAM64()
     let addressLength = 6
     let testFilePath = "Registers/RAM64"
@@ -105,7 +113,6 @@ class RAM64Tests: XCTestCase, RAMTest {
 }
 
 class RAM512Tests: XCTestCase, RAMTest {
-    
     let ram: RAM = RAM512()
     let addressLength = 9
     let testFilePath = "Registers/RAM512"
@@ -116,7 +123,6 @@ class RAM512Tests: XCTestCase, RAMTest {
 }
 
 class RAM4KTests: XCTestCase, RAMTest {
-    
     let ram: RAM = RAM4K()
     let addressLength = 12
     let testFilePath = "Registers/RAM4K"
@@ -127,7 +133,6 @@ class RAM4KTests: XCTestCase, RAMTest {
 }
 
 class RAM16KTests: XCTestCase, RAMTest {
-    
     let ram: RAM = RAM16K()
     let addressLength = 14
     let testFilePath = "Registers/RAM16K"

@@ -2,7 +2,6 @@
 import XCTest
 
 final class AdderTests: XCTestCase {
-
     func test_halfAdder() {
         halfAdder("0", "0") => "00"
         halfAdder("0", "1") => "01"

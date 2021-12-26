@@ -1,6 +1,5 @@
 // Data Flip Flops cannot be perfectly represeted in code as they depend on a feedback loop between the final two nand gates. This is a reasonable approximation of a standard 5 gate implementation
 final class DataFlipFlop {
- 
     private var Q = "0".toChar
     private var notQ = "1".toChar
     
@@ -15,7 +14,6 @@ final class DataFlipFlop {
 }
 
 final class Bit {
-
     private let dff = DataFlipFlop()
     
     func callAsFunction(
@@ -28,7 +26,6 @@ final class Bit {
 }
 
 final class Register {
-    
     private let bits = [Bit](count: 16, forEach: Bit())
     
     func callAsFunction(
@@ -43,7 +40,6 @@ final class Register {
 }
 
 protocol RAM {
-    
     func callAsFunction(
         _ word: String,
         _ load: Char,
@@ -53,7 +49,6 @@ protocol RAM {
 }
 
 final class FastRAM: RAM {
-    
     var words: [String]
     
     init(_ bits: Int) {
@@ -78,7 +73,6 @@ final class FastRAM: RAM {
 }
 
 final class RAM8: RAM {
-    
     private let registers = [Register](count: 8,
                                        forEach: Register())
     
@@ -112,12 +106,10 @@ final class RAM8: RAM {
 }
 
 protocol RAMx8: RAM {
-    
     var subRAM: [RAM] { get }
 }
 
 extension RAMx8 {
-    
     func callAsFunction(
         _ word: String,
         _ load: Char,
@@ -153,22 +145,18 @@ extension RAMx8 {
 }
 
 final class RAM64: RAMx8 {
-    
     var subRAM: [RAM] = [FastRAM](count: 8, forEach: FastRAM(8))
 }
 
 final class RAM512: RAMx8 {
-    
     var subRAM: [RAM] = [RAM64](count: 8, forEach: RAM64())
 }
 
 final class RAM4K: RAMx8 {
-    
     var subRAM: [RAM] = [FastRAM](count: 8, forEach: FastRAM(512))
 }
 
 final class RAM16K: RAM {
-    
     private let ram4Ks = [RAM4K](count: 4, forEach: RAM4K())
     
     func callAsFunction(
@@ -201,14 +189,12 @@ final class RAM16K: RAM {
 }
 
 extension BinaryInteger {
-    
     func toBinary(_ bitWidth: Int = 16) -> String {
         String(self, radix: 2).leftPad(bitWidth)
     }
 }
 
 extension String {
-    
     func toBinary(_ bitWidth: Int = 16) -> String {
         twosComplement(bitWidth).toBinary(bitWidth)
     }
@@ -240,7 +226,6 @@ extension String {
 }
 
 extension Array {
-    
     init(count: Int, forEach block: @autoclosure () -> (Element)) {
         self.init()
         (0..<count).forEach { _ in append(block()) }

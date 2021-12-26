@@ -3,7 +3,6 @@ import XCTest
 import Nand2TetrisTestLoader
 
 final class ALUTests: XCTestCase {
-    
     func testALU() throws {
         try FileBasedATR("ALU/ALU", firstExpectedColumn: 8) {
             let x = $0[0]

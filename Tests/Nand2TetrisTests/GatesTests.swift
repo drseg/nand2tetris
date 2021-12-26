@@ -2,7 +2,6 @@
 import XCTest
 
 final class OneBitTests: XCTestCase {
-    
     func test_nand() {
         nand("0", "0") => "1"
         nand("0", "1") => "1"
@@ -61,9 +60,7 @@ let zerosAndOnes = "0000000011111111"
 let onesAndZeros = "1111111100000000"
 
 final class MultiBitTests: XCTestCase {
-
     func test_not16() {
-        
         not16(min) => max
         not16(max) => min
 
@@ -102,7 +99,6 @@ final class MultiBitTests: XCTestCase {
 }
 
 final class MultiWayTests: XCTestCase {
-    
     func test_or8way() {
         or8Way("00000000") => "0"
         or8Way("11111111") => "1"
