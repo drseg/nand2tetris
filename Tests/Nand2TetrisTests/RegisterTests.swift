@@ -3,44 +3,6 @@ import XCTest
 @testable import Nand2Tetris
 import AbstractTestCase
 
-class BinaryDecimalConversionTests: XCTestCase {
-    func testTwosComplement16() {
-        "-1".toBinary() => "1111111111111111"
-        "1".toBinary() => "0000000000000001"
-        
-        "1111111111111111".toDecimal() => "-1"
-        "1000000000000000".toDecimal() => "-32768"
-        
-        "0000000000000001".toDecimal() => "1"
-        "0111111111111111".toDecimal() => "32767"
-    }
-    
-    func testTwosComplement8() {
-        "-1".toBinary(8) => "11111111"
-        "1".toBinary(8) => "00000001"
-        
-        "11111111".toDecimal(8) => "-1"
-        "10000000".toDecimal(8) => "-128"
-        
-        "00000001".toDecimal(8) => "1"
-        "01111111".toDecimal(8) => "127"
-    }
-    
-    func testTwosComplement2() {
-        "-1".toBinary(2) => "11"
-        "1".toBinary(2) => "01"
-        
-        "01".toDecimal(2) => "1"
-        "11".toDecimal(2) => "-1"
-    }
-    
-    func testTwosComplementAcceptance() {
-        (Int8.min...Int8.max).forEach {
-            XCTAssertEqual("\($0)".toBinary(8).toDecimal(8), "\($0)")
-        }
-    }
-}
-
 class BitTests: XCTestCase {
     func testAcceptance() throws {
         let bit = Bit()
@@ -69,13 +31,13 @@ class RegisterTests: XCTestCase {
     }
 }
 
-class AbstractRAMTest: AbstractTestCase {
+class RAMTestCase: AbstractTestCase {
     var ram: RAM!
     var addressLength: Int!
     var testFilePath: String!
     
     override var abstractTestClass: XCTest.Type {
-        AbstractRAMTest.self
+        RAMTestCase.self
     }
     
     func testAbstractly() throws {
@@ -93,7 +55,7 @@ class AbstractRAMTest: AbstractTestCase {
     }
 }
 
-class RAM8Tests: AbstractRAMTest {
+class RAM8Tests: RAMTestCase {
     override func setUp() {
         ram = RAM8()
         addressLength = 3
@@ -101,7 +63,7 @@ class RAM8Tests: AbstractRAMTest {
     }
 }
 
-class RAM64Tests: AbstractRAMTest {
+class RAM64Tests: RAMTestCase {
     override func setUp() {
         ram = RAM64()
         addressLength = 6
@@ -109,7 +71,7 @@ class RAM64Tests: AbstractRAMTest {
     }
 }
 
-class RAM512Tests: AbstractRAMTest {
+class RAM512Tests: RAMTestCase {
     override func setUp() {
         ram = RAM512()
         addressLength = 9
@@ -117,7 +79,7 @@ class RAM512Tests: AbstractRAMTest {
     }
 }
 
-class RAM4KTests: AbstractRAMTest {
+class RAM4KTests: RAMTestCase {
     override func setUp() {
         ram = RAM4K()
         addressLength = 12
@@ -125,7 +87,7 @@ class RAM4KTests: AbstractRAMTest {
     }
 }
 
-class RAM16KTests: AbstractRAMTest {
+class RAM16KTests: RAMTestCase {
     override func setUp() {
         ram = RAM16K()
         addressLength = 14

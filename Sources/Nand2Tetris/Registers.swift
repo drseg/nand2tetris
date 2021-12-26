@@ -1,4 +1,4 @@
-// Data Flip Flops cannot be perfectly represeted in code as they depend on a feedback loop between the final two nand gates. This is a reasonable approximation of a standard 5 gate implementation
+/// Data Flip Flops cannot be perfectly represeted in code as they depend on a feedback loop between the final two nand gates. This is a reasonable approximation of a standard 5 gate implementation
 final class DataFlipFlop {
     private var Q = "0".toChar
     private var notQ = "1".toChar
@@ -185,43 +185,6 @@ final class RAM16K: RAM {
                          out[3],
                          address[0],
                          address[1])
-    }
-}
-
-extension BinaryInteger {
-    func toBinary(_ bitWidth: Int = 16) -> String {
-        String(self, radix: 2).leftPad(bitWidth)
-    }
-}
-
-extension String {
-    func toBinary(_ bitWidth: Int = 16) -> String {
-        twosComplement(bitWidth).toBinary(bitWidth)
-    }
-    
-    private func twosComplement(_ bitWidth: Int) -> Int {
-        let intValue = Int(self)!
-        
-        return intValue < 0
-        ? intValue + intMax(bitWidth) + 1
-        : intValue
-    }
-    
-    func toDecimal(_ bitWidth: Int = 16) -> String {
-        let padded = leftPad(bitWidth)
-        let intValue = Int(padded, radix: 2)!
-        
-        return padded[0] == "1"
-        ? String(intValue - intMax(bitWidth) - 1)
-        : String(intValue)
-    }
-    
-    private func intMax(_ bitWidth: Int) -> Int {
-        2 << (bitWidth - 1) - 1
-    }
-
-    func leftPad(_ length: Int) -> String {
-        String(repeating: "0", count: length - count) + self
     }
 }
 
