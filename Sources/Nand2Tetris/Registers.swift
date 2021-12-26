@@ -149,7 +149,7 @@ final class RAM64: RAMx8 {
 }
 
 final class RAM512: RAMx8 {
-    var subRAM: [RAM] = [RAM64](count: 8, forEach: RAM64())
+    var subRAM: [RAM] = [FastRAM](count: 8, forEach: FastRAM(64))
 }
 
 final class RAM4K: RAMx8 {
@@ -157,7 +157,7 @@ final class RAM4K: RAMx8 {
 }
 
 final class RAM16K: RAM {
-    private let ram4Ks = [RAM4K](count: 4, forEach: RAM4K())
+    private let ram4Ks = [FastRAM](count: 4, forEach: FastRAM(4096))
     
     func callAsFunction(
         _ word: String,

@@ -1,5 +1,4 @@
 import XCTest
-@testable import Nand2TetrisTestLoader
 
 class TestLoaderTests: XCTestCase {
     private func run(
@@ -70,6 +69,7 @@ class TestLoaderTests: XCTestCase {
     }
 
     func testFailsWhenActualAndExpectedDiffer() throws {
+        throw XCTSkip("Too slow for general use")
         let message = "AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3"
         assertFailure(message) {
             try run("And") { _ in ["0"] }
