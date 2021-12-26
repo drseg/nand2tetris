@@ -1,6 +1,7 @@
 import XCTest
-import Nand2TetrisTestLoader
+
 @testable import Nand2Tetris
+import AbstractTestCase
 
 class BinaryDecimalConversionTests: XCTestCase {
     func testTwosComplement16() {
@@ -68,16 +69,16 @@ class RegisterTests: XCTestCase {
     }
 }
 
-protocol RAMTest {
-    var ram: RAM { get }
-    var addressLength: Int { get }
-    var testFilePath: String { get }
+class AbstractRAMTest: AbstractTestCase {
+    var ram: RAM!
+    var addressLength: Int!
+    var testFilePath: String!
     
-    func runAcceptanceTest() throws
-}
-
-extension RAMTest {
-    func runAcceptanceTest() throws {
+    override var abstractTestClass: XCTest.Type {
+        AbstractRAMTest.self
+    }
+    
+    func testAbstractly() throws {
         try FileBasedATR(testFilePath) { [self] in
             let signal = $0[0].clockSignal
             let input = $0[1].toBinary()
@@ -92,52 +93,42 @@ extension RAMTest {
     }
 }
 
-class RAM8Tests: XCTestCase, RAMTest {
-    let ram: RAM = RAM8()
-    let addressLength = 3
-    let testFilePath = "Registers/RAM8"
-    
-    func testAcceptance() throws {
-        try runAcceptanceTest()
+class RAM8Tests: AbstractRAMTest {
+    override func setUp() {
+        ram = RAM8()
+        addressLength = 3
+        testFilePath = "Registers/RAM8"
     }
 }
 
-class RAM64Tests: XCTestCase, RAMTest {
-    let ram: RAM = RAM64()
-    let addressLength = 6
-    let testFilePath = "Registers/RAM64"
-    
-    func testAcceptance() throws {
-        try runAcceptanceTest()
+class RAM64Tests: AbstractRAMTest {
+    override func setUp() {
+        ram = RAM64()
+        addressLength = 6
+        testFilePath = "Registers/RAM64"
     }
 }
 
-class RAM512Tests: XCTestCase, RAMTest {
-    let ram: RAM = RAM512()
-    let addressLength = 9
-    let testFilePath = "Registers/RAM512"
-    
-    func testAcceptance() throws {
-        try runAcceptanceTest()
+class RAM512Tests: AbstractRAMTest {
+    override func setUp() {
+        ram = RAM512()
+        addressLength = 9
+        testFilePath = "Registers/RAM512"
     }
 }
 
-class RAM4KTests: XCTestCase, RAMTest {
-    let ram: RAM = RAM4K()
-    let addressLength = 12
-    let testFilePath = "Registers/RAM4K"
-    
-    func testAcceptance() throws {
-        try runAcceptanceTest()
+class RAM4KTests: AbstractRAMTest {
+    override func setUp() {
+        ram = RAM4K()
+        addressLength = 12
+        testFilePath = "Registers/RAM4K"
     }
 }
 
-class RAM16KTests: XCTestCase, RAMTest {
-    let ram: RAM = RAM16K()
-    let addressLength = 14
-    let testFilePath = "Registers/RAM16K"
-    
-    func testAcceptance() throws {
-        try runAcceptanceTest()
+class RAM16KTests: AbstractRAMTest {
+    override func setUp() {
+        ram = RAM16K()
+        addressLength = 14
+        testFilePath = "Registers/RAM16K"
     }
 }

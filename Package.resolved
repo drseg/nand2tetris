@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AbstractTestCase",
+        "repositoryURL": "https://github.com/drseg/abstract-test-case.git",
+        "state": {
+          "branch": "master",
+          "revision": "1255bab6105f408bf4f702d6e582d5db8546f906",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

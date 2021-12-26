@@ -11,6 +11,10 @@ let package = Package(
             targets: ["Nand2Tetris"]),
     ],
     dependencies: [
+        .package(
+            name: "AbstractTestCase",
+            url: "https://github.com/drseg/abstract-test-case.git",
+            .branch("master")),
     ],
     targets: [
         .target(
@@ -18,7 +22,7 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "Nand2TetrisTests",
-            dependencies: ["Nand2Tetris"],
+            dependencies: ["Nand2Tetris", "AbstractTestCase"],
             resources: [
                 .copy("AcceptanceTests")
             ]
