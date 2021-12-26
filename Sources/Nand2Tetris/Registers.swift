@@ -52,9 +52,8 @@ final class FastRAM: RAM {
     var words: [String]
     
     init(_ bits: Int) {
-        words = [String](count: bits,
-                         forEach: String(repeating: "0",
-                                             count: 16))
+        words = [String](repeating: "0000000000000000",
+                         count: bits)
     }
     
     func callAsFunction(
