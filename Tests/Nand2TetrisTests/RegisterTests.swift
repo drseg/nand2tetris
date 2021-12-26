@@ -94,3 +94,19 @@ class RAM16KTests: RAMTestCase {
         testFilePath = "Registers/RAM16K"
     }
 }
+
+class PCTests: XCTestCase {
+    func testAcceptance() throws {
+        let pc = PC()
+        
+        try FileBasedATR("Registers/PC") {
+            let signal = $0[0].clockSignal
+            let input = $0[1].toBinary()
+            let reset = $0[2].toChar
+            let load = $0[3].toChar
+            let inc = $0[4].toChar
+            
+            return [pc(input, reset, load, inc, signal).toDecimal()]
+        }.run()
+    }
+}

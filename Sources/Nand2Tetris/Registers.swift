@@ -39,6 +39,59 @@ final class Register {
     }
 }
 
+final class PC {
+    
+    private let register = Register()
+    
+    func callAsFunction(
+        _ input: String,
+        _ reset: Char,
+        _ load: Char,
+        _ inc: Char,
+        _ clock: Char
+    ) -> String {
+        let lastInput = register(
+            input,
+            zero(input)[0],
+            clock
+        )
+        
+        let shouldInc = and(
+            inc,
+            and(
+                not(reset),
+                not(load)
+            )
+        )
+        
+        let incOrLoad = mux16(
+            input,
+            inc16(lastInput),
+            shouldInc
+        )
+        
+        let resetOrIncOrLoad = mux16(
+            incOrLoad,
+            zero(input),
+            reset
+        )
+        
+        let shouldLoadNewValue = or(
+            or(
+                reset,
+                load
+            ),
+            inc
+        )
+        
+        return register(
+            resetOrIncOrLoad,
+            shouldLoadNewValue,
+            clock
+        )
+    }
+}
+
 protocol RAM {
     func callAsFunction(
         _ word: String,
