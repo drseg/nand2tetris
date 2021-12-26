@@ -29,12 +29,6 @@ public protocol ATR {
     func run(swiftFile: StaticString, swiftLine: UInt) throws
 }
 
-extension ATR {
-    public func run() throws {
-        try run(swiftFile: #file, swiftLine: #line)
-    }
-}
-
 protocol ATRImplementation: ATR {
     var testString: String { get throws }
     var testName: String { get throws }
@@ -63,19 +57,21 @@ extension ATRImplementation {
         try givenThenSentences
             .enumerated()
             .compactMap { line, row in
-                let firstOutputColumn = try calculateFirstOutputColumn(
-                    row.count
-                )
+                let firstOutputColumn: Int = try {
+                    let column = firstExpectedColumn ?? row.count - 1
+                    try checkIsValid(column, row.count)
+                    return column
+                }()
                 
                 let givens = row.prefix(upTo: firstOutputColumn)
                 let actuals = try getActuals(from: givens)
                 let expecteds = try getExpecteds(in: row,
-                                                 from: firstOutputColumn,
+                                                 startingAt: firstOutputColumn,
                                                  count: actuals.count)
                 
                 return Test(actuals: actuals,
                             expecteds: expecteds,
-                            firstExpectedColumn: firstOutputColumn,
+                            firstOutputColumn: firstOutputColumn,
                             filePath: try testName,
                             fileLine: line)
             }
@@ -92,14 +88,6 @@ extension ATRImplementation {
         return sentences
     }
     
-    private func calculateFirstOutputColumn(
-        _ columnCount: Int
-    ) throws -> Int {
-        let column = firstExpectedColumn ?? columnCount - 1
-        try checkIsValid(column, columnCount)
-        return column
-    }
-    
     private func getActuals(
         from givens: Array<String>.SubSequence
     ) throws -> [String] {
@@ -110,7 +98,7 @@ extension ATRImplementation {
     
     private func getExpecteds(
         in givenThenRow: [String],
-        from firstExpectedColumn: Int,
+        startingAt firstExpectedColumn: Int,
         count: Int
     ) throws -> Array<String>.SubSequence {
         let expecteds = givenThenRow.suffix(from: firstExpectedColumn)
@@ -197,14 +185,14 @@ private struct Test {
     init<T: Collection, U: Collection>(
         actuals: T,
         expecteds: U,
-        firstExpectedColumn: Int,
+        firstOutputColumn: Int,
         filePath: String,
         fileLine: Int
     ) where T.Element == String, U.Element == String {
         self.assertions = zip(actuals, expecteds).enumerated().map {
             Assertion(actual: $0.element.0,
                       expected: $0.element.1,
-                      column: firstExpectedColumn + $0.offset,
+                      column: firstOutputColumn + $0.offset,
                       line: fileLine,
                       path: filePath)
         }
@@ -265,6 +253,6 @@ private extension String {
 
 private extension Sequence where Element: StringProtocol {
     var toStrings: [String] {
-        map { $0.components(separatedBy: "").joined() }
+        map { String($0) }
     }
 }
