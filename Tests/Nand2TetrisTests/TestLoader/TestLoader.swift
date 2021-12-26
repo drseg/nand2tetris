@@ -47,37 +47,35 @@ extension ATRImplementation {
         }
     }
     
-    private func getTests() throws -> [Test] {
+    func getTests() throws -> [Test] {
         try makeTests(from: givenThenSentences(in: testString))
     }
     
-    private func makeTests(
+    func makeTests(
         from givenThenSentences: [[String]]
     ) throws -> [Test] {
-        try givenThenSentences
-            .enumerated()
-            .compactMap { line, row in
-                let firstOutputColumn: Int = try {
-                    let column = self.firstOutputColumn ?? row.count - 1
-                    try checkIsValid(column, row.count)
-                    return column
-                }()
-                
-                let givens = row.prefix(upTo: firstOutputColumn)
-                let actuals = try getActuals(from: givens)
-                let expecteds = try getExpecteds(in: row,
-                                                 startingAt: firstOutputColumn,
-                                                 count: actuals.count)
-                
-                return Test(actuals: actuals,
-                            expecteds: expecteds,
-                            firstOutputColumn: firstOutputColumn,
-                            filePath: try testName,
-                            fileLine: line)
-            }
+        try givenThenSentences.enumerated().compactMap { line, row in
+            let firstOutputColumn: Int = try {
+                let column = self.firstOutputColumn ?? row.count - 1
+                try checkIsValid(column, row.count)
+                return column
+            }()
+            
+            let givens = row.prefix(upTo: firstOutputColumn)
+            let actuals = try getActuals(from: givens)
+            let expecteds = try getExpecteds(in: row,
+                                             startingAt: firstOutputColumn,
+                                             count: actuals.count)
+            
+            return Test(actuals: actuals,
+                        expecteds: expecteds,
+                        firstOutputColumn: firstOutputColumn,
+                        filePath: try testName,
+                        fileLine: line)
+        }
     }
     
-    private func givenThenSentences(in s: String) throws -> [[String]] {
+    func givenThenSentences(in s: String) throws -> [[String]] {
         let sentences = s.split(separator: "\r\n")
             .dropFirst()
             .toStrings
@@ -88,7 +86,7 @@ extension ATRImplementation {
         return sentences
     }
     
-    private func getActuals(
+    func getActuals(
         from givens: Array<String>.SubSequence
     ) throws -> [String] {
         let actuals = actualsFactory(Array(givens)).map(\.toString)
@@ -96,29 +94,29 @@ extension ATRImplementation {
         return actuals
     }
     
-    private func getExpecteds(
-        in givenThenRow: [String],
+    func getExpecteds(
+        in row: [String],
         startingAt firstExpectedColumn: Int,
         count: Int
     ) throws -> Array<String>.SubSequence {
-        let expecteds = givenThenRow.suffix(from: firstExpectedColumn)
+        let expecteds = row.suffix(from: firstExpectedColumn)
         try checkCountsMatch(count, expecteds.count)
         return expecteds
     }
     
-    private func checkIsValid(_ expected: Int, _ given: Int) throws {
+    func checkIsValid(_ expected: Int, _ given: Int) throws {
         guard expected < given else {
             throw ATRError("Expected column index is out of bounds")
         }
     }
     
-    private func checkIsNonZero(_ c: Int) throws {
+    func checkIsNonZero(_ c: Int) throws {
         guard c != 0 else {
             throw ATRError("No actual values found")
         }
     }
     
-    private func checkCountsMatch(_ lhs: Int, _ rhs: Int) throws {
+    func checkCountsMatch(_ lhs: Int, _ rhs: Int) throws {
         guard lhs == rhs else {
             throw ATRError(
                 "Actual (\(lhs)) and Expected (\(rhs)) counts differ"
@@ -126,7 +124,7 @@ extension ATRImplementation {
         }
     }
     
-    private func checkIsNotEmpty(_ s: String) throws {
+    func checkIsNotEmpty(_ s: String) throws {
         guard !s.isEmpty else {
             throw ATRError("Parsing error")
         }
@@ -174,12 +172,12 @@ public struct FileBasedATR: ATRImplementation {
         }
     }
     
-    private func fileNotFound() -> ATRError {
+    func fileNotFound() -> ATRError {
         ATRError("File not found")
     }
 }
 
-private struct Test {
+struct Test {
     private let assertions: [Assertion]
     
     init<T: Collection, U: Collection>(
@@ -203,7 +201,7 @@ private struct Test {
     }
 }
 
-private struct Assertion {
+struct Assertion {
     private let actual: Stringable
     private let expected: Stringable
     
@@ -227,17 +225,17 @@ private struct Assertion {
     }
     
     func assert(in swiftFile: StaticString, at swiftLine: UInt) {
+        let failureMessage = {
+            "\n\(testRoot)/\(filePath).\(testFileExtension)" +
+            ": comparison failure at " +
+            "line \(fileLine+2) " +
+            "column \(column+1)"
+        }()
+        
         XCTAssertEqual(actual.toString, expected.toString,
                        failureMessage,
                        file: swiftFile,
                        line: swiftLine)
-    }
-    
-    private var failureMessage: String {
-        "\n\(testRoot)/\(filePath).\(testFileExtension)" +
-        ": comparison failure at " +
-        "line \(fileLine+2) " +
-        "column \(column+1)"
     }
 }
 

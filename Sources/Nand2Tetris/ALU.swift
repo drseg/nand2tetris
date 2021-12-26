@@ -19,12 +19,12 @@ func alu(
 
     let f_out = mux16(andOut, addOut, f)
     let not_f_out = not16(f_out)
-    let noModified_fOut = mux16(f_out, not_f_out, no)
     
-    let ng = isNegative(noModified_fOut)
-    let zr = isZero(noModified_fOut)
+    let out = mux16(f_out, not_f_out, no)
+    let ng = isNegative(out)
+    let zr = isZero(out)
     
-    return (noModified_fOut, zr, ng)
+    return (out, zr, ng)
 }
 
 private func negateIfN(_ a: String, n: Char) -> String {
