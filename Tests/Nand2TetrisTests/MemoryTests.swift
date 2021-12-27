@@ -4,13 +4,19 @@ import XCTest
 class Memorytests: XCTestCase {
     
     func testAcceptance() throws {
-        let memory = Memory()
+        let keyboard = MockKeyboard()
+        let screen = MockScreen()
+        let memory = Memory(keyboard: keyboard,
+                            screen: screen)
         
         try FileBasedATR("Computer/Memory") {
             let clock = $0[0].clockSignal
+            let key = $0[1].toChar
             let word = $0[2].toBinary()
             let load = $0[3].toChar
             let address = $0[4]
+            
+            keyboard.didPress(key)
             
             return [memory(word,
                            load,
