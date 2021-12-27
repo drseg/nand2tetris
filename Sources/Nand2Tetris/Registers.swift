@@ -40,7 +40,6 @@ final class Register {
 }
 
 final class PC {
-    
     private let register = Register()
     
     func callAsFunction(
@@ -64,19 +63,19 @@ final class PC {
             )
         )
         
-        let incOrLoad = mux16(
+        let incrementedOrNot = mux16(
             input,
             inc16(lastInput),
             shouldInc
         )
         
-        let resetOrIncOrLoad = mux16(
-            incOrLoad,
+        let registerInput = mux16(
+            incrementedOrNot,
             zero(input),
             reset
         )
         
-        let shouldLoadNewValue = or(
+        let shouldLoadInput = or(
             or(
                 reset,
                 load
@@ -85,8 +84,8 @@ final class PC {
         )
         
         return register(
-            resetOrIncOrLoad,
-            shouldLoadNewValue,
+            registerInput,
+            shouldLoadInput,
             clock
         )
     }
