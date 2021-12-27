@@ -134,12 +134,10 @@ final class RAM8: RAM {
         _ clock: Char
     ) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
-        let clockMap = deMux8Way(clock, address[0], address[1], address[2])
-        
         let out = registers.enumerated().reduce([String]()) {
             $0 + [$1.element(word,
                              loadMap[$1.offset],
-                             clockMap[$1.offset])]
+                             clock)]
         }
         
         return mux8Way16(out[0],
@@ -168,8 +166,6 @@ extension RAMx8 {
         _ clock: Char
     ) -> String {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
-        let clockMap = deMux8Way(clock, address[0], address[1], address[2])
-        
         let ramAddress = String(address.suffix(address.count - 3))
         
         let out = subRAM.enumerated().reduce(into: [String]()) {
@@ -177,7 +173,7 @@ extension RAMx8 {
                 $1.element(word,
                            loadMap[$1.offset],
                            ramAddress,
-                           clockMap[$1.offset])
+                           clock)
             )
         }
         
@@ -217,8 +213,6 @@ final class RAM16K: RAM {
         _ clock: Char
     ) -> String {
         let loadMap = deMux4Way(load, address[0], address[1])
-        let clockMap = deMux4Way(clock, address[0], address[1])
-        
         let ram4KAddress = String(address.suffix(12))
         
         let out = ram4Ks.enumerated().reduce(into: [String]()) {
@@ -226,7 +220,7 @@ final class RAM16K: RAM {
                 $1.element(word,
                            loadMap[$1.offset],
                            ram4KAddress,
-                           clockMap[$1.offset])
+                           clock)
             )
         }
         

@@ -5,7 +5,7 @@ class Memorytests: XCTestCase {
     
     func testAcceptance() throws {
         let keyboard = MockKeyboard()
-        let screen = MockScreen()
+        let screen = FastRAM(8192)
         let memory = Memory(keyboard: keyboard,
                             screen: screen)
         
