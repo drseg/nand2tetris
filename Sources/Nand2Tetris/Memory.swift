@@ -31,11 +31,16 @@ class Memory {
         self.screen = screen
     }
     
-    func callAsFunction(_ word: String, _ load: Char, _ address: String, _ clock: Char) -> String {
+    func callAsFunction(
+        _ word: String,
+        _ load: Char,
+        _ address: String,
+        _ clock: Char
+    ) -> String {
         let loadMap = deMux4Way(load, address[0], address[1])
         
-        let ramAddress = String(address.suffix(address.count - 1))
-        let screenAddress = String(address.suffix(address.count - 2))
+        let ramAddress = String(address.dropFirst())
+        let screenAddress = String(address.dropFirst(2))
         
         let ramOut = ram16k(word,
                             or(loadMap[0],
