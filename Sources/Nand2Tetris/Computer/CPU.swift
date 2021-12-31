@@ -76,12 +76,15 @@ final class CPU {
                        aValue: aValue,
                        pcValue: pcValue)
         } else {
+            let zero = zero(instruction)
+            let one = instruction[0]
+            
             let instruction = String(instruction.dropFirst(3))
             
-            let aValue = a("0".toBinary(15), "0", clock)
-            let dValue = d("0".toBinary(15), "0", clock)
+            let aValue = a(zero.toBinary(15), zero[0], clock)
+            let dValue = d(zero.toBinary(15), zero[0], clock)
 
-            let aOrMValue = instruction[0] == "0"
+            let aOrMValue = instruction[0] == zero[0]
                 ? aValue
                 : input
             
@@ -95,18 +98,14 @@ final class CPU {
                              no: instruction[6]).out
             
             let shouldWriteM = instruction[9]
-            let toMemory = shouldWriteM == "0" ? null : aluOut
-            let pcValue = pc("0".toBinary(), "0", "0", "1", clock)
+            let toMemory = shouldWriteM == zero[0] ? null : aluOut
             
-            let shouldWriteD = instruction[8]
-            let shouldWriteA = instruction[7]
-            
-            let _ = d(aluOut, shouldWriteD, clock)
+            d(aluOut, instruction[8], clock)
             
             return Out(toMemory: toMemory,
                        shouldWrite: shouldWriteM,
-                       aValue: a(aluOut, shouldWriteA, clock),
-                       pcValue: pcValue)
+                       aValue: a(aluOut, instruction[7], clock),
+                       pcValue: pc(zero, zero[0], zero[0], one, clock))
         }
     }
 }

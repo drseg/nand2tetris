@@ -28,6 +28,7 @@ final class Bit {
 final class Register {
     private let bits = [Bit](count: 16, forEach: Bit())
     
+    @discardableResult
     func callAsFunction(
         _ input: String,
         _ load: Char,
