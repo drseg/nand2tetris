@@ -226,10 +226,9 @@ struct Assertion {
     
     func assert(in swiftFile: StaticString, at swiftLine: UInt) {
         let failureMessage = {
-            "\n\(testRoot)/\(filePath).\(testFileExtension)" +
-            ": comparison failure at " +
-            "line \(fileLine+2) " +
-            "column \(column+1)"
+            "\nLine \(fileLine+2) " +
+            "column \(column+1): " +
+            "\(filePath).\(testFileExtension)"
         }()
         
         XCTAssertEqual(actual.toString, expected.toString,

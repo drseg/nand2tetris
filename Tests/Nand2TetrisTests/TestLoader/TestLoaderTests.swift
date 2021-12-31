@@ -70,7 +70,7 @@ class TestLoaderTests: XCTestCase {
 
     func testFailsWhenActualAndExpectedDiffer() throws {
         throw XCTSkip("Too slow for general use")
-        let message = "AcceptanceTests/Gates/And.cmp: comparison failure at line 5 column 3"
+        let message = "Line 5 column 3: Gates/And.cmp"
         assertFailure(message) {
             try run("And") { _ in ["0"] }
         }

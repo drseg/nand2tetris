@@ -33,8 +33,8 @@ final class Register {
         _ load: Char,
         _ clock: Char
     ) -> String {
-        zip(input, bits).reduce(into: "") {
-            $0.append($1.1($1.0, load, clock))
+        zip(input, bits).reversed().reduce("") {
+            String($1.1($1.0, load, clock)) + $0
         }
     }
 }

@@ -2,10 +2,7 @@ typealias Char = Character
 
 /// nand considered primitive, implemented using Swift builtins
 func nand(_ a: Char, _ b: Char) -> Char {
-    assert(a == "1" || a == "0")
-    assert(b == "1" || b == "0")
-    
-    return a == "1" && b == "1" ? "0" : "1"
+    a == "0" || b == "0" ? "1" : "0"
 }
 
 func not(_ a: Char) -> Char {
