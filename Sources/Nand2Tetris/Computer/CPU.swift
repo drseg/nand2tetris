@@ -51,6 +51,22 @@ final class CPU {
         let shouldWrite: Char
         let aValue: String
         let pcValue: String
+        
+        func or(_ other: Out, predicate: Char) -> Out {
+            Out(toMemory: mux16(toMemory.leftPad(16),
+                                other.toMemory.leftPad(16),
+                                predicate),
+                shouldWrite: mux(shouldWrite,
+                                 other.shouldWrite,
+                                 predicate),
+                aValue: mux16(aValue.leftPad(16),
+                              other.aValue.leftPad(16),
+                              predicate),
+                pcValue: mux16(pcValue.leftPad(16),
+                               other.pcValue.leftPad(16),
+                               predicate)
+            )
+        }
     }
     
     let a = Register()
@@ -66,11 +82,10 @@ final class CPU {
         let isComputation = instruction[0]
         
         func setA() -> Out {
-            let value = String(instruction.dropFirst())
-            let aValue = a(value, not(isComputation), clock)
-            let pcValue = pc("0" + aValue,
-                             isComputation,
-                             isComputation,
+            let aValue = a(instruction, not(isComputation), clock)
+            let pcValue = pc(aValue,
+                             "0",
+                             "0",
                              not(isComputation),
                              clock)
             
@@ -81,14 +96,13 @@ final class CPU {
         }
         
         func computeInstruction() -> Out {
-            let instruction15 = String(instruction.dropFirst())
             let isMInstruction = instruction[3]
             let aluInstruction = String(instruction.dropFirst(4).prefix(6))
             let destination = String(instruction.dropFirst(10).prefix(3))
             let jump = String(instruction.dropFirst(13))
             
-            let initialAValue = a(instruction15, not(isComputation), clock)
-            let initialDValue = d(instruction15, not(isComputation), clock)
+            let initialAValue = a(instruction, "0", clock)
+            let initialDValue = d(instruction, "0", clock)
             
             let aOrMValue = mux16(initialAValue, fromM, isMInstruction)
             
@@ -128,13 +142,16 @@ final class CPU {
                 zerJumpBit
             )
             let shouldJump = and(isComputation, jumpBit)
-            let shouldInc = and(isComputation,
-                                and(
-                                    not(jumpBit),
-                                    not(reset)
-                                ))
             
-            let pcValue = pc("0" + finalAValue,
+            let shouldInc =
+            and(isComputation,
+                and(
+                    not(jumpBit),
+                    not(reset)
+                )
+            )
+            
+            let pcValue = pc(finalAValue,
                              reset,
                              shouldJump,
                              shouldInc,
@@ -145,12 +162,8 @@ final class CPU {
                        aValue: finalAValue,
                        pcValue: pcValue)
         }
-    
-        if isComputation == "0" {
-            return setA()
-        } else {
-            return computeInstruction()
-        }
+        
+        return setA().or(computeInstruction(), predicate: isComputation)
     }
     
     private func compute(

@@ -9,7 +9,7 @@ class CPUTests: XCTestCase {
     }
     
     func setA(_ value: String) {
-        let _ = cpu("0", "0" + value, "0", "1")
+        let _ = cpu("0", value, "0", "1")
     }
     
     func dEqualsA() -> CPU.Out {
@@ -40,7 +40,7 @@ class CPUTests: XCTestCase {
         _ instruction: String,
         _ clock: Char = "1"
     ) -> CPU.Out {
-        cpu("0".toBinary(15), instruction, "0", clock)
+        cpu(0.b, instruction, "0", clock)
     }
     
     func cpuOut(
@@ -57,16 +57,16 @@ class CPUTests: XCTestCase {
     
     func testAInstructions() {
         let expected1 = cpuOut(aValue: 0.b,
-                               pcValue: "0".toBinary())
+                               pcValue: 0.b)
         
-        let expected2 = cpuOut(aValue: "011000000111001",
-                               pcValue: "1".toBinary())
+        let expected2 = cpuOut(aValue: "0011000000111001",
+                               pcValue: 1.b)
         
-        let expected3 = cpuOut(aValue: "011000000111001",
-                               pcValue: "1".toBinary())
+        let expected3 = cpuOut(aValue: "0011000000111001",
+                               pcValue: 1.b)
         
-        let expected4 = cpuOut(aValue: "101101110100000",
-                               pcValue: "2".toBinary())
+        let expected4 = cpuOut(aValue: "0101101110100000",
+                               pcValue: 2.b)
         
         cpu("0", "0011000000111001", "0", "0") ==> expected1
         cpu("0", "0011000000111001", "0", "1") ==> expected2
@@ -79,47 +79,46 @@ class CPUTests: XCTestCase {
         setA(12345.b)
         dEqualsA()
         ==> cpuOut(aValue: 12345.b,
-                  pcValue: "2".toBinary())
+                   pcValue: 2.b)
         cpu.d.value => 12345.b
         
         setA(23456.b)
         aMinusD()
         ==> cpuOut(aValue: 23456.b,
-                  pcValue: "4".toBinary())
+                   pcValue: 4.b)
         cpu.d.value => 11111.b
         
         setA(1000.b)
         mEqualsD() ==> cpuOut(toMemory: 11111.b,
-                             shouldWrite: "1",
-                             aValue: 1000.b,
-                             pcValue: "6".toBinary())
+                              shouldWrite: "1",
+                              aValue: 1000.b,
+                              pcValue: 6.b)
         cpu.d.value => 11111.b
         
         setA(1001.b)
         mdEqualsDMinusOne(clock: "0")
         ==> cpuOut(toMemory: 11110.b,
-                  shouldWrite: "1",
-                  aValue: 1001.b,
-                  pcValue: "7".toBinary())
+                   shouldWrite: "1",
+                   aValue: 1001.b,
+                   pcValue: 7.b)
         
         mdEqualsDMinusOne(clock: "1")
         ==> cpuOut(toMemory: 11109.b,
-                  shouldWrite: "1",
-                  aValue: 1001.b,
-                  pcValue: "8".toBinary())
+                   shouldWrite: "1",
+                   aValue: 1001.b,
+                   pcValue: 8.b)
         cpu.d.value => 11110.b
         
         setA(1000.b)
         dEqualsDMinusM()
         ==> cpuOut(aValue: 1000.b,
-                  pcValue: "10".toBinary())
+                   pcValue: 10.b)
         cpu.d.value => (-1).b
         
         setA(14.b)
         jumpIfNegD()
         ==> cpuOut(aValue: 14.b,
-                  pcValue: "14".toBinary())
-        
+                   pcValue: 14.b)
     }
     
     func testAcceptance() throws {
@@ -150,24 +149,28 @@ class CPUTests: XCTestCase {
 
 extension Register {
     fileprivate var value: String {
-        self("0".toBinary(15), "0", "0")
+        self(0.b, "0", "0")
     }
 }
 
 extension Int {
     fileprivate var b: String {
-        String(self).toBinary(15)
+        String(self).toBinary()
     }
 }
 
 infix operator ==>
 
 func ==>(actual: CPU.Out, expected: CPU.Out) {
-    XCTAssertEqual(actual.pcValue, expected.pcValue, "pcValue")
-    XCTAssertEqual(actual.aValue, expected.aValue, "aValue")
-    XCTAssertEqual(actual.shouldWrite, expected.shouldWrite, "shouldWrite")
+    XCTAssertEqual(actual.pcValue, expected.pcValue,
+                   "pcValue")
+    XCTAssertEqual(actual.aValue, expected.aValue,
+                   "aValue")
+    XCTAssertEqual(actual.shouldWrite, expected.shouldWrite,
+                   "shouldWrite")
     
     if !expected.toMemory.contains("*") {
-        XCTAssertEqual(actual.toMemory, expected.toMemory, "toMemory")
+        XCTAssertEqual(actual.toMemory, expected.toMemory,
+                       "toMemory")
     }
 }
