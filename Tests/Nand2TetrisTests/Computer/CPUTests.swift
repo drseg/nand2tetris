@@ -36,6 +36,10 @@ class CPUTests: XCTestCase {
         cpu(11111.b, "1110001100000100", "0", "1")
     }
     
+    func aEqualsAPlus1() -> CPU.Out {
+        writeFromRegisters("1110110111100000")
+    }
+    
     func writeFromRegisters(
         _ instruction: String,
         _ clock: Char = "1"
@@ -44,12 +48,12 @@ class CPUTests: XCTestCase {
     }
     
     func cpuOut(
-        toMemory: String = "*******",
+        mValue: String = "*******",
         shouldWrite: Char = "0",
         aValue: String,
         pcValue: String
     ) -> CPU.Out {
-        CPU.Out(toMemory: toMemory,
+        CPU.Out(mValue: mValue,
                 shouldWrite: shouldWrite,
                 aValue: aValue,
                 pcValue: pcValue)
@@ -89,7 +93,7 @@ class CPUTests: XCTestCase {
         cpu.d.value => 11111.b
         
         setA(1000.b)
-        mEqualsD() ==> cpuOut(toMemory: 11111.b,
+        mEqualsD() ==> cpuOut(mValue: 11111.b,
                               shouldWrite: "1",
                               aValue: 1000.b,
                               pcValue: 6.b)
@@ -97,13 +101,13 @@ class CPUTests: XCTestCase {
         
         setA(1001.b)
         mdEqualsDMinusOne(clock: "0")
-        ==> cpuOut(toMemory: 11110.b,
+        ==> cpuOut(mValue: 11110.b,
                    shouldWrite: "1",
                    aValue: 1001.b,
                    pcValue: 7.b)
         
         mdEqualsDMinusOne(clock: "1")
-        ==> cpuOut(toMemory: 11109.b,
+        ==> cpuOut(mValue: 11109.b,
                    shouldWrite: "1",
                    aValue: 1001.b,
                    pcValue: 8.b)
@@ -119,11 +123,14 @@ class CPUTests: XCTestCase {
         jumpIfNegD()
         ==> cpuOut(aValue: 14.b,
                    pcValue: 14.b)
+        
+        setA(999.b)
+        aEqualsAPlus1()
+        ==> cpuOut(aValue: 1000.b,
+                   pcValue: 16.b)
     }
     
     func testAcceptance() throws {
-        throw XCTSkip()
-        
         let cpu = CPU()
         
         try FileBasedATR("Computer/CPU-external", firstOutputColumn: 4) {
@@ -133,16 +140,13 @@ class CPUTests: XCTestCase {
             let reset = $0[3].toChar
             
             let result = cpu(input, instruction, reset, clock)
+            let shouldWrite = result.shouldWrite
+            let aValue = result.aValue.toDecimal()
+            let pcValue = result.pcValue.toDecimal()
             
-            var output = result.toMemory
-            output = output.first! == "*"
-            ? output
-            : output.toDecimal()
-            
-            return [output.toDecimal(),
-                    result.shouldWrite,
-                    result.aValue.toDecimal(),
-                    result.pcValue.toDecimal()]
+            return shouldWrite == "1"
+            ? [result.mValue.toDecimal(), shouldWrite, aValue, pcValue]
+            : ["*******", shouldWrite, aValue, pcValue]
         }.run()
     }
 }
@@ -169,8 +173,8 @@ func ==>(actual: CPU.Out, expected: CPU.Out) {
     XCTAssertEqual(actual.shouldWrite, expected.shouldWrite,
                    "shouldWrite")
     
-    if !expected.toMemory.contains("*") {
-        XCTAssertEqual(actual.toMemory, expected.toMemory,
+    if !expected.mValue.contains("*") {
+        XCTAssertEqual(actual.mValue, expected.mValue,
                        "toMemory")
     }
 }
