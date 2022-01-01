@@ -57,55 +57,114 @@ final class CPU {
     let d = Register()
     let pc = PC()
     
-    private let null = "*******"
-
-    
     func callAsFunction(
-        _ input: String,
+        _ fromM: String,
         _ instruction: String,
         _ reset: Char,
         _ clock: Char
     ) -> Out {
-        if instruction[0] == "0" {
+        let isComputation = instruction[0]
+        
+        func setA() -> Out {
             let value = String(instruction.dropFirst())
-            let aValue = a(value, "1", clock)
-            let pcValue = pc("0".toBinary(), "0", "0", "1", clock)
+            let aValue = a(value, not(isComputation), clock)
+            let pcValue = pc("0" + aValue,
+                             isComputation,
+                             isComputation,
+                             not(isComputation),
+                             clock)
             
-            return Out(toMemory: null,
-                       shouldWrite: "0",
+            return Out(toMemory: aValue,
+                       shouldWrite: isComputation,
                        aValue: aValue,
                        pcValue: pcValue)
-        } else {
-            let zero = zero(instruction)
-            let one = instruction[0]
-            
-            let instruction = String(instruction.dropFirst(3))
-            
-            let aValue = a(zero.toBinary(15), zero[0], clock)
-            let dValue = d(zero.toBinary(15), zero[0], clock)
-
-            let aOrMValue = instruction[0] == zero[0]
-                ? aValue
-                : input
-            
-            let aluOut = alu(x: dValue,
-                             y: aOrMValue,
-                             zx: instruction[1],
-                             nx: instruction[2],
-                             zy: instruction[3],
-                             ny: instruction[4],
-                             f: instruction[5],
-                             no: instruction[6]).out
-            
-            let shouldWriteM = instruction[9]
-            let toMemory = shouldWriteM == zero[0] ? null : aluOut
-            
-            d(aluOut, instruction[8], clock)
-            
-            return Out(toMemory: toMemory,
-                       shouldWrite: shouldWriteM,
-                       aValue: a(aluOut, instruction[7], clock),
-                       pcValue: pc(zero, zero[0], zero[0], one, clock))
         }
+        
+        func computeInstruction() -> Out {
+            let instruction15 = String(instruction.dropFirst())
+            let isMInstruction = instruction[3]
+            let aluInstruction = String(instruction.dropFirst(4).prefix(6))
+            let destination = String(instruction.dropFirst(10).prefix(3))
+            let jump = String(instruction.dropFirst(13))
+            
+            let initialAValue = a(instruction15, not(isComputation), clock)
+            let initialDValue = d(instruction15, not(isComputation), clock)
+            
+            let aOrMValue = mux16(initialAValue, fromM, isMInstruction)
+            
+            let initialALU = compute(x: initialDValue,
+                                     y: aOrMValue,
+                                     instruction: aluInstruction)
+            
+            let shouldWriteA = and(isComputation, destination[0])
+            let shouldWriteD = and(isComputation, destination[1])
+            let shouldWriteM = and(isComputation, destination[2])
+            
+            let finalDValue = d(initialALU.out,
+                                shouldWriteD,
+                                clock)
+            
+            let finalALU = compute(x: finalDValue,
+                                   y: aOrMValue,
+                                   instruction: aluInstruction)
+            
+            let finalAValue = a(finalALU.out,
+                                shouldWriteA,
+                                clock)
+            
+            let negJumpBit = and(finalALU.ng, jump[0])
+            let zerJumpBit = and(finalALU.zr, jump[1])
+            let posJumpBit =
+            and(
+                and(not(finalALU.ng),
+                    not(finalALU.zr)),
+                jump[2]
+            )
+            
+            let jumpBit =
+            or(
+                or(negJumpBit,
+                   posJumpBit),
+                zerJumpBit
+            )
+            let shouldJump = and(isComputation, jumpBit)
+            let shouldInc = and(isComputation,
+                                and(
+                                    not(jumpBit),
+                                    not(reset)
+                                ))
+            
+            let pcValue = pc("0" + finalAValue,
+                             reset,
+                             shouldJump,
+                             shouldInc,
+                             clock)
+            
+            return Out(toMemory: finalALU.out,
+                       shouldWrite: shouldWriteM,
+                       aValue: finalAValue,
+                       pcValue: pcValue)
+        }
+    
+        if isComputation == "0" {
+            return setA()
+        } else {
+            return computeInstruction()
+        }
+    }
+    
+    private func compute(
+        x: String,
+        y: String,
+        instruction: String
+    ) -> (out: String, zr: Char, ng: Char) {
+        alu(x: x,
+            y: y,
+            zx: instruction[0],
+            nx: instruction[1],
+            zy: instruction[2],
+            ny: instruction[3],
+            f: instruction[4],
+            no: instruction[5])
     }
 }
