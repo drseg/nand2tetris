@@ -74,15 +74,15 @@ final class CPU {
     let pc = PC()
     
     func callAsFunction(
-        _ fromM: String,
-        _ instruction: String,
-        _ reset: Char,
+        _ mValue: String,
+        _ code: String,
+        _ shouldReset: Char,
         _ clock: Char
     ) -> Out {
-        let isComputation = instruction[0]
+        let isComputation = code[0]
         
         func setA() -> Out {
-            let aValue = a(instruction, not(isComputation), clock)
+            let aValue = a(code, not(isComputation), clock)
             let pcValue = pc(aValue,
                              "0",
                              "0",
@@ -95,24 +95,28 @@ final class CPU {
                        pcValue: pcValue)
         }
         
-        func computeInstruction() -> Out {
-            let isMInstruction = instruction[3]
-            let aluInstruction = String(instruction.dropFirst(4).prefix(6))
-            let destination = String(instruction.dropFirst(10).prefix(3))
-            let jump = String(instruction.dropFirst(13))
+        func computeCode() -> Out {
+            func shouldAct(_ bit: Char) -> Char {
+                and(bit, isComputation)
+            }
             
-            let initialAValue = a(instruction, "0", clock)
-            let initialDValue = d(instruction, "0", clock)
+            let isMCode = code[3]
+            let aluCode = String(code.dropFirst(4).prefix(6))
+            let destination = String(code.dropFirst(10).prefix(3))
+            let jump = String(code.dropFirst(13))
             
-            let aOrMValue = mux16(initialAValue, fromM, isMInstruction)
+            let initialAValue = a(code, "0", clock)
+            let initialDValue = d(code, "0", clock)
+            
+            let aOrMValue = mux16(initialAValue, mValue, isMCode)
             
             let initialALU = compute(x: initialDValue,
                                      y: aOrMValue,
-                                     instruction: aluInstruction)
+                                     code: aluCode)
             
-            let shouldWriteA = and(isComputation, destination[0])
-            let shouldWriteD = and(isComputation, destination[1])
-            let shouldWriteM = and(isComputation, destination[2])
+            let shouldWriteA = shouldAct(destination[0])
+            let shouldWriteD = shouldAct(destination[1])
+            let shouldWriteM = shouldAct(destination[2])
             
             let finalDValue = d(initialALU.out,
                                 shouldWriteD,
@@ -120,39 +124,32 @@ final class CPU {
             
             let finalALU = compute(x: finalDValue,
                                    y: aOrMValue,
-                                   instruction: aluInstruction)
+                                   code: aluCode)
             
             let finalAValue = a(finalALU.out,
                                 shouldWriteA,
                                 clock)
             
-            let negJumpBit = and(finalALU.ng, jump[0])
-            let zerJumpBit = and(finalALU.zr, jump[1])
-            let posJumpBit =
-            and(
-                and(not(finalALU.ng),
-                    not(finalALU.zr)),
-                jump[2]
+            let negJumpBit = and(finalALU.ng,
+                                 jump[0])
+            let zerJumpBit = and(finalALU.zr,
+                                 jump[1])
+            let posJumpBit = and(and(not(finalALU.ng),
+                                     not(finalALU.zr)),
+                                 jump[2])
+            
+            let shouldJump = shouldAct(
+                or(or(negJumpBit,
+                      posJumpBit),
+                   zerJumpBit
+                  )
             )
             
-            let jumpBit =
-            or(
-                or(negJumpBit,
-                   posJumpBit),
-                zerJumpBit
-            )
-            let shouldJump = and(isComputation, jumpBit)
-            
-            let shouldInc =
-            and(isComputation,
-                and(
-                    not(jumpBit),
-                    not(reset)
-                )
-            )
+            let shouldInc = shouldAct(and(not(shouldJump),
+                                          not(shouldReset)))
             
             let pcValue = pc(finalAValue,
-                             reset,
+                             shouldReset,
                              shouldJump,
                              shouldInc,
                              clock)
@@ -163,21 +160,21 @@ final class CPU {
                        pcValue: pcValue)
         }
         
-        return setA().or(computeInstruction(), predicate: isComputation)
+        return setA().or(computeCode(), predicate: isComputation)
     }
     
     private func compute(
         x: String,
         y: String,
-        instruction: String
+        code: String
     ) -> (out: String, zr: Char, ng: Char) {
         alu(x: x,
             y: y,
-            zx: instruction[0],
-            nx: instruction[1],
-            zy: instruction[2],
-            ny: instruction[3],
-            f: instruction[4],
-            no: instruction[5])
+            zx: code[0],
+            nx: code[1],
+            zy: code[2],
+            ny: code[3],
+            f: code[4],
+            no: code[5])
     }
 }
