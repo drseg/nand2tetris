@@ -60,23 +60,21 @@ class CPUTests: XCTestCase {
     }
     
     func testAInstructions() {
-        let expected1 = cpuOut(aValue: 0.b,
-                               pcValue: 0.b)
+        cpu("0", "0011000000111001", "0", "0")
+        ==> cpuOut(aValue: 0.b,
+                   pcValue: 0.b)
         
-        let expected2 = cpuOut(aValue: "0011000000111001",
-                               pcValue: 1.b)
+        cpu("0", "0011000000111001", "0", "1")
+        ==> cpuOut(aValue: "0011000000111001",
+                   pcValue: 1.b)
         
-        let expected3 = cpuOut(aValue: "0011000000111001",
-                               pcValue: 1.b)
+        cpu("0", "0101101110100000", "0", "0")
+        ==> cpuOut(aValue: "0011000000111001",
+                   pcValue: 1.b)
         
-        let expected4 = cpuOut(aValue: "0101101110100000",
-                               pcValue: 2.b)
-        
-        cpu("0", "0011000000111001", "0", "0") ==> expected1
-        cpu("0", "0011000000111001", "0", "1") ==> expected2
-        
-        cpu("0", "0101101110100000", "0", "0") ==> expected3
-        cpu("0", "0101101110100000", "0", "1") ==> expected4
+        cpu("0", "0101101110100000", "0", "1")
+        ==> cpuOut(aValue: "0101101110100000",
+                   pcValue: 2.b)
     }
     
     func testDAndMInstructions() {
@@ -84,20 +82,20 @@ class CPUTests: XCTestCase {
         dEqualsA()
         ==> cpuOut(aValue: 12345.b,
                    pcValue: 2.b)
-        cpu.d.value => 12345.b
+        cpu.dRegister.value => 12345.b
         
         setA(23456.b)
         aMinusD()
         ==> cpuOut(aValue: 23456.b,
                    pcValue: 4.b)
-        cpu.d.value => 11111.b
+        cpu.dRegister.value => 11111.b
         
         setA(1000.b)
         mEqualsD() ==> cpuOut(mValue: 11111.b,
                               shouldWrite: "1",
                               aValue: 1000.b,
                               pcValue: 6.b)
-        cpu.d.value => 11111.b
+        cpu.dRegister.value => 11111.b
         
         setA(1001.b)
         mdEqualsDMinusOne(clock: "0")
@@ -111,13 +109,13 @@ class CPUTests: XCTestCase {
                    shouldWrite: "1",
                    aValue: 1001.b,
                    pcValue: 8.b)
-        cpu.d.value => 11110.b
+        cpu.dRegister.value => 11110.b
         
         setA(1000.b)
         dEqualsDMinusM()
         ==> cpuOut(aValue: 1000.b,
                    pcValue: 10.b)
-        cpu.d.value => (-1).b
+        cpu.dRegister.value => (-1).b
         
         setA(14.b)
         jumpIfNegD()
@@ -131,15 +129,13 @@ class CPUTests: XCTestCase {
     }
     
     func testAcceptance() throws {
-        let cpu = CPU()
-        
         try FileBasedATR("Computer/CPU-external", firstOutputColumn: 4) {
             let clock = $0[0].clockSignal
             let input = $0[1].toBinary()
-            let instruction = $0[2]
+            let code = $0[2]
             let reset = $0[3].toChar
             
-            let result = cpu(input, instruction, reset, clock)
+            let result = self.cpu(input, code, reset, clock)
             let shouldWrite = result.shouldWrite
             let aValue = result.aValue.toDecimal()
             let pcValue = result.pcValue.toDecimal()
@@ -165,7 +161,7 @@ extension Int {
 
 infix operator ==>
 
-func ==>(actual: CPU.Out, expected: CPU.Out) {
+fileprivate func ==>(actual: CPU.Out, expected: CPU.Out) {
     XCTAssertEqual(actual.pcValue, expected.pcValue,
                    "pcValue")
     XCTAssertEqual(actual.aValue, expected.aValue,

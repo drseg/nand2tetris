@@ -5,26 +5,26 @@ final class CPU {
         let aValue: String
         let pcValue: String
         
-        func or(_ other: Out, predicate: Char) -> Out {
-            Out(mValue: mux16(mValue.leftPad(16),
-                              other.mValue.leftPad(16),
-                              predicate),
-                shouldWrite: mux(shouldWrite,
-                                 other.shouldWrite,
-                                 predicate),
-                aValue: mux16(aValue.leftPad(16),
-                              other.aValue.leftPad(16),
-                              predicate),
-                pcValue: mux16(pcValue.leftPad(16),
-                               other.pcValue.leftPad(16),
-                               predicate)
+        func or(_ other: Out, predicate pred: Char) -> Out {
+            Out(mValue: or(mValue, other.mValue, pred),
+                shouldWrite: mux(shouldWrite, other.shouldWrite, pred),
+                aValue: or(aValue, other.aValue, pred),
+                pcValue: or(pcValue, other.pcValue, pred)
             )
+        }
+        
+        private func or(
+            _ lhs: String,
+            _ rhs: String,
+            _ pred: Char
+        ) -> String {
+            mux16(lhs.leftPad(16), rhs.leftPad(16), pred)
         }
     }
     
-    let a = Register()
-    let d = Register()
-    let pc = PC()
+    let aRegister = Register()
+    let dRegister = Register()
+    let pcRegister = PC()
     
     func callAsFunction(
         _ mValue: String,
@@ -36,17 +36,17 @@ final class CPU {
         let zero = xor(isComputation, isComputation)
         
         func setA() -> Out {
-            let aValue = a(code, not(isComputation), clock)
-            let pcValue = pc(aValue,
-                             zero,
-                             zero,
-                             not(isComputation),
-                             clock)
+            let a = aRegister(code, not(isComputation), clock)
+            let pc = pcRegister(a,
+                                zero,
+                                zero,
+                                not(isComputation),
+                                clock)
             
-            return Out(mValue: aValue,
+            return Out(mValue: a,
                        shouldWrite: isComputation,
-                       aValue: aValue,
-                       pcValue: pcValue)
+                       aValue: a,
+                       pcValue: pc)
         }
         
         func computeCode() -> Out {
@@ -59,30 +59,30 @@ final class CPU {
             let destination = String(code.dropFirst(10).prefix(3))
             let jump = String(code.dropFirst(13))
             
-            let initialAValue = a(code, zero, clock)
-            let initialDValue = d(code, zero, clock)
+            let initialA = aRegister(code, zero, clock)
+            let initialD = dRegister(code, zero, clock)
             
-            let aOrMValue = mux16(initialAValue, mValue, isMCode)
+            let aOrM = mux16(initialA, mValue, isMCode)
             
-            let initialALU = compute(x: initialDValue,
-                                     y: aOrMValue,
+            let initialALU = compute(x: initialD,
+                                     y: aOrM,
                                      code: aluCode)
             
             let shouldWriteA = shouldAct(destination[0])
             let shouldWriteD = shouldAct(destination[1])
             let shouldWriteM = shouldAct(destination[2])
             
-            let finalDValue = d(initialALU.out,
-                                shouldWriteD,
-                                clock)
+            let finalD = dRegister(initialALU.out,
+                                   shouldWriteD,
+                                   clock)
             
-            let finalALU = compute(x: finalDValue,
-                                   y: aOrMValue,
+            let finalALU = compute(x: finalD,
+                                   y: aOrM,
                                    code: aluCode)
             
-            let finalAValue = a(finalALU.out,
-                                shouldWriteA,
-                                clock)
+            let finalA = aRegister(finalALU.out,
+                                   shouldWriteA,
+                                   clock)
             
             let negJumpBit = and(finalALU.ng,
                                  jump[0])
@@ -92,25 +92,22 @@ final class CPU {
                                      not(finalALU.zr)),
                                  jump[2])
             
-            let shouldJump = shouldAct(
-                or(or(negJumpBit,
-                      posJumpBit),
-                   zerJumpBit
-                  )
-            )
+            let shouldJump = shouldAct(or(or(negJumpBit,
+                                             posJumpBit),
+                                          zerJumpBit))
             
             let shouldInc = shouldAct(and(not(shouldJump),
                                           not(shouldReset)))
             
-            let pcValue = pc(finalAValue,
-                             shouldReset,
-                             shouldJump,
-                             shouldInc,
-                             clock)
+            let pcValue = pcRegister(finalA,
+                                     shouldReset,
+                                     shouldJump,
+                                     shouldInc,
+                                     clock)
             
             return Out(mValue: finalALU.out,
                        shouldWrite: shouldWriteM,
-                       aValue: finalAValue,
+                       aValue: finalA,
                        pcValue: pcValue)
         }
         
