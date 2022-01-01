@@ -1,7 +1,7 @@
 import XCTest
 @testable import Nand2Tetris
 
-class CPUTests: XCTestCase {
+class CPUTestCase: XCTestCase {
     var cpu: CPU!
     
     override func setUp() {
@@ -58,25 +58,9 @@ class CPUTests: XCTestCase {
                 aValue: aValue,
                 pcValue: pcValue)
     }
-    
-    func testAInstructions() {
-        cpu("0", "0011000000111001", "0", "0")
-        ==> cpuOut(aValue: 0.b,
-                   pcValue: 0.b)
-        
-        cpu("0", "0011000000111001", "0", "1")
-        ==> cpuOut(aValue: "0011000000111001",
-                   pcValue: 1.b)
-        
-        cpu("0", "0101101110100000", "0", "0")
-        ==> cpuOut(aValue: "0011000000111001",
-                   pcValue: 1.b)
-        
-        cpu("0", "0101101110100000", "0", "1")
-        ==> cpuOut(aValue: "0101101110100000",
-                   pcValue: 2.b)
-    }
-    
+}
+
+class CPUTests: CPUTestCase {
     func testDAndMInstructions() {
         setA(12345.b)
         dEqualsA()
