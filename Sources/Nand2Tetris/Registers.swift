@@ -109,6 +109,7 @@ final class FastRAM: RAM {
                          count: bits)
     }
     
+    @discardableResult
     func callAsFunction(
         _ word: String,
         _ load: Char,

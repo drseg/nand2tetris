@@ -3,27 +3,39 @@ import XCTest
 
 class ComputerTests: CPUTestCase {
     var c: Computer!
+    var screen: FastRAM!
+    var keyboard: Keyboard!
     
     override func setUp() {
         super.setUp()
-        c = Computer(cpu: cpu)
+        screen = FastRAM(16384)
+        keyboard = MockKeyboard()
+        c = Computer(cpu: cpu,
+                     memory: Memory(keyboard: keyboard,
+                                    screen: screen))
     }
     
-    func testComputerCanLoadProgramme() {
-        c.load(["1111111111111111"])
-        c.instructions[0] => "1111111111111111"
-        c.instructions[1] => "0000000000000000"
-        c.instructions.count => 32768
-    }
-    
-    func testLoadErasesPreviousInstructions() {
-        c.load(["0000000000000001",
-                "1111111111111111"])
-        c.load(["0000000000000001"])
-        c.instructions[1] => "0000000000000000"
-    }
-    
-    func testClock() {
+    func testCanRunDEqualsA() {
+        let aEquals12345 = 12345.b
+        let dEqualsA = "1110110000010000"
         
+        c.load([aEquals12345,
+                dEqualsA])
+        c.reset("0")
+        
+        cpu.dRegister.value => 12345.b
+    }
+    
+    func testCanRunMEqualsD() {
+        let aEquals12345 = 12345.b
+        let dEqualsA = "1110110000010000"
+        let mEqualsD = "1110001100001000"
+        
+        c.load([aEquals12345,
+                dEqualsA,
+                mEqualsD])
+        c.reset("0")
+        
+        c.memory(0.b, "0", 12345.b, "1") => 12345.b
     }
 }

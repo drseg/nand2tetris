@@ -132,13 +132,13 @@ class CPUTests: CPUTestCase {
 }
 
 extension Register {
-    fileprivate var value: String {
+    var value: String {
         self(0.b, "0", "0")
     }
 }
 
 extension Int {
-    fileprivate var b: String {
+    var b: String {
         String(self).toBinary()
     }
 }

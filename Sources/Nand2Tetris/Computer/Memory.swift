@@ -31,6 +31,7 @@ class Memory {
         self.screen = screen
     }
     
+    @discardableResult
     func callAsFunction(
         _ word: String,
         _ load: Char,

@@ -26,6 +26,7 @@ final class CPU {
     let dRegister = Register()
     let pcRegister = PC()
     
+    @discardableResult
     func callAsFunction(
         _ mValue: String,
         _ code: String,
