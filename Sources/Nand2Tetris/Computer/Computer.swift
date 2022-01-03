@@ -1,7 +1,11 @@
+import Foundation
+
 final class Computer {
     let cpu: CPU
     let memory: Memory
     var rom = FastRAM(32768)
+    
+    var reset: Char = "0"
     
     init(cpu: CPU, memory: Memory) {
         self.cpu = cpu
@@ -19,28 +23,41 @@ final class Computer {
         }
     }
     
-    func reset(_ reset: Char) {
-        var next = fetchNext(rom["0".toBinary()], reset: reset)
-        while next != "0".toBinary() {
-            next = fetchNext(next, reset: reset)
+    func run() {
+        DispatchQueue.global().async { [self] in
+            var last = fetchNext(CPU.Out.null)
+            while true {
+                last = fetchNext(last)
+            }
         }
     }
     
-    private func fetchNext(_ previous: String, reset: Char) -> String {
-        let out = cpu(zero(previous),
-                      previous,
-                      reset, "1")
+    private func fetchNext(_ previous: CPU.Out) -> CPU.Out {
+        let out = cpu(previous.mValue,
+                      rom[previous.pcValue],
+                      reset,
+                      "1")
+        
         memory(out.mValue,
                out.shouldWrite,
                out.aValue,
                "1")
         
-        return rom[out.pcValue]
+        return out
     }
 }
 
 extension FastRAM {
     subscript(_ address: String) -> String {
         self(zero(address), zero(address)[0], address, "1")
+    }
+}
+
+extension CPU.Out {
+    static var null: CPU.Out {
+        CPU.Out(mValue: "0".toBinary(),
+                shouldWrite: "0",
+                aValue: "0".toBinary(),
+                pcValue: "0".toBinary())
     }
 }

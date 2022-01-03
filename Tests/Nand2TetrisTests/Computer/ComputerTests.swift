@@ -15,27 +15,49 @@ class ComputerTests: CPUTestCase {
                                     screen: screen))
     }
     
+    #warning("nasty hack")
+    func runProgramme() {
+        c.run()
+        usleep(20000)
+    }
+    
     func testCanRunDEqualsA() {
         let aEquals12345 = 12345.b
         let dEqualsA = "1110110000010000"
         
         c.load([aEquals12345,
                 dEqualsA])
-        c.reset("0")
         
+        runProgramme()
         cpu.dRegister.value => 12345.b
     }
     
-    func testCanRunMEqualsD() {
+    func testCanRunDEqualsM() {
         let aEquals12345 = 12345.b
         let dEqualsA = "1110110000010000"
+        
+        let aEquals0 = 0.b
         let mEqualsD = "1110001100001000"
+        let dEqualsMplus1 = "1111110111010000"
         
         c.load([aEquals12345,
                 dEqualsA,
-                mEqualsD])
-        c.reset("0")
+                aEquals0,
+                mEqualsD,
+                dEqualsMplus1])
         
-        c.memory(0.b, "0", 12345.b, "1") => 12345.b
+        runProgramme()
+        cpu.dRegister.value => 12346.b
     }
+    
+    //    func testCanAddTwoAndThree() {
+    //        c.load(["0000000000000010",
+//                "1110110000010000",
+//                "0000000000000011",
+//                "1110000010010000",
+//                "0000000000000000",
+//                "1110001100001000"])
+//        c.reset("0")
+//
+//    }
 }
