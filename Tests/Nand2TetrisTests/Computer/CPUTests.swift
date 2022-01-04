@@ -137,12 +137,6 @@ extension Register {
     }
 }
 
-extension Int {
-    var b: String {
-        String(self).toBinary()
-    }
-}
-
 infix operator ==>
 
 fileprivate func ==>(actual: CPU.Out, expected: CPU.Out) {

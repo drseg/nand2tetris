@@ -15,7 +15,6 @@ class ComputerTests: CPUTestCase {
                                     screen: screen))
     }
     
-    #warning("nasty hack")
     func runProgramme() {
         c.run()
         usleep(40000)
@@ -23,7 +22,7 @@ class ComputerTests: CPUTestCase {
     
     func testCanRunDEqualsA() {
         let aEquals12345 = 12345.b
-        let dEqualsA = "1110110000010000"
+        let dEqualsA = "111 0 110000 010 000".trimmed
         
         c.load([aEquals12345,
                 dEqualsA])
@@ -48,6 +47,23 @@ class ComputerTests: CPUTestCase {
         
         runProgramme()
         cpu.dRegister.value => 12346.b
+    }
+    
+    func testCanSaveResultOfAddingTwoAndThreeToAddressZero() {
+        c.load(["0000000000000010",
+                "1110110000010000",
+                "0000000000000011",
+                "1110000010010000",
+                "0000000000000000",
+                "1110001100001000"])
+        runProgramme()
+        c.memory.value(0.b) => 5.b
+    }
+}
+
+extension Memory {
+    func value(_ address: String) -> String {
+        self(0.b, "0", address, "0")
     }
 }
 

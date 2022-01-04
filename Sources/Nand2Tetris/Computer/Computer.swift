@@ -7,6 +7,12 @@ final class Computer {
     
     var reset: Char = "0"
     
+    private var clockState: Char = "0"
+    var clock: Char {
+        defer { clockState = clockState == "0" ? "1" : "0" }
+        return clockState
+    }
+    
     init(cpu: CPU, memory: Memory) {
         self.cpu = cpu
         self.memory = memory
@@ -16,45 +22,34 @@ final class Computer {
         rom.load(instructions)
     }
     
-    private var clockStorage: Char = "0"
-    var clock: Char {
-        defer {
-            clockStorage = clockStorage == "0" ? "1" : "0"
-        }
-        
-        return clockStorage
-    }
-    
     func run() {
         DispatchQueue.global().async { [self] in
-            var lastOut = performNext(CPU.Out.null, clock: clock)
+            var lastOut = CPU.Out.null
             while true {
                 lastOut = performNext(lastOut, clock: clock)
             }
         }
     }
     
-    private func performNext(_ previous: CPU.Out, clock: Char) -> CPU.Out {
-        let mOut = memory(previous.mValue,
-                          previous.shouldWrite,
-                          previous.aValue,
+    private func performNext(_ current: CPU.Out, clock: Char) -> CPU.Out {
+        let mOut = memory(current.mValue,
+                          current.shouldWrite,
+                          current.aValue,
                           clock)
         
-        let current = cpu(mOut,
-                          rom[previous.pcValue],
-                          reset,
-                          clock)
-        
-        return current
+        return cpu(mOut,
+                   rom[current.pcValue],
+                   reset,
+                   clock)
     }
 }
 
 extension CPU.Out {
     static var null: CPU.Out {
-        CPU.Out(mValue: "0".toBinary(),
+        CPU.Out(mValue: 0.b,
                 shouldWrite: "0",
-                aValue: "0".toBinary(),
-                pcValue: "0".toBinary())
+                aValue: 0.b,
+                pcValue: 0.b)
     }
 }
 
@@ -73,7 +68,7 @@ extension FastRAM {
     
     func reset() {
         for i in 0..<words.count {
-            words[i] = "0".toBinary()
+            words[i] = 0.b
         }
     }
 }

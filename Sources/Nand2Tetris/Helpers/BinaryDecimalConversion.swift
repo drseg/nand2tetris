@@ -2,6 +2,10 @@ extension BinaryInteger {
     func toBinary(_ width: Int = 16) -> String {
         String(self, radix: 2).leftPad(width)
     }
+    
+    var b: String {
+        String(self).toBinary()
+    }
 }
 
 extension String {
