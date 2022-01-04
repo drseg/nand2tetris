@@ -18,7 +18,7 @@ class ComputerTests: CPUTestCase {
     #warning("nasty hack")
     func runProgramme() {
         c.run()
-        usleep(20000)
+        usleep(40000)
     }
     
     func testCanRunDEqualsA() {
@@ -33,31 +33,26 @@ class ComputerTests: CPUTestCase {
     }
     
     func testCanRunDEqualsM() {
-        let aEquals12345 = 12345.b
-        let dEqualsA = "1110110000010000"
+        let setA12345 = 12345.b
+        let dEqualsA =      "111 0 110000 010 000".trimmed
         
-        let aEquals0 = 0.b
-        let mEqualsD = "1110001100001000"
-        let dEqualsMplus1 = "1111110111010000"
+        let setA0 = 0.b
+        let mEqualsD =      "111 0 001100 001 000".trimmed
+        let dEqualsMplus1 = "111 1 110111 010 000".trimmed
         
-        c.load([aEquals12345,
+        c.load([setA12345,
                 dEqualsA,
-                aEquals0,
+                setA0,
                 mEqualsD,
                 dEqualsMplus1])
         
         runProgramme()
         cpu.dRegister.value => 12346.b
     }
-    
-    //    func testCanAddTwoAndThree() {
-    //        c.load(["0000000000000010",
-//                "1110110000010000",
-//                "0000000000000011",
-//                "1110000010010000",
-//                "0000000000000000",
-//                "1110001100001000"])
-//        c.reset("0")
-//
-//    }
+}
+
+extension String {
+    var trimmed: String {
+        replacingOccurrences(of: " ", with: "")
+    }
 }

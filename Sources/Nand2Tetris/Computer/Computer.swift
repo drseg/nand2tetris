@@ -13,43 +13,39 @@ final class Computer {
     }
     
     func load(_ instructions: [String]) {
-        rom = FastRAM(32768)
-        
-        instructions.enumerated().forEach {
-            rom($0.element,
-                one($0.element[0]),
-                String($0.offset).toBinary(),
-                one($0.element[0]))
+        rom.load(instructions)
+    }
+    
+    private var clockStorage: Char = "0"
+    var clock: Char {
+        defer {
+            clockStorage = clockStorage == "0" ? "1" : "0"
         }
+        
+        return clockStorage
     }
     
     func run() {
         DispatchQueue.global().async { [self] in
-            var last = fetchNext(CPU.Out.null)
+            var lastOut = performNext(CPU.Out.null, clock: clock)
             while true {
-                last = fetchNext(last)
+                lastOut = performNext(lastOut, clock: clock)
             }
         }
     }
     
-    private func fetchNext(_ previous: CPU.Out) -> CPU.Out {
-        let out = cpu(previous.mValue,
-                      rom[previous.pcValue],
-                      reset,
-                      "1")
+    private func performNext(_ previous: CPU.Out, clock: Char) -> CPU.Out {
+        let mOut = memory(previous.mValue,
+                          previous.shouldWrite,
+                          previous.aValue,
+                          clock)
         
-        memory(out.mValue,
-               out.shouldWrite,
-               out.aValue,
-               "1")
+        let current = cpu(mOut,
+                          rom[previous.pcValue],
+                          reset,
+                          clock)
         
-        return out
-    }
-}
-
-extension FastRAM {
-    subscript(_ address: String) -> String {
-        self(zero(address), zero(address)[0], address, "1")
+        return current
     }
 }
 
@@ -59,5 +55,25 @@ extension CPU.Out {
                 shouldWrite: "0",
                 aValue: "0".toBinary(),
                 pcValue: "0".toBinary())
+    }
+}
+
+extension FastRAM {
+    subscript(_ address: String) -> String {
+        self(zero(address), zero(address)[0], address, "1")
+    }
+    
+    func load(_ instructions: [String]) {
+        reset()
+        
+        instructions.enumerated().forEach {
+            words[$0.offset] = $0.element
+        }
+    }
+    
+    func reset() {
+        for i in 0..<words.count {
+            words[i] = "0".toBinary()
+        }
     }
 }
