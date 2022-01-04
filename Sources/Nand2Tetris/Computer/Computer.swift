@@ -1,11 +1,13 @@
 import Foundation
+import XCTest
 
 final class Computer {
     let cpu: CPU
     let memory: Memory
     var rom = FastRAM(32768)
-    
+        
     var reset: Char = "0"
+    var terminated = false
     
     private var clockState: Char = "0"
     var clock: Char {
@@ -25,7 +27,7 @@ final class Computer {
     func run() {
         DispatchQueue.global().async { [self] in
             var lastOut = CPU.Out.null
-            while true {
+            while !terminated {
                 lastOut = performNext(lastOut, clock: clock)
             }
         }
