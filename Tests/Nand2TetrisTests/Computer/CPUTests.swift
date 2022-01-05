@@ -9,7 +9,7 @@ class CPUTestCase: XCTestCase {
     }
     
     func setA(_ value: String) {
-        let _ = cpu("0", value, "0", "1")
+        cpu("0", value, "0", "1")
     }
     
     func dEqualsA() -> CPU.Out {

@@ -105,7 +105,7 @@ final class FastRAM: RAM {
     var words: [String]
     
     init(_ bits: Int) {
-        words = [String](repeating: "0000000000000000",
+        words = [String](repeating: 0.b,
                          count: bits)
     }
     

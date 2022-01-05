@@ -27,8 +27,7 @@ class ComputerTests: CPUTestCase {
         let aEquals12345 = 12345.b
         let dEqualsA = "111 0 110000 010 000".trimmed
         
-        runProgram([aEquals12345,
-                                    dEqualsA])
+        runProgram([aEquals12345, dEqualsA])
         cpu.dRegister.value => 12345.b
     }
     

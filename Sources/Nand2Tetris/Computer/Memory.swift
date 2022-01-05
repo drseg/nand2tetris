@@ -11,11 +11,11 @@ class MockKeyboard: Keyboard {
         guard key != "-" else {
             didRelease(key); return
         }
-        currentKey = key.asciiValue?.toBinary() ?? 0.toBinary()
+        currentKey = key.asciiValue?.b ?? 0.b
     }
     
     func didRelease(_ key: Char) {
-        currentKey = 0.toBinary()
+        currentKey = 0.b
     }
 }
 
