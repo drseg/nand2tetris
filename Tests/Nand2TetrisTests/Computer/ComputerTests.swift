@@ -2,7 +2,6 @@ import XCTest
 @testable import Nand2Tetris
 
 class ComputerTests: CPUTestCase {
-    
     var c: Computer!
     var screen: FastRAM!
     var keyboard: Keyboard!

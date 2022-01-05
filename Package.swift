@@ -24,7 +24,7 @@ let package = Package(
             name: "Nand2TetrisTests",
             dependencies: ["Nand2Tetris", "AbstractTestCase"],
             resources: [
-                .copy("AcceptanceTests")
+                .copy("AcceptanceTestFiles")
             ]
         )
     ]

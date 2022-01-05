@@ -1,20 +1,20 @@
 import XCTest
 
-public protocol Stringable {
+protocol Stringable {
     var toString: String { get }
 }
 
 extension String: Stringable {
-    public var toString: String { self }
+    var toString: String { self }
 }
 
 extension Character: Stringable {
-    public var toString: String { String(self) }
+    var toString: String { String(self) }
 }
 
-public typealias ActualsFactory = (_ givens: [String]) -> [Stringable]
+typealias ActualsFactory = (_ givens: [String]) -> [Stringable]
 
-private let testRoot = "AcceptanceTests"
+private let testRoot = "AcceptanceTestFiles"
 private let testFileExtension = "cmp"
 
 struct ATRError: Error {
@@ -25,7 +25,7 @@ struct ATRError: Error {
     }
 }
 
-public protocol ATR {
+protocol ATR {
     func run(swiftFile: StaticString, swiftLine: UInt) throws
 }
 
@@ -38,7 +38,7 @@ protocol ATRImplementation: ATR {
 }
 
 extension ATRImplementation {
-    public func run(
+    func run(
         swiftFile: StaticString = #file,
         swiftLine: UInt = #line
     ) throws {
@@ -131,14 +131,14 @@ extension ATRImplementation {
     }
 }
 
-public struct FileBasedATR: ATRImplementation {
+struct FileBasedATR: ATRImplementation {
     let actualsFactory: ActualsFactory
     let firstOutputColumn: Int?
     
     private let relativePath: String
     var testName: String { relativePath }
     
-    public init(
+    init(
         name: String,
         directory: String,
         firstOutputColumn: Int? = nil,
@@ -149,7 +149,7 @@ public struct FileBasedATR: ATRImplementation {
                   factory: factory)
     }
     
-    public init(
+    init(
         _ relativePath: String,
         firstOutputColumn: Int? = nil,
         factory: @escaping ActualsFactory
