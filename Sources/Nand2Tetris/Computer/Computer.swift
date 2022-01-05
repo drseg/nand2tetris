@@ -10,7 +10,7 @@ final class Computer {
     var terminated = false
     
     private var clockState: Char = "0"
-    var clock: Char {
+    var nextClock: Char {
         defer { clockState = clockState == "0" ? "1" : "0" }
         return clockState
     }
@@ -28,12 +28,12 @@ final class Computer {
         DispatchQueue.global().async { [self] in
             var lastOut = CPU.Out.null
             while !terminated {
-                lastOut = performNext(lastOut, clock: clock)
+                lastOut = performNext(lastOut, nextClock)
             }
         }
     }
     
-    private func performNext(_ current: CPU.Out, clock: Char) -> CPU.Out {
+    private func performNext(_ current: CPU.Out, _ clock: Char) -> CPU.Out {
         let mOut = memory(current.mValue,
                           current.shouldWrite,
                           current.aValue,
