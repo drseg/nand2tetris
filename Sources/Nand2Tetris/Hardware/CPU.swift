@@ -6,14 +6,14 @@ final class CPU {
         let pcValue: String
         
         func or(_ other: Out, predicate pred: Char) -> Out {
-            Out(mValue: or(mValue, other.mValue, pred),
+            Out(mValue: if16(mValue, other.mValue, pred),
                 shouldWrite: mux(shouldWrite, other.shouldWrite, pred),
-                aValue: or(aValue, other.aValue, pred),
-                pcValue: or(pcValue, other.pcValue, pred)
+                aValue: if16(aValue, other.aValue, pred),
+                pcValue: if16(pcValue, other.pcValue, pred)
             )
         }
         
-        private func or(
+        private func if16(
             _ lhs: String,
             _ rhs: String,
             _ pred: Char
