@@ -9,7 +9,7 @@ final class Computer {
     var reset: Char = "0"
     var terminated = false
     
-    private var clockState: Char = "0"
+    var clockState: Char = "0"
     var nextClock: Char {
         defer { clockState = clockState == "0" ? "1" : "0" }
         return clockState

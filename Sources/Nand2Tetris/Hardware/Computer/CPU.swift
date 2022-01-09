@@ -5,7 +5,7 @@ final class CPU {
         let aValue: String
         let pcValue: String
         
-        func or(_ other: Out, predicate pred: Char) -> Out {
+        func or(_ other: Out, if pred: Char) -> Out {
             Out(mValue: if16(mValue, other.mValue, pred),
                 shouldWrite: mux(shouldWrite, other.shouldWrite, pred),
                 aValue: if16(aValue, other.aValue, pred),
@@ -112,7 +112,7 @@ final class CPU {
                        pcValue: pcValue)
         }
         
-        return setA().or(computeCode(), predicate: isComputation)
+        return setA().or(computeCode(), if: isComputation)
     }
     
     private func compute(
