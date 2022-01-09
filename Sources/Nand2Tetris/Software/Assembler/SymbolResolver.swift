@@ -1,17 +1,15 @@
 class SymbolResolver {
     func resolve(_ assembly: String)  -> [String: Int] {
-        var lineNumber = 0
-        
-        return assembly
+        assembly
             .components(separatedBy: "\n")
-            .reduce(into: [String: Int]()) { result, line in
-                lineNumber += 1
+            .reduce(into: ([String: Int](), 0)) { result, line in
+                result.1 += 1
                 if let pseudoCommand = line
                     .droppingComments
                     .pseudoCommand {
-                    result[pseudoCommand] = lineNumber
+                    result.0[pseudoCommand] = result.1
                 }
-            }
+            }.0
     }
 }
 
