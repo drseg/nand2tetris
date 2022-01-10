@@ -75,4 +75,39 @@ class SymbolResolverTests: XCTestCase {
         resolver.resolveSymbols("@TEST")
         resolver.symbols => [:]
     }
+    
+    func testDeletesResolvedCommands() {
+        let assembly =
+        """
+        (LOOP)
+        (END)
+        """
+        resolver.resolve(assembly) => ""
+    }
+    
+    func testReplacesResolvedSymbols() {
+        let assembly =
+        """
+        (LOOP)
+        @i
+        M=D
+        @j
+        D=M
+        (END)
+        @LOOP
+        @END
+        """
+        
+        let expected =
+        """
+        @1024
+        M=D
+        @1025
+        D=M
+        @1
+        @6
+        """
+        
+        resolver.resolve(assembly) => expected
+    }
 }
