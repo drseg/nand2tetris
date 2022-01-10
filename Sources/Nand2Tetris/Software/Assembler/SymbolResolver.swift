@@ -1,5 +1,5 @@
 class SymbolResolver {
-    var staticSymbols: [String: Int] = {
+    let staticSymbols: [String: Int] = {
         (0...15).reduce(into: ["SP": 0,
                                "LCL": 1,
                                "ARG": 2,
@@ -60,12 +60,10 @@ class SymbolResolver {
 
 extension String {
     func replacing(_ replacements: [(String, String)]) -> String {
-        var s = self
-        replacements.forEach {
-            s = s.replacingOccurrences(of: $0.0, with: $0.1)
+        replacements.reduce(into: self) { result, replacement in
+            result = result.replacingOccurrences(of: replacement.0,
+                                                 with: replacement.1)
         }
-        
-        return s
     }
     
     func eachLine(_ forEach: (String) -> ()) {
