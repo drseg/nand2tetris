@@ -1,13 +1,39 @@
 class SymbolResolver {
-    func resolve(_ assembly: String)  -> [String: Int] {
-        assembly
-            .lines
-            .reduce(into: ([String: Int](), 0)) { result, line in
-                result.1 += 1
-                if let pseudoCommandSymbol = line.pseudoCommandSymbol {
-                    result.0[pseudoCommandSymbol] = result.1
-                }
-            }.0
+    var staticSymbols: [String: Int] = {
+        var c = ["SP": 0,
+                 "LCL": 1,
+                 "ARG": 2,
+                 "THIS": 3,
+                 "THAT": 4,
+                 "SCREEN": 16384,
+                 "KBD": 24576]
+        
+        for i in 0...15 {
+            c["R\(i)"] = i
+        }
+        return c
+    }()
+    
+    var commands = [String: Int]()
+    var symbols = [String: Int]()
+    
+    func resolveCommands(_ assembly: String) {
+        var lineNumber = 1
+        
+        assembly.lines.forEach {
+            if let pseudoCommandSymbol = $0.pseudoCommandSymbol {
+                commands[pseudoCommandSymbol] = lineNumber
+            }
+            lineNumber += 1
+        }
+    }
+    
+    func resolveSymbols(_ assembly: String) {
+        var address = 1024
+        
+        if let match = assembly.firstMatching("[@].*")?.dropFirst() {
+            symbols[String(match)] = address
+        }
     }
 }
 
