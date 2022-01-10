@@ -22,20 +22,12 @@ class SymbolResolverTests: XCTestCase {
         resolve("(LOOP)") => ["LOOP": 1]
     }
     
-    func testDoesNotResolveComments() {
-        resolve("//(LOOP)") => [:]
-    }
-    
     func testResolvesMultiplePseudoCommands() {
         resolve("(LOOP)\n(END)") => ["LOOP": 1, "END": 2]
     }
     
     func testIncrementsCommandAddressCorrectly() {
         resolve("(LOOP)\nM=A\n(END)") => ["LOOP": 1, "END": 3]
-    }
-    
-    func testDoesNotResolveCommentOnSameLineAsPseudoCommand() {
-        resolve("(LOOP)//(NULL)\n(END)//(NULL)") => ["LOOP": 1, "END": 2]
     }
     
     func testOnlyResolvesOneCommandPerLine() {

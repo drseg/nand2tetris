@@ -1,29 +1,35 @@
 class SymbolResolver {
     func resolve(_ assembly: String)  -> [String: Int] {
         assembly
-            .components(separatedBy: "\n")
+            .lines
             .reduce(into: ([String: Int](), 0)) { result, line in
                 result.1 += 1
-                if let pseudoCommand = line
-                    .droppingComments
-                    .pseudoCommand {
-                    result.0[pseudoCommand] = result.1
+                if let pseudoCommandSymbol = line.pseudoCommandSymbol {
+                    result.0[pseudoCommandSymbol] = result.1
                 }
             }.0
     }
 }
 
 extension String {
-    var droppingComments: String {
-        components(separatedBy: "//")[0]
+    var lines: [String] {
+        components(separatedBy: "\n")
     }
     
-    var pseudoCommand: String? {
-        guard let range = range(of: "[(][^0-9][^()]*[)]",
-                                options: .regularExpression) else {
-            return nil
-        }
+    var pseudoCommandSymbol: String? {
+        firstMatching("[(][^0-9][^()]*[)]")?.removingBrackets
+    }
+    
+    func firstMatching(_ regex: String) -> String? {
+        guard let range = range(of: regex, options: .regularExpression)
+        else { return nil }
         
-        return String(self[range].dropFirst().dropLast())
+        return String(self[range])
+    }
+    
+    var removingBrackets: String {
+        replacingOccurrences(of: "[()]",
+                             with: "",
+                             options: .regularExpression)
     }
 }
