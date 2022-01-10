@@ -54,13 +54,12 @@ class SymbolResolverTests: XCTestCase {
         resolver.staticSymbols["ARG"] => 2
         resolver.staticSymbols["THIS"] => 3
         resolver.staticSymbols["THAT"] => 4
+        resolver.staticSymbols["SCREEN"] => 16384
+        resolver.staticSymbols["KBD"] => 24576
         
         for i in 0...15 {
             resolver.staticSymbols["R\(i)"] => i
         }
-        
-        resolver.staticSymbols["SCREEN"] => 16384
-        resolver.staticSymbols["KBD"] => 24576
     }
     
     func testResolvesSymbols() {
@@ -71,7 +70,7 @@ class SymbolResolverTests: XCTestCase {
         resolveSymbols("@i\n@i\n@i\n@j") => ["i": 1024, "j": 1025]
     }
     
-    func testDoesNotResolveSymbolIfActuallyPseudoCommand() {
+    func testDoesNotResolveSymbolIfActuallyCommand() {
         resolver.resolveCommands("(TEST)")
         resolver.resolveSymbols("@TEST")
         resolver.symbols => [:]
@@ -101,12 +100,7 @@ class SymbolResolverTests: XCTestCase {
     }
     
     func testDeletesResolvedCommands() {
-        let assembly =
-        """
-        (LOOP)
-        (END)
-        """
-        resolve(assembly) => ""
+        resolve("(LOOP)\n(END)") => ""
     }
     
     
@@ -141,7 +135,7 @@ class SymbolResolverTests: XCTestCase {
         """
         )
         
-        let expected =
+        let resolvedAssembly =
         """
         @0
         D=M
@@ -161,6 +155,6 @@ class SymbolResolverTests: XCTestCase {
         0;JMP
         """
         
-        resolve(assembly) => expected
+        resolve(assembly) => resolvedAssembly
     }
 }
