@@ -14,25 +14,23 @@ class SymbolResolver {
     var commands = [String: Int]()
     var symbols = [String: Int]()
     
+    var allSymbols: [String: Int] {
+        commands + symbols + staticSymbols
+    }
+    
     func resolve(_ assembly: String) -> String {
         resolveCommands(assembly)
         resolveSymbols(assembly)
         
-        return replacingResolvedSymbols(replacingStaticSymbols(assembly))
+        return replacingAll(assembly)
     }
     
-    func replacingResolvedSymbols(_ assembly: String) -> String {
-        (commands + symbols).reduce(into: assembly) { result, symbol in
-            result = result.replacing([("\n(\(symbol.key))", ""),
-                                       ("(\(symbol.key))\n", ""),
-                                       ("(\(symbol.key))", ""),
-                                       (symbol.key, String(symbol.value))])
-        }
-    }
-    
-    func replacingStaticSymbols(_ assembly: String) -> String {
-        staticSymbols.reduce(into: assembly) { result, symbol in
-            result = result.replacing([(symbol.key, String(symbol.value))])
+    func replacingAll(_ assembly: String) -> String {
+        allSymbols.reduce(into: assembly) {
+            $0 = $0.replacing([("\n(\($1.key))", ""),
+                               ("(\($1.key))\n", ""),
+                               ("(\($1.key))", ""),
+                               ($1.key, String($1.value))])
         }
     }
     
@@ -54,6 +52,7 @@ class SymbolResolver {
         assembly.eachLine {
             if let symbol = $0.symbol,
                symbols[symbol] == nil,
+               staticSymbols[symbol] == nil,
                commands[symbol] == nil
             {
                 symbols[symbol] = address

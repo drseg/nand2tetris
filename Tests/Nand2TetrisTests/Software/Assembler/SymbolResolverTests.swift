@@ -62,6 +62,10 @@ class SymbolResolverTests: XCTestCase {
         }
     }
     
+    func testPredifinedSymbolsAreNotResolved() {
+        resolveSymbols("@R1") => [:]
+    }
+    
     func testResolvesSymbols() {
         resolveSymbols("@i") => ["i": 1024]
         resolveSymbols("@i\n@i") => ["i": 1024]
