@@ -18,31 +18,46 @@ class SymbolResolver {
     var symbols = [String: Int]()
     
     func resolveCommands(_ assembly: String) {
-        var lineNumber = 1
+        var instructionNumber = 1
         
-        assembly.lines.forEach {
-            if let pseudoCommandSymbol = $0.pseudoCommandSymbol {
-                commands[pseudoCommandSymbol] = lineNumber
+        assembly.eachLine {
+            if let command = $0.command {
+                commands[command] = instructionNumber
             }
-            lineNumber += 1
+            instructionNumber += 1
         }
     }
     
     func resolveSymbols(_ assembly: String) {
         var address = 1024
         
-        if let match = assembly.firstMatching("[@].*")?.dropFirst() {
-            symbols[String(match)] = address
+        assembly.eachLine {
+            if let symbol = $0.symbol,
+               symbols[symbol] == nil,
+               commands[symbol] == nil
+            {
+                symbols[symbol] = address
+                address += 1
+            }
         }
     }
 }
 
 extension String {
+    func eachLine(_ forEach: (String) -> ()) {
+        lines.forEach(forEach)
+    }
+    
     var lines: [String] {
         components(separatedBy: "\n")
     }
     
-    var pseudoCommandSymbol: String? {
+    var symbol: String? {
+        guard let match = firstMatching("[@].*") else { return nil }
+        return String(match.dropFirst())
+    }
+    
+    var command: String? {
         firstMatching("[(][^0-9][^()]*[)]")?.removingBrackets
     }
     

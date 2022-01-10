@@ -9,11 +9,13 @@ class SymbolResolverTests: XCTestCase {
     }
     
     func resolveCommands(_ assembly: String) -> [String: Int] {
+        resolver = SymbolResolver()
         resolver.resolveCommands(assembly)
         return resolver.commands
     }
     
     func resolveSymbols(_ assembly: String) -> [String: Int] {
+        resolver = SymbolResolver()
         resolver.resolveSymbols(assembly)
         return resolver.symbols
     }
@@ -62,5 +64,15 @@ class SymbolResolverTests: XCTestCase {
     
     func testResolvesSymbol() {
         resolveSymbols("@i") => ["i": 1024]
+        resolveSymbols("@i\n@i") => ["i": 1024]
+
+        resolveSymbols("@i\n@j") => ["i": 1024, "j": 1025]
+        resolveSymbols("@i\n@i\n@i\n@j") => ["i": 1024, "j": 1025]
+    }
+    
+    func testDoesNotResolveSymbolIfActuallyPseudoCommand() {
+        resolver.resolveCommands("(TEST)")
+        resolver.resolveSymbols("@TEST")
+        resolver.symbols => [:]
     }
 }
