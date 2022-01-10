@@ -3,9 +3,9 @@ class AssemblyCleaner {
         assembly
             .components(separatedBy: "\n")
             .map {
-                $0.droppingComments
-                    .trimmingCharacters(in: .whitespaces)
+                $0.trimmingCharacters(in: .whitespaces)
                     .replacingOccurrences(of: " ", with: "")
+                    .droppingComments
             }
             .filter { $0 != "" }
             .joined(separator: "\n")

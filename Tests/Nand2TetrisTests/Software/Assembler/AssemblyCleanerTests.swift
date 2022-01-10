@@ -33,6 +33,7 @@ class AssemblyCleanerTests: XCTestCase {
     
     func testDropsCommentsOnEachLine() {
         clean("//") => ""
+        clean("/   /") => ""
         clean("a //\nb //") => "a\nb"
     }
 }

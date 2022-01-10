@@ -43,7 +43,7 @@ class AssemblerTests: XCTestCase {
                     @R   13
                     A=M
                     M=D
-                    @1   // HE  LP! Someone messed with my assembleee
+                    @1   /  / HE  LP! Someone messed with my assembleee
                     0;J MP
                     (b  all.s etdestin    ation$i f_false 0)
                     @TH IS
