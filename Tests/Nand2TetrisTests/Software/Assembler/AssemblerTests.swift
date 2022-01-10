@@ -1,39 +1,6 @@
 import XCTest
 @testable import Nand2Tetris
 
-/// Specs:
-/// @xxx -> A command
-/// dest=comp;jump => computation with jump and destination
-///     dest= | comp | jump
-///
-
-/*
- """
- // Computes R2 = max(R0, R1)  (R0,R1,R2 refer to RAM[0],RAM[1],RAM[2])
-
-    @R0
-    D=M              // D = first number
-    @R1
-    D=D-M            // D = first number - second number
-    @OUTPUT_FIRST
-    D;JGT            // if D>0 (first is greater) goto output_first
-    @R1
-    D=M              // D = second number
-    @OUTPUT_D
-    0;JMP            // goto output_d
- (OUTPUT_FIRST)
-    @R0
-    D=M              // D = first number
- (OUTPUT_D)
-    @R2
-    M=D              // M[2] = D (greatest number)
- (INFINITE_LOOP)
-    @INFINITE_LOOP
-    0;JMP            // infinite loop
- """
- 
- */
-
 class AssemblerTests: XCTestCase {
     var assembler: Assembler!
     
@@ -59,5 +26,112 @@ class AssemblerTests: XCTestCase {
         assembler.assemble("D=D-M") => ["1111010011010000"]
         assembler.assemble("D=D-A") => ["1110010011010000"]
         assembler.assemble("D=D-A;JNE") => ["1110010011010101"]
+    }
+    
+    func testAcceptance() throws {
+        let assembly = """
+                    @256
+                    D=A
+                    @SP
+                    M=D
+                    @133
+                    0;JMP
+                    @1
+                    D=M
+                    @R13
+                    A=M
+                    M=D
+                    @1
+                    0;JMP
+                    (ball.setdestination$if_false0)
+                    @THIS
+                    A=M
+                    D=M
+                    @THIS
+                    A=M+1
+                    D=M
+                    @SP
+                    AM=M+1
+                    A=A-1
+                    M=D
+                    @ARG
+                    A=M+1
+                    A=A+1
+                    D=M
+                    @SP
+                    AM=M+1
+                    A=A-1
+                    M=D
+                    @RET_ADDRESS_LT4
+                    D=A
+                    @38
+                    0;JMP
+                    (RET_ADDRESS_LT4)
+                    @THIS
+                    D=M
+                    @9
+                    D=D+A
+                    @R13
+                    M=D
+                    @SP
+                    AM=M-1
+                    D=M
+                    @R13
+                    A=M
+                    """
+        let binary = """
+                    0000000100000000
+                    1110110000010000
+                    0000000000000000
+                    1110001100001000
+                    0000000010000101
+                    1110101010000111
+                    0000000000000001
+                    1111110000010000
+                    0000000000001101
+                    1111110000100000
+                    1110001100001000
+                    0000000000000001
+                    1110101010000111
+                    0000000000000011
+                    1111110000100000
+                    1111110000010000
+                    0000000000000011
+                    1111110111100000
+                    1111110000010000
+                    0000000000000000
+                    1111110111101000
+                    1110110010100000
+                    1110001100001000
+                    0000000000000010
+                    1111110111100000
+                    1110110111100000
+                    1111110000010000
+                    0000000000000000
+                    1111110111101000
+                    1110110010100000
+                    1110001100001000
+                    0000000000100011
+                    1110110000010000
+                    0000000000100110
+                    1110101010000111
+                    0000000000000011
+                    1111110000010000
+                    0000000000001001
+                    1110000010010000
+                    0000000000001101
+                    1110001100001000
+                    0000000000000000
+                    1111110010101000
+                    1111110000010000
+                    0000000000001101
+                    1111110000100000
+                    """.components(separatedBy: "\n")
+        
+        let resolver = SymbolResolver()
+        let cleaner = AssemblyCleaner()
+        let resolvedAssembly = resolver.resolve(cleaner.clean(assembly))
+        
+        assembler.assemble(resolvedAssembly) => binary
     }
 }

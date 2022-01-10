@@ -32,20 +32,20 @@ class SymbolResolverTests: XCTestCase {
     
     func testResolvesSinglePseudoCommand() {
         resolveCommands("LOOP") => [:]
-        resolveCommands("(LOOP)") => ["LOOP": 1]
+        resolveCommands("(LOOP)") => ["LOOP": 0]
     }
     
     func testIncrementsCommandAddressCorrectly() {
-        resolveCommands("(LOOP)\nM=A\n(END)") => ["LOOP": 1, "END": 2]
+        resolveCommands("(LOOP)\nM=A\n(END)") => ["LOOP": 0, "END": 1]
     }
     
     func testOnlyResolvesOneCommandPerLine() {
-        resolveCommands("(LOOP)(LOOP)") => ["LOOP": 1]
+        resolveCommands("(LOOP)(LOOP)") => ["LOOP": 0]
     }
     
     func testDisallowsLeadingDigit() {
         resolveCommands("(1LOOP)") => [:]
-        resolveCommands("(LOOP1)") => ["LOOP1": 1]
+        resolveCommands("(LOOP1)") => ["LOOP1": 0]
     }
     
     func testPredefinedSymbols() {
@@ -80,6 +80,11 @@ class SymbolResolverTests: XCTestCase {
         resolver.symbols => [:]
     }
     
+    func testDoesNotResolveNumbers() {
+        resolveCommands("@256") => [:]
+        resolveSymbols("@256") => [:]
+    }
+    
     func testResolvesSymbolsAndCommands() {
         let assembly =
         """
@@ -99,7 +104,7 @@ class SymbolResolverTests: XCTestCase {
         resolver.resolveCommands(assembly)
         resolver.resolveSymbols(assembly)
         
-        resolver.commands => ["LOOP": 1, "END": 5, "TEST": 6]
+        resolver.commands => ["LOOP": 0, "END": 4, "TEST": 5]
         resolver.symbols => ["i": 1024, "j": 1025]
     }
     
@@ -145,17 +150,17 @@ class SymbolResolverTests: XCTestCase {
         D=M
         @1
         D=D-M
-        @11
+        @10
         D;JGT
         @1
         D=M
-        @13
+        @12
         0;JMP
         @0
         D=M
         @2
         M=D
-        @15
+        @14
         0;JMP
         """
         

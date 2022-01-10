@@ -7,10 +7,10 @@ class Assembler {
                 $0.append(aInstructionCode($1))
             } else {
                 let computation = padComputation($1)
-                $0.append("111"
-                          + aluCode(computation.aluMnemonic)
-                          + destCode(computation.destMnemonic)
-                          + jumpCode(computation.jumpMnemonic))
+                $0.append(compCode +
+                          aluCode(computation.aluMnemonic) +
+                          destCode(computation.destMnemonic) +
+                          jumpCode(computation.jumpMnemonic))
             }
         }
     }
@@ -35,6 +35,10 @@ class Assembler {
         }
         
         return computation
+    }
+    
+    var compCode: String {
+        return "111"
     }
     
     func aluCode(_ mnemonic: String) -> String {

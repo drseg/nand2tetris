@@ -39,7 +39,7 @@ class SymbolResolver {
         
         assembly.eachLine {
             if let command = $0.command {
-                commands[command] = instructionNumber + 1
+                commands[command] = instructionNumber
             } else {
                 instructionNumber += 1
             }
@@ -85,7 +85,7 @@ extension String {
     }
     
     var symbol: String? {
-        guard let match = firstMatching("[@].*") else { return nil }
+        guard let match = firstMatching("[@][^0-9].*") else { return nil }
         return String(match.dropFirst())
     }
     
