@@ -28,54 +28,60 @@ class AssemblerTests: XCTestCase {
         assembler.assemble("D=D-A;JNE") => ["1110010011010101"]
     }
     
-    func testAcceptance() throws {
+    func testAcceptance() {
         let assembly = """
-                    @256
-                    D=A
+                    // I'm a hungry little hippo but does it matter?
+                    
+                    @25  6
+                    D                               =A
                     @SP
-                    M=D
-                    @133
-                    0;JMP
+                    M     =D
+                    @13     3
+                    0       ;J MP
                     @1
-                    D=M
-                    @R13
+                    D   =M
+                    @R   13
                     A=M
                     M=D
-                    @1
-                    0;JMP
-                    (ball.setdestination$if_false0)
-                    @THIS
+                    @1   // HE  LP! Someone messed with my assembleee
+                    0;J MP
+                    (b  all.s etdestin    ation$i f_false 0)
+                    @TH IS
                     A=M
-                    D=M
-                    @THIS
+                    D   =M
+                    @T  HIS
                     A=M+1
-                    D=M
-                    @SP
-                    AM=M+1
-                    A=A-1
+                    D=  M
+                    @  SP
+                    A M=    M+1
+                    A       =A-1
                     M=D
-                    @ARG
-                    A=M+1
-                    A=A+1
+                    
+                    @   ARG
+                    A=      M+      1
+                    A=  A+1
                     D=M
-                    @SP
-                    AM=M+1
-                    A=A-1
-                    M=D
-                    @RET_ADDRESS_LT4
+                    @   S  P
+                    AM =M           +1
+                    A=A    -1
+                    M=D // Why are cats so strange?
+                    @RET_A  DDRESS_LT4
                     D=A
-                    @38
-                    0;JMP
-                    (RET_ADDRESS_LT4)
-                    @THIS
+                    
+                    @3      8
+                    0;    JMP
+                    (   RET_A   DD   RESS_LT4)
+                    @T  HI  S
                     D=M
-                    @9
-                    D=D+A
+                    @   9
+                    
+                    D  =D+A
                     @R13
                     M=D
-                    @SP
-                    AM=M-1
-                    D=M
+                    @   SP
+                    AM= M-1
+                    D =   M
+                    // I'm a very small fish
                     @R13
                     A=M
                     """
@@ -130,8 +136,13 @@ class AssemblerTests: XCTestCase {
         
         let resolver = SymbolResolver()
         let cleaner = AssemblyCleaner()
-        let resolvedAssembly = resolver.resolve(cleaner.clean(assembly))
         
-        assembler.assemble(resolvedAssembly) => binary
+        assembler.assemble(
+            resolver.resolve(
+                cleaner.clean(
+                    assembly
+                )
+            )
+        ) => binary
     }
 }

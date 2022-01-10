@@ -17,8 +17,8 @@ class AssemblyCleanerTests: XCTestCase {
         clean("a\nb") => "a\nb"
     }
     
-    func testDropsLeadingAndTrailingWhitespaces() {
-        clean(" a ") => "a"
+    func testDropsAllWhitespaces() {
+        clean(" a   b ") => "ab"
     }
     
     func testDropsTabs() {
