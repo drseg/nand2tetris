@@ -18,28 +18,33 @@ class SymbolResolver {
         resolveCommands(assembly)
         resolveSymbols(assembly)
         
-        return replacingSymbols(assembly)
+        return replacingResolvedSymbols(replacingStaticSymbols(assembly))
     }
     
-    func replacingSymbols(_ assembly: String) -> String {
-        commands
-            .merging(symbols, uniquingKeysWith: { a, _ in a })
-            .reduce(into: assembly) { result, symbol in
-                result = result.replacing([("\n(\(symbol.key))", ""),
-                                           ("(\(symbol.key))\n", ""),
-                                           ("(\(symbol.key))", ""),
-                                           (symbol.key, String(symbol.value))])
-            }
+    func replacingResolvedSymbols(_ assembly: String) -> String {
+        (commands + symbols).reduce(into: assembly) { result, symbol in
+            result = result.replacing([("\n(\(symbol.key))", ""),
+                                       ("(\(symbol.key))\n", ""),
+                                       ("(\(symbol.key))", ""),
+                                       (symbol.key, String(symbol.value))])
+        }
+    }
+    
+    func replacingStaticSymbols(_ assembly: String) -> String {
+        staticSymbols.reduce(into: assembly) { result, symbol in
+            result = result.replacing([(symbol.key, String(symbol.value))])
+        }
     }
     
     func resolveCommands(_ assembly: String) {
-        var instructionNumber = 1
+        var instructionNumber = 0
         
         assembly.eachLine {
             if let command = $0.command {
-                commands[command] = instructionNumber
+                commands[command] = instructionNumber + 1
+            } else {
+                instructionNumber += 1
             }
-            instructionNumber += 1
         }
     }
     
@@ -55,6 +60,12 @@ class SymbolResolver {
                 address += 1
             }
         }
+    }
+}
+
+extension Dictionary {
+    static func +(lhs: Dictionary, rhs: Dictionary) -> Dictionary {
+        lhs.merging(rhs, uniquingKeysWith: { a, _ in a })
     }
 }
 

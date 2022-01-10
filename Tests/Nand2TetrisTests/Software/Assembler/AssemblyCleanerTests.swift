@@ -21,6 +21,10 @@ class AssemblyCleanerTests: XCTestCase {
         clean(" a ") => "a"
     }
     
+    func testDropsTabs() {
+        clean("\ta\t") => "a"
+    }
+    
     func testDropsEmptyNewLines() {
         clean("\n\n\n\n\n\n\n") => ""
         clean("a\n\na") => "a\na"

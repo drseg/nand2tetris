@@ -20,6 +20,11 @@ class SymbolResolverTests: XCTestCase {
         return resolver.symbols
     }
     
+    func resolve(_ assembly: String) -> String {
+        resolver = SymbolResolver()
+        return resolver.resolve(assembly)
+    }
+    
     func testResolvesEmpty() {
         resolveCommands("") => [:]
         resolveCommands(" ") => [:]
@@ -30,12 +35,8 @@ class SymbolResolverTests: XCTestCase {
         resolveCommands("(LOOP)") => ["LOOP": 1]
     }
     
-    func testResolvesMultiplePseudoCommands() {
-        resolveCommands("(LOOP)\n(END)") => ["LOOP": 1, "END": 2]
-    }
-    
     func testIncrementsCommandAddressCorrectly() {
-        resolveCommands("(LOOP)\nM=A\n(END)") => ["LOOP": 1, "END": 3]
+        resolveCommands("(LOOP)\nM=A\n(END)") => ["LOOP": 1, "END": 2]
     }
     
     func testOnlyResolvesOneCommandPerLine() {
@@ -62,7 +63,7 @@ class SymbolResolverTests: XCTestCase {
         resolver.staticSymbols["KBD"] => 24576
     }
     
-    func testResolvesSymbol() {
+    func testResolvesSymbols() {
         resolveSymbols("@i") => ["i": 1024]
         resolveSymbols("@i\n@i") => ["i": 1024]
 
@@ -76,16 +77,7 @@ class SymbolResolverTests: XCTestCase {
         resolver.symbols => [:]
     }
     
-    func testDeletesResolvedCommands() {
-        let assembly =
-        """
-        (LOOP)
-        (END)
-        """
-        resolver.resolve(assembly) => ""
-    }
-    
-    func testReplacesResolvedSymbols() {
+    func testResolvesSymbolsAndCommands() {
         let assembly =
         """
         (LOOP)
@@ -95,19 +87,80 @@ class SymbolResolverTests: XCTestCase {
         D=M
         (END)
         @LOOP
+        (TEST)
+        M=D
+        @TEST
         @END
         """
         
+        resolver.resolveCommands(assembly)
+        resolver.resolveSymbols(assembly)
+        
+        resolver.commands => ["LOOP": 1, "END": 5, "TEST": 6]
+        resolver.symbols => ["i": 1024, "j": 1025]
+    }
+    
+    func testDeletesResolvedCommands() {
+        let assembly =
+        """
+        (LOOP)
+        (END)
+        """
+        resolve(assembly) => ""
+    }
+    
+    
+    func testReplacesStaticSymbols() {
+        resolve("@R1\n@SP") => "@1\n@0"
+    }
+    
+    func testAcceptance() throws {
+        let assembly = AssemblyCleaner().clean(
+        """
+        // Computes R2 = max(R0, R1)  (R0,R1,R2 refer to RAM[0],RAM[1],RAM[2])
+
+           @R0
+           D=M              // D = first number
+           @R1
+           D=D-M            // D = first number - second number
+           @OUTPUT_FIRST
+           D;JGT            // if D>0 (first is greater) goto output_first
+           @R1
+           D=M              // D = second number
+           @OUTPUT_D
+           0;JMP            // goto output_d
+        (OUTPUT_FIRST)
+           @R0
+           D=M              // D = first number
+        (OUTPUT_D)
+           @R2
+           M=D              // M[2] = D (greatest number)
+        (INFINITE_LOOP)
+           @INFINITE_LOOP
+           0;JMP            // infinite loop
+        """
+        )
+        
         let expected =
         """
-        @1024
-        M=D
-        @1025
+        @0
         D=M
         @1
-        @6
+        D=D-M
+        @11
+        D;JGT
+        @1
+        D=M
+        @13
+        0;JMP
+        @0
+        D=M
+        @2
+        M=D
+        @15
+        0;JMP
         """
         
-        resolver.resolve(assembly) => expected
+        resolve(assembly) => expected
     }
 }
