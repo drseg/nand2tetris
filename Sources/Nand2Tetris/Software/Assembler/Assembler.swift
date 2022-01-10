@@ -6,12 +6,11 @@ class Assembler {
             if isAInstruction($1) {
                 $0.append(aInstructionCode($1))
             } else {
-                let instruction = padInstruction($1)
-                
+                let computation = padComputation($1)
                 $0.append("111"
-                          + computationCode(instruction.aluMnemonic)
-                          + destinationCode(instruction.destMnemonic)
-                          + jumpCode(instruction.jumpMnemonic))
+                          + aluCode(computation.aluMnemonic)
+                          + destCode(computation.destMnemonic)
+                          + jumpCode(computation.jumpMnemonic))
             }
         }
     }
@@ -19,25 +18,26 @@ class Assembler {
     func isAInstruction(_ i: String) -> Bool {
         i.first == "@"
     }
-    
-    func padInstruction(_ instruction: String) -> String {
-        var instruction = instruction
-        
-        if !instruction.contains(";") {
-            instruction.append(";null")
-        }
-        
-        if !instruction.contains("=") {
-            instruction = "null=" + instruction
-        }
-        return instruction
-    }
-    
+
     func aInstructionCode(_ mnemonic: String) -> String {
         String(mnemonic.dropFirst()).toBinary()
     }
     
-    func computationCode(_ mnemonic: String) -> String {
+    func padComputation(_ computation: String) -> String {
+        var computation = computation
+        
+        if !computation.contains(";") {
+            computation.append(";null")
+        }
+        
+        if !computation.contains("=") {
+            computation = "null=" + computation
+        }
+        
+        return computation
+    }
+    
+    func aluCode(_ mnemonic: String) -> String {
         var code = mnemonic.contains("M") ? "1" : "0"
         
         switch mnemonic {
@@ -66,7 +66,7 @@ class Assembler {
         return code
     }
     
-    func destinationCode(_ mnemonic: String) -> String {
+    func destCode(_ mnemonic: String) -> String {
         switch mnemonic {
         case "null": return "000"
         case "M": return "001"

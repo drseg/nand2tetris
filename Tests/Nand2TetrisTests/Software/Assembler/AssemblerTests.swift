@@ -48,12 +48,16 @@ class AssemblerTests: XCTestCase {
     }
     
     func testPadInstruction() {
-        assembler.padInstruction("0;JMP") => ("null=0;JMP")
-        assembler.padInstruction("D=M") => ("D=M;null")
-        assembler.padInstruction("D") => ("null=D;null")
+        assembler.padComputation("0;JMP") => ("null=0;JMP")
+        assembler.padComputation("D=M") => ("D=M;null")
+        assembler.padComputation("D") => ("null=D;null")
     }
     
-    func testConvertsInstructionsWithoutJump() {
+    func testConvertsComputations() {
         assembler.assemble("D=M") => ["1111110000010000"]
+        assembler.assemble("0;JMP") => ["1110101010000111"]
+        assembler.assemble("D=D-M") => ["1111010011010000"]
+        assembler.assemble("D=D-A") => ["1110010011010000"]
+        assembler.assemble("D=D-A;JNE") => ["1110010011010101"]
     }
 }
