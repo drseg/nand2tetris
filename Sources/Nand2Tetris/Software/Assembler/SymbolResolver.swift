@@ -1,5 +1,5 @@
 class SymbolResolver {
-    let staticSymbols: [String: Int] = {
+    let staticSymbols = {
         (0...15).reduce(into: ["SP": 0,
                                "LCL": 1,
                                "ARG": 2,
@@ -26,22 +26,22 @@ class SymbolResolver {
     }
     
     func replacingAll(_ assembly: String) -> String {
-        allSymbols.reduce(into: assembly) {
-            $0 = $0.replacing([("\n(\($1.key))", ""),
-                               ("(\($1.key))\n", ""),
-                               ("(\($1.key))", ""),
-                               ($1.key, String($1.value))])
+        allSymbols.reduce(assembly) {
+            $0.replacing([("\n(\($1.key))", ""),
+                          ("(\($1.key))\n", ""),
+                          ("(\($1.key))", ""),
+                          ($1.key, String($1.value))])
         }
     }
     
     func resolveCommands(_ assembly: String) {
-        var instructionNumber = 0
+        var instructionAddress = 0
         
         assembly.eachLine {
             if let command = $0.command {
-                commands[command] = instructionNumber
+                commands[command] = instructionAddress
             } else {
-                instructionNumber += 1
+                instructionAddress += 1
             }
         }
     }
@@ -50,11 +50,7 @@ class SymbolResolver {
         var address = 1024
         
         assembly.eachLine {
-            if let symbol = $0.symbol,
-               symbols[symbol] == nil,
-               staticSymbols[symbol] == nil,
-               commands[symbol] == nil
-            {
+            if let symbol = $0.symbol, allSymbols[symbol] == nil {
                 symbols[symbol] = address
                 address += 1
             }
@@ -70,9 +66,9 @@ extension Dictionary {
 
 extension String {
     func replacing(_ replacements: [(String, String)]) -> String {
-        replacements.reduce(into: self) { result, replacement in
-            result = result.replacingOccurrences(of: replacement.0,
-                                                 with: replacement.1)
+        replacements.reduce(self) { result, replacement in
+            result.replacingOccurrences(of: replacement.0,
+                                        with: replacement.1)
         }
     }
     
@@ -85,7 +81,9 @@ extension String {
     }
     
     var symbol: String? {
-        guard let match = firstMatching("[@][^0-9].*") else { return nil }
+        guard let match = firstMatching("[@][^0-9].*")
+        else { return nil }
+        
         return String(match.dropFirst())
     }
     

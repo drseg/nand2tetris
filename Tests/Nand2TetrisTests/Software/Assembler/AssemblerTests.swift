@@ -8,24 +8,28 @@ class AssemblerTests: XCTestCase {
         assembler = Assembler()
     }
     
-    func testConvertsACommands() {
-        assembler.assemble("@0") => ["0000000000000000"]
-        assembler.assemble("@1") => ["0000000000000001"]
-        assembler.assemble("@1024") => ["0000010000000000"]
+    func assemble(_ assembly: String) -> [String] {
+        assembler.assemble(assembly)
     }
     
-    func testPadInstruction() {
+    func testConvertsACommands() {
+        assemble("@0") => ["0000000000000000"]
+        assemble("@1") => ["0000000000000001"]
+        assemble("@1024") => ["0000010000000000"]
+    }
+    
+    func testPadComputation() {
         assembler.padComputation("0;JMP") => ("null=0;JMP")
         assembler.padComputation("D=M") => ("D=M;null")
         assembler.padComputation("D") => ("null=D;null")
     }
     
     func testConvertsComputations() {
-        assembler.assemble("D=M") => ["1111110000010000"]
-        assembler.assemble("0;JMP") => ["1110101010000111"]
-        assembler.assemble("D=D-M") => ["1111010011010000"]
-        assembler.assemble("D=D-A") => ["1110010011010000"]
-        assembler.assemble("D=D-A;JNE") => ["1110010011010101"]
+        assemble("D=M") => ["1111110000010000"]
+        assemble("0;JMP") => ["1110101010000111"]
+        assemble("D=D-M") => ["1111010011010000"]
+        assemble("D=D-A") => ["1110010011010000"]
+        assemble("D=D-A;JNE") => ["1110010011010101"]
     }
     
     func testAcceptance() {
@@ -67,7 +71,8 @@ class AssemblerTests: XCTestCase {
                     M=D // Why are cats so strange?
                     @RET_A  DDRESS_LT4
                     D=A
-                    
+                    // D=A
+                    // M=MYCAT
                     @3      8
                     0;    JMP
                     (   RET_A   DD   RESS_LT4)
@@ -137,7 +142,7 @@ class AssemblerTests: XCTestCase {
         let resolver = SymbolResolver()
         let cleaner = AssemblyCleaner()
         
-        assembler.assemble(
+        assemble(
             resolver.resolve(
                 cleaner.clean(
                     assembly

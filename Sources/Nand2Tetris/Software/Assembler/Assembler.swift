@@ -5,7 +5,8 @@ class Assembler {
         assembly.lines.reduce(into: [String]()) {
             if isAInstruction($1) {
                 $0.append(aInstructionCode($1))
-            } else {
+            }
+            else {
                 let computation = padComputation($1)
                 $0.append(compCode +
                           aluCode(computation.aluMnemonic) +
@@ -14,7 +15,7 @@ class Assembler {
             }
         }
     }
-    
+        
     func isAInstruction(_ i: String) -> Bool {
         i.first == "@"
     }
@@ -24,17 +25,17 @@ class Assembler {
     }
     
     func padComputation(_ computation: String) -> String {
-        var computation = computation
+        var padded = computation
         
-        if !computation.contains(";") {
-            computation.append(";null")
+        if !padded.contains(";") {
+            padded += ";null"
         }
         
-        if !computation.contains("=") {
-            computation = "null=" + computation
+        if !padded.contains("=") {
+            padded = "null=" + padded
         }
         
-        return computation
+        return padded
     }
     
     var compCode: String {
@@ -64,7 +65,7 @@ class Assembler {
         case "D&A", "D&M": code += "000000"
         case "D|A", "D|M": code += "010101"
             
-        default: code = "*******"
+        default: code = "******"
         }
         
         return code
