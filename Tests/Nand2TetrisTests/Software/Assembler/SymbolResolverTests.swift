@@ -10,13 +10,13 @@ class SymbolResolverTests: XCTestCase {
     
     func resolveCommands(_ assembly: String) -> [String: Int] {
         resolver = SymbolResolver()
-        resolver.resolveCommands(assembly)
+        resolver.makeCommandMap(assembly)
         return resolver.commands
     }
     
     func resolveSymbols(_ assembly: String) -> [String: Int] {
         resolver = SymbolResolver()
-        resolver.resolveSymbols(assembly)
+        resolver.makeSymbolMap(assembly)
         return resolver.symbols
     }
     
@@ -67,16 +67,16 @@ class SymbolResolverTests: XCTestCase {
     }
     
     func testResolvesSymbols() {
-        resolveSymbols("@i") => ["i": 1024]
-        resolveSymbols("@i\n@i") => ["i": 1024]
+        resolveSymbols("@i") => ["i": 16]
+        resolveSymbols("@i\n@i") => ["i": 16]
 
-        resolveSymbols("@i\n@j") => ["i": 1024, "j": 1025]
-        resolveSymbols("@i\n@i\n@i\n@j") => ["i": 1024, "j": 1025]
+        resolveSymbols("@i\n@j") => ["i": 16, "j": 17]
+        resolveSymbols("@i\n@i\n@i\n@j") => ["i": 16, "j": 17]
     }
     
     func testDoesNotResolveSymbolIfActuallyCommand() {
-        resolver.resolveCommands("(TEST)")
-        resolver.resolveSymbols("@TEST")
+        resolver.makeCommandMap("(TEST)")
+        resolver.makeSymbolMap("@TEST")
         resolver.symbols => [:]
     }
     
@@ -101,11 +101,11 @@ class SymbolResolverTests: XCTestCase {
         @END
         """
         
-        resolver.resolveCommands(assembly)
-        resolver.resolveSymbols(assembly)
+        resolver.makeCommandMap(assembly)
+        resolver.makeSymbolMap(assembly)
         
         resolver.commands => ["LOOP": 0, "END": 4, "TEST": 5]
-        resolver.symbols => ["i": 1024, "j": 1025]
+        resolver.symbols => ["i": 16, "j": 17]
     }
     
     func testDeletesResolvedCommands() {

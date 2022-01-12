@@ -19,8 +19,8 @@ class SymbolResolver {
     }
     
     func resolve(_ assembly: String) -> String {
-        resolveCommands(assembly)
-        resolveSymbols(assembly)
+        makeCommandMap(assembly)
+        makeSymbolMap(assembly)
         
         return replacingAll(assembly)
     }
@@ -34,7 +34,7 @@ class SymbolResolver {
         }
     }
     
-    func resolveCommands(_ assembly: String) {
+    func makeCommandMap(_ assembly: String) {
         var instructionAddress = 0
         
         assembly.eachLine {
@@ -46,8 +46,8 @@ class SymbolResolver {
         }
     }
     
-    func resolveSymbols(_ assembly: String) {
-        var address = 1024
+    func makeSymbolMap(_ assembly: String) {
+        var address = 16
         
         assembly.eachLine {
             if let symbol = $0.symbol, allSymbols[symbol] == nil {
