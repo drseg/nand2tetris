@@ -12,7 +12,7 @@ class VMTranslatorTests: XCTestCase {
         translator.translate(vmCode)
     }
     
-    func testTranslatesPushConstant() {
+    func testPushConstant() {
         let vmCode = "push constant 17"
         let assembly =
                     """
@@ -27,7 +27,7 @@ class VMTranslatorTests: XCTestCase {
         translate(vmCode) => assembly
     }
     
-    func testTranslatesPushTwoConstants() {
+    func testPushTwoConstants() {
         let vmCode =
                     """
                     push constant 17
@@ -49,6 +49,66 @@ class VMTranslatorTests: XCTestCase {
                     M=D
                     @SP
                     M=M+1
+                    """
+        translate(vmCode) => assembly
+    }
+    
+    func testAdd() {
+        let vmCode = "add"
+        let assembly =
+                    """
+                    @SP
+                    A=M
+                    D=M
+                    @SP
+                    M=M-1
+                    A=M
+                    D=D+M
+                    """
+        translate(vmCode) => assembly
+    }
+    
+    func testSub() {
+        let vmCode = "sub"
+        let assembly =
+                    """
+                    @SP
+                    A=M
+                    D=M
+                    @SP
+                    M=M-1
+                    A=M
+                    D=D-M
+                    """
+        translate(vmCode) => assembly
+    }
+    
+    func testNeg() {
+        let vmCode = "neg"
+        let assembly =
+                    """
+                    @SP
+                    A=M
+                    M=!M
+                    """
+        translate(vmCode) => assembly
+    }
+    
+    func testEq() {
+        let vmCode = "eq"
+        let assembly =
+                    """
+                    @SP
+                    A=M
+                    D=M
+                    @SP
+                    M=M-1
+                    A=M
+                    D=D-M
+                    @EQ
+                    D;JEQ
+                    D=-1
+                    (EQ)
                     """
         translate(vmCode) => assembly
     }
