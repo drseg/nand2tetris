@@ -11,10 +11,11 @@ class VMTranslator {
                 switch line {
                 case "add": result.append(add())
                 case "sub": result.append(sub())
-                case "neg": result.append(neg())
                 case "eq": result.append((eq()))
                 case "gt": result.append((gt()))
                 case "lt": result.append((lt()))
+                case "not": result.append(not())
+                case "neg": result.append(neg())
                 default: break
                 }
             }
@@ -40,10 +41,18 @@ class VMTranslator {
         arithmetic(sign: "-")
     }
     
+    func not() -> String {
+        unary("!")
+    }
+    
     func neg() -> String {
+        unary("-")
+    }
+    
+    func unary(_ sign: String) -> String {
         """
         \(aEqualsStackAddress())
-        M=!M
+        M=\(sign)M
         \(replaceTop("SP"))
         """
     }

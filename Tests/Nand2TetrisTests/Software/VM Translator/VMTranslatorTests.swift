@@ -71,17 +71,26 @@ class VMTranslatorTests: XCTestCase {
         translate(vmCode) => assembly
     }
     
+    func generateUnary(_ sign: String) -> String {
+        """
+        @SP
+        A=M
+        M=\(sign)M
+        @SP
+        A=M
+        M=D
+        """
+    }
+    
+    func testNot() {
+        let vmCode = "not"
+        let assembly = generateUnary("!")
+        translate(vmCode) => assembly
+    }
+    
     func testNeg() {
         let vmCode = "neg"
-        let assembly =
-                    """
-                    @SP
-                    A=M
-                    M=!M
-                    @SP
-                    A=M
-                    M=D
-                    """
+        let assembly = generateUnary("-")
         translate(vmCode) => assembly
     }
     
@@ -124,6 +133,7 @@ class VMTranslatorTests: XCTestCase {
         let assembly = generateConditional("LT")
         translate(vmCode) => assembly
     }
+    
 }
 
 /// Specs:
