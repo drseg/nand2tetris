@@ -21,6 +21,7 @@ class VMTranslatorTests: XCTestCase {
                     @SP
                     A=M
                     M=D
+                    @SP
                     M=M+1
                     """
         translate(vmCode) => assembly
@@ -39,12 +40,14 @@ class VMTranslatorTests: XCTestCase {
                     @SP
                     A=M
                     M=D
+                    @SP
                     M=M+1
                     @22
                     D=A
                     @SP
                     A=M
                     M=D
+                    @SP
                     M=M+1
                     """
         translate(vmCode) => assembly
