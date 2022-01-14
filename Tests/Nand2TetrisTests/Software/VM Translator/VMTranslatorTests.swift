@@ -151,9 +151,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
         let assembly = translator.translate(add2And3)
         let binary = assembler.assemble(assembly)
-        
         runProgram(binary)
+        
         c.cpu.dRegister.value.toDecimal() => "5"
+        c.memory.value(256.b).toDecimal() => "5"
     }
 }
 
