@@ -38,7 +38,6 @@ class VMTranslatorTests: XCTestCase {
         translate(vmCode) => assembly
     }
     
-#warning("should be bottom - top, not top - bottom")
     func generateArithmetic(_ sign: String) -> String {
         """
         @SP
