@@ -13,6 +13,8 @@ class VMTranslator {
                 case "sub": result.append(sub())
                 case "neg": result.append(neg())
                 case "eq": result.append((eq()))
+                case "gt": result.append((gt()))
+                case "lt": result.append((lt()))
                 default: break
                 }
             }
@@ -42,32 +44,47 @@ class VMTranslator {
         """
         \(aEqualsStackAddress())
         M=!M
+        \(replaceTop("SP"))
         """
     }
     
     func eq() -> String {
+        controlFlow("EQ")
+    }
+    
+    func gt() -> String {
+        controlFlow("GT")
+    }
+    
+    func lt() -> String {
+        controlFlow("LT")
+    }
+    
+    func controlFlow(_ type: String) -> String {
         """
-        \(arithmetic(sign: "-"))
-        @EQ
-        D;JEQ
+        \(sub())
+        @\(type)
+        D;J\(type)
         D=-1
-        (EQ)
+        (\(type))
+        \(replaceTop("SP"))
         """
     }
     
     func arithmetic(sign: String) -> String {
         """
-        \(dEqualsTopOfStack())
-        \(decrement("SP"))
+        \(pop("SP"))
         A=M
         D=D\(sign)M
+        \(replaceTop("SP"))
         """
     }
     
-    func dEqualsTopOfStack() -> String {
+    func pop(_ pointer: String) -> String {
         """
         \(aEqualsStackAddress())
         D=M
+        \(decrement("SP"))
         """
     }
     
@@ -75,6 +92,14 @@ class VMTranslator {
         """
         @SP
         A=M
+        """
+    }
+    
+    func replaceTop(_ pointer: String) -> String {
+        """
+        @\(pointer)
+        A=M
+        M=D
         """
     }
     

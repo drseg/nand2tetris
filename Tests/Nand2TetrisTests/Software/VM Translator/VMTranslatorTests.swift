@@ -12,18 +12,21 @@ class VMTranslatorTests: XCTestCase {
         translator.translate(vmCode)
     }
     
+    func generateConstant(_ c: String) -> String {
+        """
+        @\(c)
+        D=A
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        """
+    }
+    
     func testPushConstant() {
         let vmCode = "push constant 17"
-        let assembly =
-                    """
-                    @17
-                    D=A
-                    @SP
-                    A=M
-                    M=D
-                    @SP
-                    M=M+1
-                    """
+        let assembly = generateConstant("17")
         translate(vmCode) => assembly
     }
     
@@ -35,51 +38,36 @@ class VMTranslatorTests: XCTestCase {
                     """
         let assembly =
                     """
-                    @17
-                    D=A
-                    @SP
-                    A=M
-                    M=D
-                    @SP
-                    M=M+1
-                    @22
-                    D=A
-                    @SP
-                    A=M
-                    M=D
-                    @SP
-                    M=M+1
+                    \(generateConstant("17"))
+                    \(generateConstant("22"))
                     """
         translate(vmCode) => assembly
     }
     
+    func generateArithmetic(_ sign: String) -> String {
+        """
+        @SP
+        A=M
+        D=M
+        @SP
+        M=M-1
+        A=M
+        D=D\(sign)M
+        @SP
+        A=M
+        M=D
+        """
+    }
+    
     func testAdd() {
         let vmCode = "add"
-        let assembly =
-                    """
-                    @SP
-                    A=M
-                    D=M
-                    @SP
-                    M=M-1
-                    A=M
-                    D=D+M
-                    """
+        let assembly = generateArithmetic("+")
         translate(vmCode) => assembly
     }
     
     func testSub() {
         let vmCode = "sub"
-        let assembly =
-                    """
-                    @SP
-                    A=M
-                    D=M
-                    @SP
-                    M=M-1
-                    A=M
-                    D=D-M
-                    """
+        let assembly = generateArithmetic("-")
         translate(vmCode) => assembly
     }
     
@@ -90,26 +78,50 @@ class VMTranslatorTests: XCTestCase {
                     @SP
                     A=M
                     M=!M
+                    @SP
+                    A=M
+                    M=D
                     """
         translate(vmCode) => assembly
     }
     
-    func testEq() {
+    func generateConditional(_ code: String) -> String {
+        """
+        @SP
+        A=M
+        D=M
+        @SP
+        M=M-1
+        A=M
+        D=D-M
+        @SP
+        A=M
+        M=D
+        @\(code)
+        D;J\(code)
+        D=-1
+        (\(code))
+        @SP
+        A=M
+        M=D
+        """
+    }
+    
+    func testEQ() {
         let vmCode = "eq"
-        let assembly =
-                    """
-                    @SP
-                    A=M
-                    D=M
-                    @SP
-                    M=M-1
-                    A=M
-                    D=D-M
-                    @EQ
-                    D;JEQ
-                    D=-1
-                    (EQ)
-                    """
+        let assembly = generateConditional("EQ")
+        translate(vmCode) => assembly
+    }
+    
+    func testGT() {
+        let vmCode = "gt"
+        let assembly = generateConditional("GT")
+        translate(vmCode) => assembly
+    }
+    
+    func testLT() {
+        let vmCode = "lt"
+        let assembly = generateConditional("LT")
         translate(vmCode) => assembly
     }
 }
