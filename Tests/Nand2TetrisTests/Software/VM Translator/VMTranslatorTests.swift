@@ -39,16 +39,20 @@ class VMTranslatorTests: XCTestCase {
     }
     
     func generateArithmetic(_ sign: String) -> String {
-        """
+        let dCommand = sign == "-"
+        ? "D=M\(sign)D"
+        : "D=D\(sign)M"
+        
+        return """
         @SP
-        A=M
+        A=M-1
         D=M
         @SP
         M=M-1
-        A=M
-        D=M\(sign)D
+        A=M-1
+        \(dCommand)
         @SP
-        A=M
+        A=M-1
         M=D
         """
     }
@@ -72,10 +76,10 @@ class VMTranslatorTests: XCTestCase {
     func generateUnary(_ sign: String) -> String {
         """
         @SP
-        A=M
+        A=M-1
         M=\(sign)M
         @SP
-        A=M
+        A=M-1
         M=D
         """
     }
@@ -88,25 +92,24 @@ class VMTranslatorTests: XCTestCase {
         translate("neg") => generateUnary("-")
     }
     
-#warning("should this really be jumping?")
     func generateConditional(_ code: String) -> String {
         """
         @SP
-        A=M
+        A=M-1
         D=M
         @SP
         M=M-1
-        A=M
+        A=M-1
         D=M-D
         @SP
-        A=M
+        A=M-1
         M=D
         @\(code)
         D;J\(code.prefix(2))
         D=-1
         (\(code))
         @SP
-        A=M
+        A=M-1
         M=D
         """
     }
@@ -126,6 +129,31 @@ class VMTranslatorTests: XCTestCase {
     func testChainedConditionals() {
         translate("lt\nlt") =>
         (generateConditional("LT0") + "\n" + generateConditional("LT1"))
+    }
+}
+
+class VMTranslatorAcceptanceTests: ComputerTestCase {
+    override func setUp() {
+        super.setUp()
+        c.memory(256.b, "1", 0.b, "1")
+        sleepTime = 125000
+    }
+    
+    func testAdd2And3() {
+        let translator = VMTranslator()
+        let assembler = Assembler()
+        
+        let add2And3 =
+                    """
+                    push constant 2
+                    push constant 3
+                    add
+                    """
+        let assembly = translator.translate(add2And3)
+        let binary = assembler.assemble(assembly)
+        
+        runProgram(binary)
+        c.cpu.dRegister.value.toDecimal() => "5"
     }
 }
 

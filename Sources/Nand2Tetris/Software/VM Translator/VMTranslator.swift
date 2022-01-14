@@ -44,7 +44,7 @@ class VMTranslator {
         """
         @\(c)
         D=A
-        \(aEqualsPointer("SP"))
+        \(aEquals("SP"))
         M=D
         \(increment("SP"))
         """
@@ -90,17 +90,21 @@ class VMTranslator {
     }
     
     func arithmetic(sign: String) -> String {
-        """
+        let dCommand = sign == "-"
+        ? "D=M\(sign)D"
+        : "D=D\(sign)M"
+        
+        return """
         \(pop("SP"))
-        A=M
-        D=M\(sign)D
+        A=M-1
+        \(dCommand)
         \(replaceTop("SP"))
         """
     }
     
     func pop(_ pointer: String) -> String {
         """
-        \(aEqualsPointer("SP"))
+        \(aEquals("SP", offset: "-1"))
         D=M
         \(decrement("SP"))
         """
@@ -116,22 +120,22 @@ class VMTranslator {
     
     func unary(_ sign: String) -> String {
         """
-        \(aEqualsPointer("SP"))
+        \(aEquals("SP", offset: "-1"))
         M=\(sign)M
         \(replaceTop("SP"))
         """
     }
     
-    func aEqualsPointer(_ pointer: String) -> String {
+    func aEquals(_ pointer: String, offset: String = "") -> String {
         """
         @\(pointer)
-        A=M
+        A=M\(offset)
         """
     }
     
     func replaceTop(_ pointer: String) -> String {
         """
-        \(aEqualsPointer(pointer))
+        \(aEquals(pointer, offset: "-1"))
         M=D
         """
     }

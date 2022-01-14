@@ -2,7 +2,11 @@ import Foundation
 
 class Assembler {
     func assemble(_ assembly: String) -> [String] {
-        assembly.lines.reduce(into: [String]()) {
+        let cleaner = AssemblyCleaner()
+        let resolver = SymbolResolver()
+        let assembly = resolver.resolve(cleaner.clean(assembly))
+        
+        return assembly.lines.reduce(into: [String]()) {
             if isAInstruction($1) {
                 $0.append(aInstructionCode($1))
             }

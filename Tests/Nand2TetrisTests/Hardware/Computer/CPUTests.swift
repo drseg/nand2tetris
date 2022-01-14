@@ -131,12 +131,6 @@ class CPUTests: CPUTestCase {
     }
 }
 
-extension Register {
-    var value: String {
-        self(0.b, "0", "0")
-    }
-}
-
 infix operator ==>
 
 fileprivate func ==>(actual: CPU.Out, expected: CPU.Out) {

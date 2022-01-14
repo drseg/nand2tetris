@@ -1,11 +1,12 @@
 import XCTest
 @testable import Nand2Tetris
 
-class ComputerTests: CPUTestCase {
+class ComputerTestCase: CPUTestCase {
     var c: Computer!
     var screen: FastRAM!
     var keyboard: Keyboard!
-        
+    var sleepTime: UInt32 = 40000
+    
     override func setUp() {
         super.setUp()
         screen = FastRAM(16384)
@@ -14,14 +15,16 @@ class ComputerTests: CPUTestCase {
                      memory: Memory(keyboard: keyboard,
                                     screen: screen))
     }
-
+    
     func runProgram(_ program: [String]) {
         c.load(program)
         c.run()
-        usleep(40000)
+        usleep(sleepTime)
         c.terminated = true
     }
-    
+}
+
+class ComputerTests: ComputerTestCase {
     func testCanRunDEqualsA() {
         let aEquals12345 = 12345.b
         let dEqualsA = "111 0 110000 010 000".trimmed

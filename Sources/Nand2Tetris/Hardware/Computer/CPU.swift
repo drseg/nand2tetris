@@ -105,7 +105,7 @@ final class CPU {
                                      shouldJump,
                                      shouldInc,
                                      clock)
-            
+                        
             return Out(mValue: finalALU.out,
                        shouldWrite: shouldWriteM,
                        aValue: finalA,
@@ -128,5 +128,11 @@ final class CPU {
             ny: code[3],
             f: code[4],
             no: code[5])
+    }
+}
+
+extension Register {
+    var value: String {
+        self(0.b, "0", "0")
     }
 }
