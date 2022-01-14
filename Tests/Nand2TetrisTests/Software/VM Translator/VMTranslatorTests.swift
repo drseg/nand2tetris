@@ -2,8 +2,17 @@ import XCTest
 @testable import Nand2Tetris
 
 class VMTranslatorTests: XCTestCase {
+    var translator: VMTranslator!
+    
+    override func setUp() {
+        translator = VMTranslator()
+    }
+    
+    func translate(_ vmCode: String) -> String {
+        translator.translate(vmCode)
+    }
+    
     func testTranslatesPushConstant() {
-        let translator = VMTranslator()
         let vmCode = "push constant 17"
         let assembly =
                     """
@@ -14,11 +23,10 @@ class VMTranslatorTests: XCTestCase {
                     M=D
                     M=M+1
                     """
-        translator.translate(vmCode) => assembly
+        translate(vmCode) => assembly
     }
     
     func testTranslatesPushTwoConstants() {
-        let translator = VMTranslator()
         let vmCode =
                     """
                     push constant 17
@@ -39,7 +47,7 @@ class VMTranslatorTests: XCTestCase {
                     M=D
                     M=M+1
                     """
-        translator.translate(vmCode) => assembly
+        translate(vmCode) => assembly
     }
 }
 
