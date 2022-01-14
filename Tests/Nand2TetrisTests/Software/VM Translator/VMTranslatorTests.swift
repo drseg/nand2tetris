@@ -133,28 +133,49 @@ class VMTranslatorTests: XCTestCase {
 }
 
 class VMTranslatorAcceptanceTests: ComputerTestCase {
+    var translator: VMTranslator!
+    var assembler: Assembler!
+    
     override func setUp() {
         super.setUp()
+        translator = VMTranslator()
+        assembler = Assembler()
+        sleepTime = 120000
         c.memory(256.b, "1", 0.b, "1")
-        sleepTime = 125000
+    }
+    
+    var dRegister: String {
+        c.cpu.dRegister.value.toDecimal()
+    }
+    
+    var stackPointer: String {
+        c.memory.value(0.b).toDecimal()
+    }
+    
+    func stack(_ i: Int) -> String {
+        c.memory.value(i.b).toDecimal()
+    }
+    
+    func translated(_ vmCode: String) -> [String] {
+        assembler.assemble(
+            translator.translate(
+                vmCode)
+        )
     }
     
     func testAdd2And3() {
-        let translator = VMTranslator()
-        let assembler = Assembler()
-        
         let add2And3 =
                     """
                     push constant 2
                     push constant 3
                     add
                     """
-        let assembly = translator.translate(add2And3)
-        let binary = assembler.assemble(assembly)
-        runProgram(binary)
+
+        runProgram(translated(add2And3))
         
-        c.cpu.dRegister.value.toDecimal() => "5"
-        c.memory.value(256.b).toDecimal() => "5"
+        dRegister => "5"
+        stack(256) => "5"
+        stackPointer => "257"
     }
 }
 
