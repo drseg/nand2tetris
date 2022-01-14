@@ -24,13 +24,7 @@ class VMTranslatorTests: XCTestCase {
         """
     }
     
-    func testPushConstant() {
-        let vmCode = "push constant 17"
-        let assembly = generateConstant("17")
-        translate(vmCode) => assembly
-    }
-    
-    func testPushTwoConstants() {
+    func testPushConstants() {
         let vmCode =
                     """
                     push constant 17
@@ -44,6 +38,7 @@ class VMTranslatorTests: XCTestCase {
         translate(vmCode) => assembly
     }
     
+#warning("should be bottom - top, not top - bottom")
     func generateArithmetic(_ sign: String) -> String {
         """
         @SP
@@ -52,7 +47,7 @@ class VMTranslatorTests: XCTestCase {
         @SP
         M=M-1
         A=M
-        D=D\(sign)M
+        D=M\(sign)D
         @SP
         A=M
         M=D
@@ -60,15 +55,19 @@ class VMTranslatorTests: XCTestCase {
     }
     
     func testAdd() {
-        let vmCode = "add"
-        let assembly = generateArithmetic("+")
-        translate(vmCode) => assembly
+        translate("add") => generateArithmetic("+")
     }
     
     func testSub() {
-        let vmCode = "sub"
-        let assembly = generateArithmetic("-")
-        translate(vmCode) => assembly
+        translate("sub") => generateArithmetic("-")
+    }
+    
+    func testAnd() {
+        translate("and") => generateArithmetic("&")
+    }
+    
+    func testOr() {
+        translate("or") => generateArithmetic("|")
     }
     
     func generateUnary(_ sign: String) -> String {
@@ -83,17 +82,14 @@ class VMTranslatorTests: XCTestCase {
     }
     
     func testNot() {
-        let vmCode = "not"
-        let assembly = generateUnary("!")
-        translate(vmCode) => assembly
+        translate("not") => generateUnary("!")
     }
     
     func testNeg() {
-        let vmCode = "neg"
-        let assembly = generateUnary("-")
-        translate(vmCode) => assembly
+        translate("neg") => generateUnary("-")
     }
     
+#warning("should this really be jumping?")
     func generateConditional(_ code: String) -> String {
         """
         @SP
@@ -102,12 +98,12 @@ class VMTranslatorTests: XCTestCase {
         @SP
         M=M-1
         A=M
-        D=D-M
+        D=M-D
         @SP
         A=M
         M=D
         @\(code)
-        D;J\(code)
+        D;J\(code.prefix(2))
         D=-1
         (\(code))
         @SP
@@ -117,38 +113,36 @@ class VMTranslatorTests: XCTestCase {
     }
     
     func testEQ() {
-        let vmCode = "eq"
-        let assembly = generateConditional("EQ")
-        translate(vmCode) => assembly
+        translate("eq") => generateConditional("EQ0")
     }
     
     func testGT() {
-        let vmCode = "gt"
-        let assembly = generateConditional("GT")
-        translate(vmCode) => assembly
+        translate("gt") => generateConditional("GT0")
     }
     
     func testLT() {
-        let vmCode = "lt"
-        let assembly = generateConditional("LT")
-        translate(vmCode) => assembly
+        translate("lt") => generateConditional("LT0")
     }
     
+    func testChainedConditionals() {
+        translate("lt\nlt") =>
+        (generateConditional("LT0") + "\n" + generateConditional("LT1"))
+    }
 }
 
 /// Specs:
 ///
 /// Arithmetic commands:
 ///
-/// add
-/// sub
-/// neg
-/// eq ( -> true or false, 0 or -1)
-/// gt ( -> true or false, 0 or -1)
-/// lt ( -> true or false, 0 or -1)
-/// and
-/// or
-/// not
+/// add V
+/// sub V
+/// neg V
+/// eq ( -> true or false, 0 or -1) V
+/// gt ( -> true or false, 0 or -1) V
+/// lt ( -> true or false, 0 or -1) V
+/// and V
+/// or V
+/// not V
 ///
 /// Memory access commands:
 ///

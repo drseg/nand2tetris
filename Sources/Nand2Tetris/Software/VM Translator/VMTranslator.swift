@@ -1,33 +1,50 @@
 class VMTranslator {
     func translate(_ vmCode: String) -> String {
-        vmCode.lines.reduce(into: [String]()) { result, line in
+        vmCode.lines.reduce(into: ([String](), 0)) { result, line in
+            func append(_ flowGenerator: (String) -> (String)) {
+                result.0.append(flowGenerator(String(result.1)))
+                result.1 += 1
+            }
+            
+            func append(_ assemblyGenerator: () -> (String)) {
+                result.0.append(assemblyGenerator())
+            }
+            
+            var isMemoryAccess: Bool {
+                components.count == 3
+            }
+            
             let components = line.components(separatedBy: " ")
             
-            if components.count == 3 {
-                let constant = components[2]
-                result.append(pushConstant(constant))
+            if isMemoryAccess {
+                let segment = components[2]
+                result.0.append(pushConstant(segment))
             }
             else {
                 switch line {
-                case "add": result.append(add())
-                case "sub": result.append(sub())
-                case "eq": result.append((eq()))
-                case "gt": result.append((gt()))
-                case "lt": result.append((lt()))
-                case "not": result.append(not())
-                case "neg": result.append(neg())
+                case "add": append(add)
+                case "sub": append(sub)
+                    
+                case "eq": append(eq)
+                case "gt": append(gt)
+                case "lt": append(lt)
+                    
+                case "not": append(not)
+                case "neg": append(neg)
+                case "and": append(and)
+                case "or": append(or)
+                    
                 default: break
                 }
             }
-        }.joined(separator: "\n")
+        }.0.joined(separator: "\n")
     }
     
     func pushConstant(_ c: String) -> String {
         """
         @\(c)
         D=A
-        @SP
-        A=M
+        \(aEqualsPointer("SP"))
         M=D
         \(increment("SP"))
         """
@@ -41,39 +58,31 @@ class VMTranslator {
         arithmetic(sign: "-")
     }
     
-    func not() -> String {
-        unary("!")
+    func and() -> String {
+        arithmetic(sign: "&")
     }
     
-    func neg() -> String {
-        unary("-")
+    func or() -> String {
+        arithmetic(sign: "|")
     }
     
-    func unary(_ sign: String) -> String {
-        """
-        \(aEqualsStackAddress())
-        M=\(sign)M
-        \(replaceTop("SP"))
-        """
+    func eq(_ count: String) -> String {
+        controlFlow("EQ" + count)
     }
     
-    func eq() -> String {
-        controlFlow("EQ")
+    func gt(_ count: String) -> String {
+        controlFlow("GT" + count)
     }
     
-    func gt() -> String {
-        controlFlow("GT")
-    }
-    
-    func lt() -> String {
-        controlFlow("LT")
+    func lt(_ count: String) -> String {
+        controlFlow("LT" + count)
     }
     
     func controlFlow(_ type: String) -> String {
         """
         \(sub())
         @\(type)
-        D;J\(type)
+        D;J\(type.prefix(2))
         D=-1
         (\(type))
         \(replaceTop("SP"))
@@ -84,30 +93,45 @@ class VMTranslator {
         """
         \(pop("SP"))
         A=M
-        D=D\(sign)M
+        D=M\(sign)D
         \(replaceTop("SP"))
         """
     }
     
     func pop(_ pointer: String) -> String {
         """
-        \(aEqualsStackAddress())
+        \(aEqualsPointer("SP"))
         D=M
         \(decrement("SP"))
         """
     }
     
-    func aEqualsStackAddress() -> String {
+    func not() -> String {
+        unary("!")
+    }
+    
+    func neg() -> String {
+        unary("-")
+    }
+    
+    func unary(_ sign: String) -> String {
         """
-        @SP
+        \(aEqualsPointer("SP"))
+        M=\(sign)M
+        \(replaceTop("SP"))
+        """
+    }
+    
+    func aEqualsPointer(_ pointer: String) -> String {
+        """
+        @\(pointer)
         A=M
         """
     }
     
     func replaceTop(_ pointer: String) -> String {
         """
-        @\(pointer)
-        A=M
+        \(aEqualsPointer(pointer))
         M=D
         """
     }
