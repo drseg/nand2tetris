@@ -1,5 +1,3 @@
-import Foundation
-
 class Assembler {
     let cleaner = AssemblyCleaner()
     let resolver = SymbolResolver()

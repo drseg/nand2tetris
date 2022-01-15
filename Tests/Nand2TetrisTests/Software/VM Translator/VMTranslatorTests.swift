@@ -140,8 +140,14 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         super.setUp()
         translator = VMTranslator()
         assembler = Assembler()
-        sleepTime = 120000
+        executionTime = 130000
         c.memory(256.b, "1", 0.b, "1")
+    }
+    
+    func assert(d: Int, sp: Int = 257, top: Int? = nil) {
+        String(d) => dRegister
+        String(sp) => stackPointer
+        String(top ?? d) => memory(256)
     }
     
     var dRegister: String {
@@ -152,7 +158,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         c.memory.value(0.b).toDecimal()
     }
     
-    func stack(_ i: Int) -> String {
+    func memory(_ i: Int) -> String {
         c.memory.value(i.b).toDecimal()
     }
     
@@ -172,32 +178,53 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
 
         runProgram(translated(add2And3))
+        assert(d: 5)
+    }
+    
+    func testSubtract2From3() {
+        let sub2From3 =
+                    """
+                    push constant 3
+                    push constant 2
+                    sub
+                    """
+
+        runProgram(translated(sub2From3))
+        assert(d: 1)
+    }
+    
+    func testChainedAddition() {
+        let add2And2And3 =
+                    """
+                    push constant 2
+                    push constant 2
+                    push constant 3
+                    add
+                    add
+                    """
+
+        runProgram(translated(add2And2And3))
+        assert(d: 7)
+    }
+    
+    func testNotEqual() {
+        let notEqual =
+                    """
+                    push constant 2
+                    push constant 1
+                    eq
+                    """
         
-        dRegister => "5"
-        stack(256) => "5"
-        stackPointer => "257"
+        runProgram(translated(notEqual))
+        assert(d: -1)
     }
 }
 
 /// Specs:
 ///
-/// Arithmetic commands:
-///
-/// add V
-/// sub V
-/// neg V
-/// eq ( -> true or false, 0 or -1) V
-/// gt ( -> true or false, 0 or -1) V
-/// lt ( -> true or false, 0 or -1) V
-/// and V
-/// or V
-/// not V
-///
 /// Memory access commands:
 ///
 /// (but how do you decide what to initialise the base address to?)
-///
-/// constant (not on stack, no pop)
 ///
 /// local
 /// argument
