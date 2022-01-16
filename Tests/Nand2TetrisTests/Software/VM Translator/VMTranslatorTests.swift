@@ -4,7 +4,8 @@ import XCTest
 class VMTranslatorTests: XCTestCase {
     var translator: VMTranslator!
     
-    override func setUp() {
+    override func setUpWithError() throws {
+        throw XCTSkip()
         translator = VMTranslator()
     }
     
@@ -29,11 +30,13 @@ class VMTranslatorTests: XCTestCase {
                     """
                     push constant 17
                     push constant 22
+                    push constant -3
                     """
         let assembly =
                     """
                     \(generateConstant("17"))
                     \(generateConstant("22"))
+                    \(generateConstant("-3"))
                     """
         translate(vmCode) => assembly
     }
@@ -143,19 +146,17 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     var translator: VMTranslator!
     var assembler: Assembler!
     
+    var assembly = ""
+    var binary = [String]()
+    
     override func setUp() {
         super.setUp()
         translator = VMTranslator()
         assembler = Assembler()
-        executionTime = 150000
+        executionTime = 180000
         c.memory(256.b, "1", 0.b, "1")
     }
     
-    func assert(d: Int, sp: Int = 257, top: Int? = nil) {
-        XCTAssertEqual(String(d), dRegister, "D Register")
-        XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
-        XCTAssertEqual(String(top ?? d), memory(256), "Memory 256")
-    }
     
     var dRegister: String {
         c.cpu.dRegister.value.toDecimal()
@@ -170,10 +171,22 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func translated(_ vmCode: String) -> [String] {
-        assembler.assemble(
-            translator.translate(
-                vmCode)
-        )
+        assembly = translator.translate(vmCode)
+        binary = assembler.assemble(assembly)
+        return binary
+    }
+
+    func assert(d: Int, sp: Int = 257, top: Int? = nil) {
+        XCTAssertEqual(String(d), dRegister, "D Register")
+        XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
+        XCTAssertEqual(String(top ?? d), memory(256), "Memory 256")
+    }
+    
+    func testPushNegativeConstant() {
+        let pushMinus1 = "push constant -1"
+        
+        runProgram(translated(pushMinus1))
+        assert(d: -1)
     }
     
     func testAdd2And3() {
@@ -200,6 +213,18 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assert(d: 1)
     }
     
+    func testSubtract3From2() {
+        let sub3From2 =
+                    """
+                    push constant 2
+                    push constant 3
+                    sub
+                    """
+
+        runProgram(translated(sub3From2))
+        assert(d: -1)
+    }
+    
     func testChainedAddition() {
         let add2And2And3 =
                     """
@@ -214,6 +239,18 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assert(d: 7)
     }
     
+    func testEqual() {
+        let equal =
+                    """
+                    push constant 2
+                    push constant 2
+                    eq
+                    """
+        
+        runProgram(translated(equal))
+        assert(d: 0)
+    }
+    
     func testNotEqual() {
         let notEqual =
                     """
@@ -226,17 +263,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assert(d: -1)
     }
     
-    func testEqual() {
-        let equal =
-                    """
-                    push constant 2
-                    push constant 2
-                    eq
-                    """
-        
-        runProgram(translated(equal))
-        assert(d: 0)
-    }
     
     func testLessThan() {
         let lt =
@@ -251,14 +277,117 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testNotLessThan() {
-        let lt =
+        let notLT =
                 """
                 push constant 3
                 push constant 2
                 lt
                 """
         
-        runProgram(translated(lt))
+        runProgram(translated(notLT))
+        assert(d: -1)
+    }
+    
+    func testGreaterThan() {
+        let gt =
+                """
+                push constant 3
+                push constant 2
+                gt
+                """
+        
+        runProgram(translated(gt))
+        assert(d: 0)
+    }
+    
+    func testNotGreaterThan() {
+        let notGT =
+                """
+                push constant 2
+                push constant 3
+                gt
+                """
+        
+        runProgram(translated(notGT))
+        assert(d: -1)
+    }
+    
+    func testNegative() {
+        let neg =
+                """
+                push constant 1
+                neg
+                """
+        
+        runProgram(translated(neg))
+        assert(d: -1)
+    }
+    
+    func testDoubleNegative() {
+        let neg =
+                """
+                push constant -1
+                neg
+                """
+        
+        runProgram(translated(neg))
+        assert(d: 1)
+    }
+    
+    func testOtherDoubleNegative() {
+        let neg =
+                """
+                push constant 1
+                neg
+                neg
+                """
+        
+        runProgram(translated(neg))
+        assert(d: 1)
+    }
+    
+    func testNot() {
+        let not =
+                """
+                push constant -1
+                not
+                """
+        
+        runProgram(translated(not))
+        assert(d: 0)
+    }
+    
+    func testDoubleNot() {
+        let not =
+                """
+                push constant -1
+                not
+                not
+                """
+        
+        runProgram(translated(not))
+        assert(d: -1)
+    }
+    
+    func testAnd() {
+        let and =
+                """
+                push constant 0
+                push constant -1
+                and
+                """
+        runProgram(translated(and))
+        assert(d: 0)
+    }
+    
+    func testOr() {
+        let or =
+                """
+                push constant 0
+                push constant -1
+                or
+                """
+        runProgram(translated(or))
         assert(d: -1)
     }
 }

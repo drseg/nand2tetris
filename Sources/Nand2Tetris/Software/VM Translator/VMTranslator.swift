@@ -41,13 +41,29 @@ class VMTranslator {
     }
     
     func pushConstant(_ c: String) -> String {
-        """
-        @\(c)
-        D=A
-        \(aEquals("SP"))
-        M=D
-        \(increment("SP"))
-        """
+        func saveAndIncrement() -> String {
+            """
+            \(aEquals("SP"))
+            M=D
+            \(increment("SP"))
+            """
+        }
+        
+        if c[0] != "-" {
+            return
+                """
+                @\(c)
+                D=A
+                \(saveAndIncrement())
+                """
+        } else {
+            return
+                """
+                @\(c.dropFirst())
+                D=-A
+                \(saveAndIncrement())
+                """
+        }
     }
     
     func add() -> String {
@@ -126,7 +142,8 @@ class VMTranslator {
     func unary(_ sign: String) -> String {
         """
         \(aEquals("SP", offset: "-1"))
-        M=\(sign)M
+        D=\(sign)M
+        M=D
         \(replaceTop("SP"))
         """
     }
