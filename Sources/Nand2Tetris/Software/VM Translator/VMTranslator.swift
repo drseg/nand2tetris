@@ -1,4 +1,10 @@
 class VMTranslator {
+    static let sp = 256
+    static let lcl = 1000
+    static let arg = 1250
+    static let this = 1500
+    static let that = 1750
+    
     func translate(_ vmCode: String) -> String {
         vmCode.lines.reduce(into: ([String](), 0)) { result, line in
             func append(_ flowGenerator: (String) -> (String)) {
@@ -17,8 +23,17 @@ class VMTranslator {
             let components = line.components(separatedBy: " ")
             
             if isMemoryAccess {
-                let segment = components[2]
-                result.0.append(pushConstant(segment))
+                let command = components[0]
+                let segment = components[1]
+                let segmentOffset = components[2]
+                
+                if command == "push" {
+                    result.0.append(pushConstant(segmentOffset))
+                }
+                else {
+                    result.0.append(pop(to: segment,
+                                        offset: segmentOffset))
+                }
             }
             else {
                 switch line {
@@ -38,6 +53,20 @@ class VMTranslator {
                 }
             }
         }.0.joined(separator: "\n")
+    }
+    
+    func pop(to segment: String, offset: String) -> String {
+        var address = ""
+        switch segment {
+        case "local": address = String(Self.lcl)
+        default: break
+        }
+        
+        return """
+        \(popStack())
+        @\(Int(address)! + Int(offset)!)
+        M=D
+        """
     }
     
     func pushConstant(_ c: String) -> String {
@@ -116,14 +145,14 @@ class VMTranslator {
         : "D=D\(sign)M"
         
         return """
-        \(pop("SP"))
+        \(popStack())
         A=M-1
         \(dCommand)
         \(replaceTop("SP"))
         """
     }
     
-    func pop(_ pointer: String) -> String {
+    func popStack() -> String {
         """
         \(aEquals("SP", offset: "-1"))
         D=M
