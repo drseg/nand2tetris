@@ -26,7 +26,10 @@ class SymbolResolver {
     }
     
     func replacingAll(_ assembly: String) -> String {
-        allSymbols.reduce(assembly) {
+        allSymbols
+            .sorted { $0.key.count > $1.key.count }
+            .reduce(assembly)
+        {
             $0.replacing([("\n(\($1.key))", ""),
                           ("(\($1.key))\n", ""),
                           ("(\($1.key))", ""),

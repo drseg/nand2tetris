@@ -117,7 +117,8 @@ class SymbolResolverTests: XCTestCase {
     }
     
     func testReplacesDifferentSymbolsWithSamePrefix() {
-        (1...50).forEach { _ in
+        /// This is a race condition - 100 iterations seems to expose it consistently
+        (1...100).forEach { _ in
             resolve("@A\n@A1") => "@16\n@17"
         }
     }

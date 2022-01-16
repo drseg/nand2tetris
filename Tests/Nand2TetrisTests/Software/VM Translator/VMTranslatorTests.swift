@@ -4,10 +4,6 @@ import XCTest
 class VMTranslatorTests: XCTestCase {
     var translator: VMTranslator!
     
-    override func setUpWithError() throws {
-        throw XCTSkip()
-    }
-    
     override func setUp() {
         translator = VMTranslator()
     }
@@ -108,13 +104,20 @@ class VMTranslatorTests: XCTestCase {
         @SP
         A=M-1
         M=D
-        @\(code)
+        @\(code + "_TRUE")
         D;J\(code.prefix(2))
         D=-1
-        (\(code))
         @SP
         A=M-1
         M=D
+        @\(code + "_FALSE")
+        0;JMP
+        (\(code + "_TRUE"))
+        D=0
+        @SP
+        A=M-1
+        M=D
+        (\(code + "_FALSE"))
         """
     }
     
@@ -140,15 +143,11 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     var translator: VMTranslator!
     var assembler: Assembler!
     
-    override func setUpWithError() throws {
-        throw XCTSkip()
-    }
-    
     override func setUp() {
         super.setUp()
         translator = VMTranslator()
         assembler = Assembler()
-        executionTime = 200000
+        executionTime = 150000
         c.memory(256.b, "1", 0.b, "1")
     }
     

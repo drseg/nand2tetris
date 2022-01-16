@@ -81,20 +81,16 @@ class VMTranslator {
     func controlFlow(_ type: String) -> String {
         """
         \(sub())
-        
-        @\(type)
+        @\(type + "_TRUE")
         D;J\(type.prefix(2))
         D=-1
         \(replaceTop("SP"))
-        
-        @\(type + "+")
+        @\(type + "_FALSE")
         0;JMP
-        
-        (\(type))
+        (\(type + "_TRUE"))
         D=0
         \(replaceTop("SP"))
-        
-        (\(type + "+"))
+        (\(type + "_FALSE"))
         """
     }
     
