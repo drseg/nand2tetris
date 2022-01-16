@@ -112,9 +112,14 @@ class SymbolResolverTests: XCTestCase {
         resolve("(LOOP)\n(END)") => ""
     }
     
-    
     func testReplacesStaticSymbols() {
         resolve("@R1\n@SP") => "@1\n@0"
+    }
+    
+    func testReplacesDifferentSymbolsWithSamePrefix() {
+        (1...50).forEach { _ in
+            resolve("@A\n@A1") => "@16\n@17"
+        }
     }
     
     func testAcceptance() throws {
