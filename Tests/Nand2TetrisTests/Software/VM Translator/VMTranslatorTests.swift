@@ -50,7 +50,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         return binary
     }
 
-    func assert(d: Int, sp: Int = 257, top: Int? = nil) {
+    func assertResult(d: Int, sp: Int = 257, top: Int? = nil) {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
         XCTAssertEqual(String(top ?? d), memory(256), "Memory 256")
@@ -58,7 +58,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     
     func testPushNegativeConstant() {
         runProgram(translated("push constant -1"))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func testAdd2And3() {
@@ -70,7 +70,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
 
         runProgram(translated(add2And3))
-        assert(d: 5)
+        assertResult(d: 5)
     }
     
     func testSubtract2From3() {
@@ -82,7 +82,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
 
         runProgram(translated(sub2From3))
-        assert(d: 1)
+        assertResult(d: 1)
     }
     
     func testSubtract3From2() {
@@ -94,7 +94,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
 
         runProgram(translated(sub3From2))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func testChainedAddition() {
@@ -108,7 +108,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
 
         runProgram(translated(add2And2And3))
-        assert(d: 7)
+        assertResult(d: 7)
     }
     
     func testEqual() {
@@ -120,7 +120,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
         
         runProgram(translated(equal))
-        assert(d: 0)
+        assertResult(d: 0)
     }
     
     func testNotEqual() {
@@ -132,7 +132,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
         
         runProgram(translated(notEqual))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     
@@ -145,7 +145,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(lt))
-        assert(d: 0)
+        assertResult(d: 0)
     }
     
     func testNotLessThan() {
@@ -157,7 +157,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(notLT))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func testGreaterThan() {
@@ -169,7 +169,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(gt))
-        assert(d: 0)
+        assertResult(d: 0)
     }
     
     func testNotGreaterThan() {
@@ -181,7 +181,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(notGT))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func testNegative() {
@@ -192,7 +192,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(neg))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func testDoubleNegative() {
@@ -203,7 +203,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(neg))
-        assert(d: 1)
+        assertResult(d: 1)
     }
     
     func testOtherDoubleNegative() {
@@ -215,7 +215,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(neg))
-        assert(d: 1)
+        assertResult(d: 1)
     }
     
     func testNot() {
@@ -226,7 +226,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(not))
-        assert(d: 0)
+        assertResult(d: 0)
     }
     
     func testDoubleNot() {
@@ -238,7 +238,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 """
         
         runProgram(translated(not))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func testAnd() {
@@ -249,7 +249,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 and
                 """
         runProgram(translated(and))
-        assert(d: 0)
+        assertResult(d: 0)
     }
     
     func testOr() {
@@ -260,7 +260,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 or
                 """
         runProgram(translated(or))
-        assert(d: -1)
+        assertResult(d: -1)
     }
     
     func assertPopped(

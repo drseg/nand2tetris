@@ -103,29 +103,15 @@ class VMTranslator {
     }
     
     func pushConstant(_ c: String) -> String {
-        func saveAndIncrementSP() -> String {
-                """
-                \(aEqualsSP())
-                M=D
-                \(incrementSP())
-                """
-        }
+        let isNegative = c[0] == "-"
         
-        if c[0] != "-" {
-            return
-                """
-                @\(c)
-                D=A
-                \(saveAndIncrementSP())
-                """
-        } else {
-            return
-                """
-                @\(c.dropFirst())
-                D=-A
-                \(saveAndIncrementSP())
-                """
-        }
+        return """
+        @\(isNegative ? String(c.dropFirst()) : c)
+        D=\(isNegative ? "-A" : "A")
+        \(aEqualsSP())
+        M=D
+        \(incrementSP())
+        """
     }
     
     func eq(_ count: String) -> String {
