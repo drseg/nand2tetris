@@ -269,7 +269,8 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     
     func assertPopped(
         segment: String,
-        to: Int,
+        toFirst: Int,
+        toSecond: Int? = nil,
         sp: Int = 256
     ) {
         let pop =
@@ -286,16 +287,16 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                        stackPointer,
                        "Stack Pointer")
         XCTAssertEqual(String(10),
-                       memory(to),
-                       "Memory[\(to)]")
+                       memory(toFirst),
+                       "Memory[\(toFirst)]")
         XCTAssertEqual(String(9),
-                       memory(to + 1),
-                       "Memory[\(to + 1)]")
+                       memory(toSecond ?? toFirst + 1),
+                       "Memory[\(toSecond ?? toFirst + 1)]")
     }
     
     func assertPushAndPop(
         segment: String,
-        to: Int,
+        toFirst: Int,
         sp: Int = 256
     ) {
         let pushAndPop =
@@ -316,48 +317,58 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                        stackPointer,
                        "Stack Pointer")
         XCTAssertEqual(String(19),
-                       memory(to),
-                       "Memory[\(to)]")
+                       memory(toFirst),
+                       "Memory[\(toFirst)]")
     }
     
     func testPopLocal() {
-        assertPopped(segment: "local", to: lcl)
+        assertPopped(segment: "local", toFirst: lcl)
     }
     
     func testPopArgument() {
-        assertPopped(segment: "argument", to: arg)
+        assertPopped(segment: "argument", toFirst: arg)
     }
     
     func testPopThis() {
-        assertPopped(segment: "this", to: this)
+        assertPopped(segment: "this", toFirst: this)
     }
     
     func testPopThat() {
-        assertPopped(segment: "that", to: that)
+        assertPopped(segment: "that", toFirst: that)
     }
     
     func testPopTemp() {
-        assertPopped(segment: "temp", to: temp)
+        assertPopped(segment: "temp", toFirst: temp)
+    }
+    
+    func testPopPointer() {
+        assertPopped(segment: "pointer",
+                     toFirst: pointer0,
+                     toSecond: pointer1)
     }
     
     func testPushLocal() {
-        assertPushAndPop(segment: "local", to: lcl)
+        assertPushAndPop(segment: "local", toFirst: lcl)
     }
     
     func testPushArgument() {
-        assertPushAndPop(segment: "argument", to: arg)
+        assertPushAndPop(segment: "argument", toFirst: arg)
     }
     
     func testPushThis() {
-        assertPushAndPop(segment: "this", to: this)
+        assertPushAndPop(segment: "this", toFirst: this)
     }
     
     func testPushThat() {
-        assertPushAndPop(segment: "that", to: that)
+        assertPushAndPop(segment: "that", toFirst: that)
     }
     
     func testPushTemp() {
-        assertPushAndPop(segment: "temp", to: temp)
+        assertPushAndPop(segment: "temp", toFirst: temp)
+    }
+    
+    func testPushPointer() {
+        assertPushAndPop(segment: "pointer", toFirst: pointer0)
     }
 }
 

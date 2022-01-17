@@ -75,7 +75,7 @@ class VMTranslator {
         to segment: String,
         at offset: String
     ) -> String {
-        let segment: String = {
+        let adjustedSegment: String = {
             segment == "pointer"
             ? offset == "0"
                 ? "this"
@@ -83,17 +83,17 @@ class VMTranslator {
             : segment
         }()
         
-        let offset: String = {
+        let adjustedOffset: String = {
             segment == "pointer"
             ? "0"
             : offset
         }()
         
-        let mnemonic = mnemonic(for: segment)
+        let mnemonic = mnemonic(for: adjustedSegment)
         let addend = Int(mnemonic) != nil ? "A" : "M"
         
         return """
-        @\(offset)
+        @\(adjustedOffset)
         D=A
         @\(mnemonic)
         \(register)=D+\(addend)
