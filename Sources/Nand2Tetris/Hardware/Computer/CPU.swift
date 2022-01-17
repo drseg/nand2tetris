@@ -6,19 +6,11 @@ final class CPU {
         let pcValue: String
         
         func or(_ other: Out, if pred: Char) -> Out {
-            Out(mValue: if16(mValue, other.mValue, pred),
+            Out(mValue: mux16(mValue, other.mValue, pred),
                 shouldWrite: mux(shouldWrite, other.shouldWrite, pred),
-                aValue: if16(aValue, other.aValue, pred),
-                pcValue: if16(pcValue, other.pcValue, pred)
+                aValue: mux16(aValue, other.aValue, pred),
+                pcValue: mux16(pcValue, other.pcValue, pred)
             )
-        }
-        
-        private func if16(
-            _ lhs: String,
-            _ rhs: String,
-            _ pred: Char
-        ) -> String {
-            mux16(lhs.leftPad(16), rhs.leftPad(16), pred)
         }
     }
     

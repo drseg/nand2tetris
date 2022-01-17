@@ -5,7 +5,7 @@ class ComputerTestCase: CPUTestCase {
     var c: Computer!
     var screen: FastRAM!
     var keyboard: Keyboard!
-    var executionTime: UInt32 = 40000
+    var cycles = 13
     
     override func setUp() {
         super.setUp()
@@ -18,9 +18,8 @@ class ComputerTestCase: CPUTestCase {
     
     func runProgram(_ program: [String]) {
         c.load(program)
-        c.run()
-        usleep(executionTime)
-        c.terminated = true
+        c.cycles = cycles
+        c.runSync()
     }
 }
 

@@ -60,16 +60,14 @@ class VMTranslator {
         case "argument": return "ARG"
         case "this": return "THIS"
         case "that": return "THAT"
+            
         default: return ""
         }
     }
     
     func pop(to segment: String, offset: String) -> String {
         """
-        @\(address(segment: segment))
-        D=M
-        @\(offset)
-        D=D+A
+        \(set("D", to: segment, at: offset))
         @R15
         M=D
         \(popStack())
@@ -81,16 +79,26 @@ class VMTranslator {
     
     func push(segment: String, offset: String) -> String {
         """
-        @\(offset)
-        D=A
-        @\(address(segment: segment))
-        A=D+M
+        \(set("A", to: segment, at: offset))
         D=M
         @SP
         A=M
         M=D
         @SP
         M=M+1
+        """
+    }
+    
+    func set(
+        _ register: String,
+        to segment: String,
+        at offset: String
+    ) -> String {
+        """
+        @\(offset)
+        D=A
+        @\(address(segment: segment))
+        \(register)=D+M
         """
     }
     
@@ -118,22 +126,6 @@ class VMTranslator {
                 \(saveAndIncrementSP())
                 """
         }
-    }
-    
-    func add() -> String {
-        arithmetic(sign: "+")
-    }
-    
-    func sub() -> String {
-        arithmetic(sign: "-")
-    }
-    
-    func and() -> String {
-        arithmetic(sign: "&")
-    }
-    
-    func or() -> String {
-        arithmetic(sign: "|")
     }
     
     func eq(_ count: String) -> String {
@@ -164,6 +156,22 @@ class VMTranslator {
         """
     }
     
+    func add() -> String {
+        arithmetic(sign: "+")
+    }
+    
+    func sub() -> String {
+        arithmetic(sign: "-")
+    }
+    
+    func and() -> String {
+        arithmetic(sign: "&")
+    }
+    
+    func or() -> String {
+        arithmetic(sign: "|")
+    }
+    
     func arithmetic(sign: String) -> String {
         let dCommand = sign == "-"
         ? "D=M\(sign)D"
@@ -174,14 +182,6 @@ class VMTranslator {
         A=M-1
         \(dCommand)
         \(replaceTop())
-        """
-    }
-    
-    func popStack() -> String {
-        """
-        \(aEqualsSP(offset: "-1"))
-        D=M
-        \(decrementSP())
         """
     }
     
@@ -209,6 +209,14 @@ class VMTranslator {
         """
     }
     
+    func popStack() -> String {
+        """
+        \(aEqualsSP(offset: "-1"))
+        D=M
+        \(decrementSP())
+        """
+    }
+    
     func replaceTop() -> String {
         """
         \(aEqualsSP(offset: "-1"))
@@ -224,13 +232,10 @@ class VMTranslator {
         adjustSP(sign: "-")
     }
     
-    func adjustSP(
-        by amount: String = "1",
-        sign: String
-    ) -> String {
+    func adjustSP(sign: String) -> String {
         """
         @SP
-        M=M\(sign)\(amount)
+        M=M\(sign)1
         """
     }
 }

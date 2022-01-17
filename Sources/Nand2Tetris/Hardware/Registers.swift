@@ -116,11 +116,12 @@ final class FastRAM: RAM {
         _ address: String,
         _ clock: Char
     ) -> String {
-        let address = Int(address.toDecimal())!
+        let address = Int(address, radix: 2)!
         
-        words[address] = mux16(words[address],
-                               word,
-                               and(load, clock))
+        if load == "1" && clock == "1" {
+            words[address] = word
+        }
+        
         return words[address]
     }
 }

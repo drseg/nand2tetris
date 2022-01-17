@@ -18,12 +18,13 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         super.setUp()
         translator = VMTranslator()
         assembler = Assembler()
-        executionTime = 150000
+        cycles = 45
         
-        initialiseStack()
+        c.usesFastClocking = true
+        initialiseMemory()
     }
     
-    func initialiseStack() {
+    func initialiseMemory() {
         c.memory(sp.b, "1", 0.b, "1")
         c.memory(lcl.b, "1", 1.b, "1")
         c.memory(arg.b, "1", 2.b, "1")
@@ -304,7 +305,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     add
                     pop \(segment) 0
                     """
-        
+        cycles = 88
         runProgram(translated(pushAndPop))
         
         XCTAssertEqual(String(sp),
@@ -332,8 +333,19 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPushLocal() {
-        executionTime = 300000
         assertPushAndPop(segment: "local", to: lcl)
+    }
+    
+    func testPushArgument() {
+        assertPushAndPop(segment: "argument", to: arg)
+    }
+    
+    func testPushThis() {
+        assertPushAndPop(segment: "this", to: this)
+    }
+    
+    func testPushThat() {
+        assertPushAndPop(segment: "that", to: that)
     }
 }
 
