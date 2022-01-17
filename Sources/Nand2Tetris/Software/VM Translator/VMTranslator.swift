@@ -8,27 +8,30 @@ class VMTranslator {
     }
     
     func translateLine(_ line: (i: Int, vmCode: String)) -> String {
-        let components = line.vmCode.components(separatedBy: " ")
+        let words = line.vmCode.components(separatedBy: " ")
         
-        switch components.count {
+        switch words.count {
         case 1:
             switch line.1 {
             case "add": return add()
             case "sub": return sub()
-            case "eq": return eq(String(line.i))
-            case "gt": return gt(String(line.i))
-            case "lt": return lt(String(line.i))
             case "not": return not()
             case "neg": return neg()
             case "and": return and()
             case "or": return or()
+            case "eq": return eq(String(line.i))
+            case "gt": return gt(String(line.i))
+            case "lt": return lt(String(line.i))
                 
-            default: fatalError()
+            default:
+                fatalError(
+                    "'\(line.1)' is not a valid command"
+                )
             }
         case 3:
-            let command = components[0]
-            let segment = components[1]
-            let offset = components[2]
+            let command = words[0]
+            let segment = words[1]
+            let offset = words[2]
             
             return command == "push"
             ? segment == "constant"
@@ -36,7 +39,10 @@ class VMTranslator {
                 : push(segment, at: offset)
             : pop(to: segment, at: offset)
             
-        default: fatalError()
+        default:
+            fatalError(
+                "VM lines can't have \(words.count) words"
+            )
         }
     }
     
@@ -69,11 +75,28 @@ class VMTranslator {
         to segment: String,
         at offset: String
     ) -> String {
-        """
+        let segment: String = {
+            segment == "pointer"
+            ? offset == "0"
+                ? "this"
+                : "that"
+            : segment
+        }()
+        
+        let offset: String = {
+            segment == "pointer"
+            ? "0"
+            : offset
+        }()
+        
+        let mnemonic = mnemonic(for: segment)
+        let addend = Int(mnemonic) != nil ? "A" : "M"
+        
+        return """
         @\(offset)
         D=A
-        @\(mnemonic(for: segment))
-        \(register)=D+M
+        @\(mnemonic)
+        \(register)=D+\(addend)
         """
     }
     
@@ -83,8 +106,9 @@ class VMTranslator {
         case "argument": return "ARG"
         case "this": return "THIS"
         case "that": return "THAT"
+        case "temp": return "5"
             
-        default: fatalError()
+        default: fatalError("Unknown segment '\(segment)'")
         }
     }
     

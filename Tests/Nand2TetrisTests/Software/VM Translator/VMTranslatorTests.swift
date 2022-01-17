@@ -8,6 +8,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     let this = 1500
     let that = 1750
     
+    let temp = 5
+    var pointer0: Int { this }
+    var pointer1: Int { that }
+    
     var translator: VMTranslator!
     var assembler: Assembler!
     
@@ -332,6 +336,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assertPopped(segment: "that", to: that)
     }
     
+    func testPopTemp() {
+        assertPopped(segment: "temp", to: temp)
+    }
+    
     func testPushLocal() {
         assertPushAndPop(segment: "local", to: lcl)
     }
@@ -347,6 +355,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     func testPushThat() {
         assertPushAndPop(segment: "that", to: that)
     }
+    
+    func testPushTemp() {
+        assertPushAndPop(segment: "temp", to: temp)
+    }
 }
 
 /// Specs:
@@ -354,7 +366,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
 /// Memory access commands:
 ///
 /// pointer
-/// temp
 /// static
 ///
 /// Ram:
