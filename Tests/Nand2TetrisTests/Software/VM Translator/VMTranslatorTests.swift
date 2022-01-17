@@ -1,148 +1,13 @@
 import XCTest
 @testable import Nand2Tetris
 
-class VMTranslatorTests: XCTestCase {
-    var translator: VMTranslator!
-    
-    override func setUpWithError() throws {
-        throw XCTSkip()
-        translator = VMTranslator()
-    }
-    
-    func translate(_ vmCode: String) -> String {
-        translator.translate(vmCode)
-    }
-    
-    func generateConstant(_ c: String) -> String {
-        """
-        @\(c)
-        D=A
-        @SP
-        A=M
-        M=D
-        @SP
-        M=M+1
-        """
-    }
-    
-    func testPushConstants() {
-        let vmCode =
-                    """
-                    push constant 17
-                    push constant 22
-                    push constant -3
-                    """
-        let assembly =
-                    """
-                    \(generateConstant("17"))
-                    \(generateConstant("22"))
-                    \(generateConstant("-3"))
-                    """
-        translate(vmCode) => assembly
-    }
-    
-    func generateArithmetic(_ sign: String) -> String {
-        let dCommand = sign == "-"
-        ? "D=M\(sign)D"
-        : "D=D\(sign)M"
-        
-        return """
-        @SP
-        A=M-1
-        D=M
-        @SP
-        M=M-1
-        A=M-1
-        \(dCommand)
-        @SP
-        A=M-1
-        M=D
-        """
-    }
-    
-    func testAdd() {
-        translate("add") => generateArithmetic("+")
-    }
-    
-    func testSub() {
-        translate("sub") => generateArithmetic("-")
-    }
-    
-    func testAnd() {
-        translate("and") => generateArithmetic("&")
-    }
-    
-    func testOr() {
-        translate("or") => generateArithmetic("|")
-    }
-    
-    func generateUnary(_ sign: String) -> String {
-        """
-        @SP
-        A=M-1
-        M=\(sign)M
-        @SP
-        A=M-1
-        M=D
-        """
-    }
-    
-    func testNot() {
-        translate("not") => generateUnary("!")
-    }
-    
-    func testNeg() {
-        translate("neg") => generateUnary("-")
-    }
-    
-    func generateConditional(_ code: String) -> String {
-        """
-        @SP
-        A=M-1
-        D=M
-        @SP
-        M=M-1
-        A=M-1
-        D=M-D
-        @SP
-        A=M-1
-        M=D
-        @\(code + "_TRUE")
-        D;J\(code.prefix(2))
-        D=-1
-        @SP
-        A=M-1
-        M=D
-        @\(code + "_FALSE")
-        0;JMP
-        (\(code + "_TRUE"))
-        D=0
-        @SP
-        A=M-1
-        M=D
-        (\(code + "_FALSE"))
-        """
-    }
-    
-    func testEQ() {
-        translate("eq") => generateConditional("EQ0")
-    }
-    
-    func testGT() {
-        translate("gt") => generateConditional("GT0")
-    }
-    
-    func testLT() {
-        translate("lt") => generateConditional("LT0")
-    }
-    
-    func testChainedConditionals() {
-        translate("lt\nlt") =>
-        (generateConditional("LT0") + "\n" + generateConditional("LT1"))
-    }
-}
-
 class VMTranslatorAcceptanceTests: ComputerTestCase {
+    let sp = 256
+    let lcl = 1000
+    let arg = 1250
+    let this = 1500
+    let that = 1750
+    
     var translator: VMTranslator!
     var assembler: Assembler!
     
@@ -154,7 +19,16 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         translator = VMTranslator()
         assembler = Assembler()
         executionTime = 150000
-        c.memory(256.b, "1", 0.b, "1")
+        
+        initialiseStack()
+    }
+    
+    func initialiseStack() {
+        c.memory(sp.b, "1", 0.b, "1")
+        c.memory(lcl.b, "1", 1.b, "1")
+        c.memory(arg.b, "1", 2.b, "1")
+        c.memory(this.b, "1", 3.b, "1")
+        c.memory(that.b, "1", 4.b, "1")
     }
     
     var dRegister: String {
@@ -179,15 +53,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
         XCTAssertEqual(String(top ?? d), memory(256), "Memory 256")
-    }
-    
-    func assertPopped(_ value: Int, to: Int, sp: Int = 256) {
-        XCTAssertEqual(String(sp),
-                       stackPointer,
-                       "Stack Pointer")
-        XCTAssertEqual(String(value),
-                       memory(to),
-                       "Memory[\(to)]")
     }
     
     func testPushNegativeConstant() {
@@ -397,16 +262,73 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assert(d: -1)
     }
     
-    func testPopLocal() {
-        let popLocal =
+    func assertPopped(
+        segment: String,
+        to: Int,
+        sp: Int = 256
+    ) {
+        let pop =
                 """
                 push constant 9
-                pop local 0
+                pop \(segment) 0
                 """
         
-        runProgram(translated(popLocal))
-        assertPopped(9, to: VMTranslator.lcl)
+        runProgram(translated(pop))
+        
+        XCTAssertEqual(String(sp),
+                       stackPointer,
+                       "Stack Pointer")
+        XCTAssertEqual(String(9),
+                       memory(to),
+                       "Memory[\(to)]")
     }
+    
+    func assertPushAndPop(
+        segment: String,
+        to: Int,
+        sp: Int = 256
+    ) {
+        let pushAndPop =
+                    """
+                    push constant 9
+                    push constant 10
+                    pop \(segment) 0
+                    pop \(segment) 1
+                    push \(segment) 0
+                    push \(segment) 1
+                    add
+                    pop \(segment) 0
+                    """
+        
+        runProgram(translated(pushAndPop))
+        
+        XCTAssertEqual(String(sp),
+                       stackPointer,
+                       "Stack Pointer")
+        XCTAssertEqual(String(19),
+                       memory(to),
+                       "Memory[\(to)]")
+    }
+    
+    func testPopLocal() {
+        assertPopped(segment: "local", to: lcl)
+    }
+    
+    func testPopArgument() {
+        assertPopped(segment: "argument", to: arg)
+    }
+    
+    func testPopThis() {
+        assertPopped(segment: "this", to: this)
+    }
+    
+    func testPopThat() {
+        assertPopped(segment: "that", to: that)
+    }
+    
+//    func testPushLocal() {
+//        assertPushAndPop(segment: "local", to: VMTranslator.lcl)
+//    }
 }
 
 /// Specs:
@@ -419,6 +341,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
 /// argument
 /// this
 /// that
+///
 /// pointer
 /// temp
 /// static

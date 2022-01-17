@@ -1,10 +1,4 @@
 class VMTranslator {
-    static let sp = 256
-    static let lcl = 1000
-    static let arg = 1250
-    static let this = 1500
-    static let that = 1750
-    
     func translate(_ vmCode: String) -> String {
         vmCode.lines.reduce(into: ([String](), 0)) { result, line in
             func append(_ flowGenerator: (String) -> (String)) {
@@ -25,14 +19,19 @@ class VMTranslator {
             if isMemoryAccess {
                 let command = components[0]
                 let segment = components[1]
-                let segmentOffset = components[2]
+                let offset = components[2]
                 
                 if command == "push" {
-                    result.0.append(pushConstant(segmentOffset))
+                    if segment == "constant" {
+                        result.0.append(pushConstant(offset))
+                    }
+                    else {
+                        result.0.append(push(segment: segment,
+                                             offset: offset))
+                    }
                 }
                 else {
-                    result.0.append(pop(to: segment,
-                                        offset: segmentOffset))
+                    result.0.append(pop(to: segment, offset: offset))
                 }
             }
             else {
@@ -55,18 +54,42 @@ class VMTranslator {
         }.0.joined(separator: "\n")
     }
     
-    func pop(to segment: String, offset: String) -> String {
-        var address = ""
+    func address(segment: String) -> String {
         switch segment {
-        case "local": address = String(Self.lcl)
-        default: break
+        case "local": return "LCL"
+        case "argument": return "ARG"
+        case "this": return "THIS"
+        case "that": return "THAT"
+        default: return ""
         }
+    }
+    
+    func pop(to segment: String, offset: String) -> String {
+        let address = address(segment: segment)
         
         return """
+        @\(address)
+        D=M
+        @\(offset)
+        D=D+A
+        @R15
+        M=D
         \(popStack())
-        @\(Int(address)! + Int(offset)!)
+        @R15
+        A=M
         M=D
         """
+    }
+    
+    func push(segment: String, offset: String) -> String {
+//        let address = address(segment: segment)
+//
+//        return
+//        """
+//        \(aEquals(""))
+//        """
+        
+        ""
     }
     
     func pushConstant(_ c: String) -> String {
