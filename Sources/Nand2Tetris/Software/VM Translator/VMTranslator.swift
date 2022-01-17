@@ -1,46 +1,43 @@
 class VMTranslator {
     func translate(_ vmCode: String) -> String {
-        vmCode.lines.reduce(into: ([String](), 0)) { result, line in
-            let components = line.components(separatedBy: " ")
+        vmCode
+            .lines
+            .enumerated()
+            .map(translateLine)
+            .joined(separator: "\n")
+    }
+    
+    func translateLine(_ line: (i: Int, vmCode: String)) -> String {
+        let components = line.vmCode.components(separatedBy: " ")
+        
+        switch components.count {
+        case 1:
+            switch line.1 {
+            case "add": return add()
+            case "sub": return sub()
+            case "eq": return eq(String(line.i))
+            case "gt": return gt(String(line.i))
+            case "lt": return lt(String(line.i))
+            case "not": return not()
+            case "neg": return neg()
+            case "and": return and()
+            case "or": return or()
+                
+            default: fatalError()
+            }
+        case 3:
+            let command = components[0]
+            let segment = components[1]
+            let offset = components[2]
             
-            if components.count == 3 {
-                let command = components[0]
-                let segment = components[1]
-                let offset = components[2]
-                
-                command == "push"
-                ? segment == "constant"
-                    ? result.0.append(pushConstant(offset))
-                    : result.0.append(push(segment, at: offset))
-                : result.0.append(pop(to: segment, at: offset))
-            }
-            else {
-                func append(_ flowGenerator: (String) -> (String)) {
-                    result.0.append(flowGenerator(String(result.1)))
-                    result.1 += 1
-                }
-                
-                func append(_ assemblyGenerator: () -> (String)) {
-                    result.0.append(assemblyGenerator())
-                }
-                
-                switch line {
-                case "add": append(add)
-                case "sub": append(sub)
-                    
-                case "eq": append(eq)
-                case "gt": append(gt)
-                case "lt": append(lt)
-                    
-                case "not": append(not)
-                case "neg": append(neg)
-                case "and": append(and)
-                case "or": append(or)
-                    
-                default: break
-                }
-            }
-        }.0.joined(separator: "\n")
+            return command == "push"
+            ? segment == "constant"
+                ? pushConstant(offset)
+                : push(segment, at: offset)
+            : pop(to: segment, at: offset)
+            
+        default: fatalError()
+        }
     }
     
     func pop(to segment: String, at offset: String) -> String {
@@ -87,16 +84,16 @@ class VMTranslator {
         case "this": return "THIS"
         case "that": return "THAT"
             
-        default: return ""
+        default: fatalError()
         }
     }
     
     func pushConstant(_ c: String) -> String {
-        let isNegative = c[0] == "-"
+        let isNeg = c[0] == "-"
         
         return """
-        @\(isNegative ? String(c.dropFirst()) : c)
-        D=\(isNegative ? "-A" : "A")
+        @\(isNeg ? String(c.dropFirst()) : c)
+        D=\(isNeg ? "-A" : "A")
         \(aEqualsSP())
         M=D
         \(incrementSP())
@@ -104,30 +101,30 @@ class VMTranslator {
     }
     
     func eq(_ count: String) -> String {
-        controlFlow("EQ" + count)
+        bool("EQ" + count)
     }
     
     func gt(_ count: String) -> String {
-        controlFlow("GT" + count)
+        bool("GT" + count)
     }
     
     func lt(_ count: String) -> String {
-        controlFlow("LT" + count)
+        bool("LT" + count)
     }
     
-    func controlFlow(_ type: String) -> String {
+    func bool(_ condition: String) -> String {
         """
         \(sub())
-        @\(type + "_TRUE")
-        D;J\(type.prefix(2))
+        @\(condition + "_TRUE")
+        D;J\(condition.prefix(2))
         D=-1
         \(replaceTop())
-        @\(type + "_FALSE")
+        @\(condition + "_FALSE")
         0;JMP
-        (\(type + "_TRUE"))
+        (\(condition + "_TRUE"))
         D=0
         \(replaceTop())
-        (\(type + "_FALSE"))
+        (\(condition + "_FALSE"))
         """
     }
     
