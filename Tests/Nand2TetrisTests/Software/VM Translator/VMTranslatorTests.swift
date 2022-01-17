@@ -353,11 +353,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
 ///
 /// Memory access commands:
 ///
-/// local
-/// argument
-/// this
-/// that
-///
 /// pointer
 /// temp
 /// static

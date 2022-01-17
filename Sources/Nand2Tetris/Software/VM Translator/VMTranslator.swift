@@ -1,40 +1,29 @@
 class VMTranslator {
     func translate(_ vmCode: String) -> String {
         vmCode.lines.reduce(into: ([String](), 0)) { result, line in
-            func append(_ flowGenerator: (String) -> (String)) {
-                result.0.append(flowGenerator(String(result.1)))
-                result.1 += 1
-            }
-            
-            func append(_ assemblyGenerator: () -> (String)) {
-                result.0.append(assemblyGenerator())
-            }
-            
-            var isMemoryAccess: Bool {
-                components.count == 3
-            }
-            
             let components = line.components(separatedBy: " ")
             
-            if isMemoryAccess {
+            if components.count == 3 {
                 let command = components[0]
                 let segment = components[1]
                 let offset = components[2]
                 
-                if command == "push" {
-                    if segment == "constant" {
-                        result.0.append(pushConstant(offset))
-                    }
-                    else {
-                        result.0.append(push(segment: segment,
-                                             offset: offset))
-                    }
-                }
-                else {
-                    result.0.append(pop(to: segment, offset: offset))
-                }
+                command == "push"
+                ? segment == "constant"
+                    ? result.0.append(pushConstant(offset))
+                    : result.0.append(push(segment, at: offset))
+                : result.0.append(pop(to: segment, at: offset))
             }
             else {
+                func append(_ flowGenerator: (String) -> (String)) {
+                    result.0.append(flowGenerator(String(result.1)))
+                    result.1 += 1
+                }
+                
+                func append(_ assemblyGenerator: () -> (String)) {
+                    result.0.append(assemblyGenerator())
+                }
+                
                 switch line {
                 case "add": append(add)
                 case "sub": append(sub)
@@ -54,18 +43,7 @@ class VMTranslator {
         }.0.joined(separator: "\n")
     }
     
-    func address(segment: String) -> String {
-        switch segment {
-        case "local": return "LCL"
-        case "argument": return "ARG"
-        case "this": return "THIS"
-        case "that": return "THAT"
-            
-        default: return ""
-        }
-    }
-    
-    func pop(to segment: String, offset: String) -> String {
+    func pop(to segment: String, at offset: String) -> String {
         """
         \(set("D", to: segment, at: offset))
         @R15
@@ -77,7 +55,7 @@ class VMTranslator {
         """
     }
     
-    func push(segment: String, offset: String) -> String {
+    func push(_ segment: String, at offset: String) -> String {
         """
         \(set("A", to: segment, at: offset))
         D=M
@@ -97,9 +75,20 @@ class VMTranslator {
         """
         @\(offset)
         D=A
-        @\(address(segment: segment))
+        @\(mnemonic(for: segment))
         \(register)=D+M
         """
+    }
+    
+    func mnemonic(for segment: String) -> String {
+        switch segment {
+        case "local": return "LCL"
+        case "argument": return "ARG"
+        case "this": return "THIS"
+        case "that": return "THAT"
+            
+        default: return ""
+        }
     }
     
     func pushConstant(_ c: String) -> String {
