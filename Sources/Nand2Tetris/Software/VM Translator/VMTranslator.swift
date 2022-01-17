@@ -95,11 +95,11 @@ class VMTranslator {
     }
     
     func pushConstant(_ c: String) -> String {
-        func saveAndIncrement() -> String {
+        func saveAndIncrementSP() -> String {
                 """
-                \(aEquals("SP"))
+                \(aEqualsSP())
                 M=D
-                \(increment("SP"))
+                \(incrementSP())
                 """
         }
         
@@ -108,14 +108,14 @@ class VMTranslator {
                 """
                 @\(c)
                 D=A
-                \(saveAndIncrement())
+                \(saveAndIncrementSP())
                 """
         } else {
             return
                 """
                 @\(c.dropFirst())
                 D=-A
-                \(saveAndIncrement())
+                \(saveAndIncrementSP())
                 """
         }
     }
@@ -154,12 +154,12 @@ class VMTranslator {
         @\(type + "_TRUE")
         D;J\(type.prefix(2))
         D=-1
-        \(replaceTop("SP"))
+        \(replaceTop())
         @\(type + "_FALSE")
         0;JMP
         (\(type + "_TRUE"))
         D=0
-        \(replaceTop("SP"))
+        \(replaceTop())
         (\(type + "_FALSE"))
         """
     }
@@ -173,15 +173,15 @@ class VMTranslator {
         \(popStack())
         A=M-1
         \(dCommand)
-        \(replaceTop("SP"))
+        \(replaceTop())
         """
     }
     
     func popStack() -> String {
         """
-        \(aEquals("SP", offset: "-1"))
+        \(aEqualsSP(offset: "-1"))
         D=M
-        \(decrement("SP"))
+        \(decrementSP())
         """
     }
     
@@ -195,42 +195,41 @@ class VMTranslator {
     
     func unary(_ sign: String) -> String {
         """
-        \(aEquals("SP", offset: "-1"))
+        \(aEqualsSP(offset: "-1"))
         D=\(sign)M
         M=D
-        \(replaceTop("SP"))
+        \(replaceTop())
         """
     }
     
-    func aEquals(_ pointer: String, offset: String = "") -> String {
+    func aEqualsSP(offset: String = "") -> String {
         """
-        @\(pointer)
+        @SP
         A=M\(offset)
         """
     }
     
-    func replaceTop(_ pointer: String) -> String {
+    func replaceTop() -> String {
         """
-        \(aEquals(pointer, offset: "-1"))
+        \(aEqualsSP(offset: "-1"))
         M=D
         """
     }
     
-    func increment(_ pointer: String) -> String {
-        adjust(pointer, sign: "+")
+    func incrementSP() -> String {
+        adjustSP(sign: "+")
     }
     
-    func decrement(_ pointer: String) -> String {
-        adjust(pointer, sign: "-")
+    func decrementSP() -> String {
+        adjustSP(sign: "-")
     }
     
-    func adjust(
-        _ pointer: String,
+    func adjustSP(
         by amount: String = "1",
         sign: String
     ) -> String {
         """
-        @\(pointer)
+        @SP
         M=M\(sign)\(amount)
         """
     }
