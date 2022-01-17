@@ -1,49 +1,69 @@
 class VMTranslator {
-    func translate(_ vmCode: String) -> String {
+    struct VMLine {
+        let code: String
+        let fileName: String
+        let index: Int
+        
+        var words: [String] {
+            code.components(separatedBy: " ")
+        }
+    }
+    
+    func translate(
+        _ vmCode: String,
+        fileName: String = #fileID
+    ) -> String {
         vmCode
             .lines
             .enumerated()
+            .map {
+                VMLine(code: $0.element,
+                       fileName: fileName,
+                       index: $0.offset)
+            }
             .map(translateLine)
             .joined(separator: "\n")
     }
     
-    func translateLine(_ line: (i: Int, vmCode: String)) -> String {
-        let words = line.vmCode.components(separatedBy: " ")
-        
-        switch words.count {
-        case 1:
-            switch line.1 {
-            case "add": return add()
-            case "sub": return sub()
-            case "not": return not()
-            case "neg": return neg()
-            case "and": return and()
-            case "or": return or()
-            case "eq": return eq(String(line.i))
-            case "gt": return gt(String(line.i))
-            case "lt": return lt(String(line.i))
-                
-            default:
-                fatalError(
-                    "'\(line.1)' is not a valid command"
-                )
-            }
-        case 3:
-            let command = words[0]
-            let segment = words[1]
-            let offset = words[2]
-            
-            return command == "push"
-            ? segment == "constant"
-                ? pushConstant(offset)
-                : push(segment, at: offset)
-            : pop(to: segment, at: offset)
+    func translateLine(_ line: VMLine) -> String {
+        switch line.words.count {
+        case 1: return computationToAssembly(line)
+        case 3: return memoryAccessToAssembly(line)
+        default:
+            fatalError("VM lines can't have \(line.words.count) words")
+        }
+    }
+    
+    func computationToAssembly(_ line: VMLine) -> String {
+        switch line.code {
+        case "add": return add()
+        case "sub": return sub()
+        case "not": return not()
+        case "neg": return neg()
+        case "and": return and()
+        case "or": return or()
+        case "eq": return eq(String(line.index))
+        case "gt": return gt(String(line.index))
+        case "lt": return lt(String(line.index))
             
         default:
             fatalError(
-                "VM lines can't have \(words.count) words"
+                "'\(line.code)' is not a valid command"
             )
         }
+    }
+    
+    func memoryAccessToAssembly(_ line: VMLine) -> String {
+        let words = line.words
+        let command = words[0]
+        let segment = words[1]
+        let offset = words[2]
+        
+        return command == "push"
+        ? segment == "constant"
+            ? pushConstant(offset)
+            : push(segment, at: offset)
+        : pop(to: segment, at: offset)
     }
     
     func pop(to segment: String, at offset: String) -> String {
@@ -78,20 +98,20 @@ class VMTranslator {
         if let mnemonic = mnemonic(for: segment) {
             return setRegister(register,
                                toMnemonic: mnemonic,
-                               at: offset)
+                               offset: offset)
         }
         
         if segment == "pointer" {
             let segment = offset == "0" ? "this" : "that"
             return setRegister(register,
                                toMnemonic: mnemonic(for: segment)!,
-                               at: "0")
+                               offset: "0")
         }
         
         if segment == "temp" {
             return setRegister(register,
                                toValue: "5",
-                               at: offset)
+                               offset: offset)
         }
         
         fatalError("Unrecognised segment '\(segment)'")
@@ -100,7 +120,7 @@ class VMTranslator {
     func setRegister(
         _ register: String,
         toMnemonic mnemonic: String,
-        at offset: String
+        offset: String
     ) -> String {
         setWithOffsetRegister(register,
                               to: mnemonic,
@@ -111,7 +131,7 @@ class VMTranslator {
     func setRegister(
         _ register: String,
         toValue value: String,
-        at offset: String
+        offset: String
     ) -> String {
         setWithOffsetRegister(register,
                               to: value,

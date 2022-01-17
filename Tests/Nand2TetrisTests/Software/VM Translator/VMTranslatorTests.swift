@@ -9,8 +9,8 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     let that = 1750
     
     let temp = 5
-    var pointer0: Int { this }
-    var pointer1: Int { that }
+    var ptr0: Int { this }
+    var ptr1: Int { that }
     
     var translator: VMTranslator!
     var assembler: Assembler!
@@ -342,9 +342,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPopPointer() {
-        assertPopped(segment: "pointer",
-                     toFirst: pointer0,
-                     toSecond: pointer1)
+        assertPopped(segment: "pointer", toFirst: ptr0, toSecond: ptr1)
     }
     
     func testPushLocal() {
@@ -368,7 +366,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPushPointer() {
-        assertPushAndPop(segment: "pointer", toFirst: pointer0)
+        assertPushAndPop(segment: "pointer", toFirst: ptr0)
     }
 }
 
