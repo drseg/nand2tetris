@@ -75,40 +75,72 @@ class VMTranslator {
         to segment: String,
         at offset: String
     ) -> String {
-        let adjustedSegment: String = {
-            segment == "pointer"
-            ? offset == "0"
-                ? "this"
-                : "that"
-            : segment
-        }()
+        if let mnemonic = mnemonic(for: segment) {
+            return setRegister(register,
+                               toMnemonic: mnemonic,
+                               at: offset)
+        }
         
-        let adjustedOffset: String = {
-            segment == "pointer"
-            ? "0"
-            : offset
-        }()
+        if segment == "pointer" {
+            let segment = offset == "0" ? "this" : "that"
+            return setRegister(register,
+                               toMnemonic: mnemonic(for: segment)!,
+                               at: "0")
+        }
         
-        let mnemonic = mnemonic(for: adjustedSegment)
-        let addend = Int(mnemonic) != nil ? "A" : "M"
+        if segment == "temp" {
+            return setRegister(register,
+                               toValue: "5",
+                               at: offset)
+        }
         
-        return """
-        @\(adjustedOffset)
+        fatalError("Unrecognised segment '\(segment)'")
+    }
+    
+    func setRegister(
+        _ register: String,
+        toMnemonic mnemonic: String,
+        at offset: String
+    ) -> String {
+        setWithOffsetRegister(register,
+                              to: mnemonic,
+                              at: offset,
+                              offsetRegister: "M")
+    }
+    
+    func setRegister(
+        _ register: String,
+        toValue value: String,
+        at offset: String
+    ) -> String {
+        setWithOffsetRegister(register,
+                              to: value,
+                              at: offset,
+                              offsetRegister: "A")
+    }
+    
+    func setWithOffsetRegister(
+        _ register: String,
+        to value: String,
+        at offset: String,
+        offsetRegister: String
+    ) -> String {
+        """
+        @\(offset)
         D=A
-        @\(mnemonic)
-        \(register)=D+\(addend)
+        @\(value)
+        \(register)=D+\(offsetRegister)
         """
     }
     
-    func mnemonic(for segment: String) -> String {
+    func mnemonic(for segment: String) -> String? {
         switch segment {
         case "local": return "LCL"
         case "argument": return "ARG"
         case "this": return "THIS"
         case "that": return "THAT"
-        case "temp": return "5"
             
-        default: fatalError("Unknown segment '\(segment)'")
+        default: return nil
         }
     }
     

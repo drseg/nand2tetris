@@ -376,7 +376,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
 ///
 /// Memory access commands:
 ///
-/// pointer
 /// static
 ///
 /// Ram:
