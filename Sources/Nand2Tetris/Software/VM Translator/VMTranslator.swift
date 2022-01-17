@@ -65,10 +65,8 @@ class VMTranslator {
     }
     
     func pop(to segment: String, offset: String) -> String {
-        let address = address(segment: segment)
-        
-        return """
-        @\(address)
+        """
+        @\(address(segment: segment))
         D=M
         @\(offset)
         D=D+A
@@ -82,23 +80,27 @@ class VMTranslator {
     }
     
     func push(segment: String, offset: String) -> String {
-//        let address = address(segment: segment)
-//
-//        return
-//        """
-//        \(aEquals(""))
-//        """
-        
-        ""
+        """
+        @\(offset)
+        D=A
+        @\(address(segment: segment))
+        A=D+M
+        D=M
+        @SP
+        A=M
+        M=D
+        @SP
+        M=M+1
+        """
     }
     
     func pushConstant(_ c: String) -> String {
         func saveAndIncrement() -> String {
-            """
-            \(aEquals("SP"))
-            M=D
-            \(increment("SP"))
-            """
+                """
+                \(aEquals("SP"))
+                M=D
+                \(increment("SP"))
+                """
         }
         
         if c[0] != "-" {
