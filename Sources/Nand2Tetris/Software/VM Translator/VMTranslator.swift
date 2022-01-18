@@ -165,42 +165,6 @@ class VMTranslator {
         fatalError("Unrecognised segment '\(segment)'")
     }
     
-    func setRegister(
-        _ register: String,
-        toMnemonic mnemonic: String,
-        offset: String = "0"
-    ) -> String {
-        setWithOffsetRegister(register,
-                              to: mnemonic,
-                              at: offset,
-                              offsetRegister: "M")
-    }
-    
-    func setRegister(
-        _ register: String,
-        toValue value: String,
-        offset: String = "0"
-    ) -> String {
-        setWithOffsetRegister(register,
-                              to: value,
-                              at: offset,
-                              offsetRegister: "A")
-    }
-    
-    func setWithOffsetRegister(
-        _ register: String,
-        to value: String,
-        at offset: String,
-        offsetRegister: String
-    ) -> String {
-        """
-        @\(offset)
-        D=A
-        @\(value)
-        \(register)=D+\(offsetRegister)
-        """
-    }
-    
     func mnemonic(for segment: String) -> String? {
         switch segment {
         case "local": return "LCL"
@@ -210,6 +174,42 @@ class VMTranslator {
             
         default: return nil
         }
+    }
+    
+    func setRegister(
+        _ register: String,
+        toMnemonic mnemonic: String,
+        offset: String = "0"
+    ) -> String {
+        setWithOffsetAddend(register,
+                              to: mnemonic,
+                              at: offset,
+                              addOffsetTo: "M")
+    }
+    
+    func setRegister(
+        _ register: String,
+        toValue value: String,
+        offset: String = "0"
+    ) -> String {
+        setWithOffsetAddend(register,
+                            to: value,
+                            at: offset,
+                            addOffsetTo: "A")
+    }
+    
+    func setWithOffsetAddend(
+        _ register: String,
+        to value: String,
+        at offset: String,
+        addOffsetTo addend: String
+    ) -> String {
+        """
+        @\(offset)
+        D=A
+        @\(value)
+        \(register)=D+\(addend)
+        """
     }
     
     func pushConstant(_ c: String) -> String {
@@ -253,25 +253,25 @@ class VMTranslator {
     }
     
     func add() -> String {
-        arithmetic(sign: "+")
+        binaryOperation("+")
     }
     
     func sub() -> String {
-        arithmetic(sign: "-")
+        binaryOperation("-")
     }
     
     func and() -> String {
-        arithmetic(sign: "&")
+        binaryOperation("&")
     }
     
     func or() -> String {
-        arithmetic(sign: "|")
+        binaryOperation("|")
     }
     
-    func arithmetic(sign: String) -> String {
-        let dCommand = sign == "-"
-        ? "D=M\(sign)D"
-        : "D=D\(sign)M"
+    func binaryOperation(_ o: String) -> String {
+        let dCommand = o == "-"
+        ? "D=M\(o)D"
+        : "D=D\(o)M"
         
         return """
         \(popStack())
@@ -282,14 +282,14 @@ class VMTranslator {
     }
     
     func not() -> String {
-        unary("!")
+        unaryOperation("!")
     }
     
     func neg() -> String {
-        unary("-")
+        unaryOperation("-")
     }
     
-    func unary(_ sign: String) -> String {
+    func unaryOperation(_ sign: String) -> String {
         """
         \(aEqualsSP(offset: "-1"))
         D=\(sign)M
