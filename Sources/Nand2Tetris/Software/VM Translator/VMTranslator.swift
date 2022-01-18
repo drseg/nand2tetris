@@ -48,7 +48,7 @@ class VMTranslator {
         case "lt": return lt(String(line.index))
             
         default:
-            fatalError("'\(line.code)' is not a valid computation")
+            fatalError("Unrecognised computation '\(line.code)'")
         }
     }
     
@@ -63,7 +63,30 @@ class VMTranslator {
         case "if-goto": return ifGoto(label)
             
         default:
-            fatalError("'\(command)' is not a valid branching command")
+            fatalError("Unrecognised branching command '\(command)'")
+        }
+    }
+    
+    func memoryAccessToAssembly(_ line: VMLine) -> String {
+        let words = line.words
+        
+        let command = words[0]
+        let segment = words[1]
+        let offset = words[2]
+        
+        switch command {
+        case "push" where segment == "constant":
+            return pushConstant(offset)
+        case "push" where segment != "constant":
+            return push(segment,
+                        at: offset,
+                        in: line.fileName)
+        case "pop":
+            return pop(to: segment,
+                       at: offset,
+                       in: line.fileName)
+        default:
+            fatalError("Unrecognised memory command '\(command)'")
         }
     }
     
@@ -86,19 +109,6 @@ class VMTranslator {
         @\(label)
         D;JEQ
         """
-    }
-    
-    func memoryAccessToAssembly(_ line: VMLine) -> String {
-        let words = line.words
-        let command = words[0]
-        let segment = words[1]
-        let offset = words[2]
-        
-        return command == "push"
-        ? segment == "constant"
-            ? pushConstant(offset)
-        : push(segment, at: offset, in: line.fileName)
-        : pop(to: segment, at: offset, in: line.fileName)
     }
     
     func pop(
@@ -140,29 +150,29 @@ class VMTranslator {
         in file: String
     ) -> String {
         switch segment {
-        case _ where mnemonic(for: segment) != nil:
+        case _ where mnemonic(segment) != nil:
             return setRegister(register,
-                               toMnemonic: mnemonic(for: segment)!,
+                               mnemonic: mnemonic(segment)!,
                                offset: offset)
         case "pointer" where offset == "0":
             return setRegister(register,
-                               toMnemonic: mnemonic(for: "this")!)
+                               mnemonic: mnemonic("this")!)
         case "pointer" where offset == "1":
             return setRegister(register,
-                               toMnemonic: mnemonic(for: "that")!)
+                               mnemonic: mnemonic("that")!)
         case "temp":
             return setRegister(register,
-                               toValue: "5",
+                               value: "5",
                                offset: offset)
         case "static":
             return setRegister(register,
-                               toValue: "\(file).\(offset)")
+                               value: "\(file).\(offset)")
         default:
             fatalError("Unrecognised segment '\(segment)'")
         }
     }
     
-    func mnemonic(for segment: String) -> String? {
+    func mnemonic(_ segment: String) -> String? {
         switch segment {
         case "local": return "LCL"
         case "argument": return "ARG"
@@ -175,31 +185,25 @@ class VMTranslator {
     
     func setRegister(
         _ register: String,
-        toMnemonic mnemonic: String,
+        mnemonic: String,
         offset: String = "0"
     ) -> String {
-        setWithOffsetAddend(register,
-                              to: mnemonic,
-                              at: offset,
-                              addOffsetTo: "M")
+        setWithOffsetAddend(register, mnemonic, offset, "M")
     }
     
     func setRegister(
         _ register: String,
-        toValue value: String,
+        value: String,
         offset: String = "0"
     ) -> String {
-        setWithOffsetAddend(register,
-                            to: value,
-                            at: offset,
-                            addOffsetTo: "A")
+        setWithOffsetAddend(register, value, offset, "A")
     }
     
     func setWithOffsetAddend(
         _ register: String,
-        to value: String,
-        at offset: String,
-        addOffsetTo addend: String
+        _ value: String,
+        _ offset: String,
+        _ addend: String
     ) -> String {
         """
         @\(offset)
@@ -233,19 +237,19 @@ class VMTranslator {
         bool("LT" + count)
     }
     
-    func bool(_ condition: String) -> String {
+    func bool(_ predicate: String) -> String {
         """
         \(sub())
-        @\(condition + "_TRUE")
-        D;J\(condition.prefix(2))
+        @\(predicate + "_TRUE")
+        D;J\(predicate.prefix(2))
         D=-1
         \(replaceTop())
-        @\(condition + "_FALSE")
+        @\(predicate + "_FALSE")
         0;JMP
-        (\(condition + "_TRUE"))
+        (\(predicate + "_TRUE"))
         D=0
         \(replaceTop())
-        (\(condition + "_FALSE"))
+        (\(predicate + "_FALSE"))
         """
     }
     
@@ -318,14 +322,14 @@ class VMTranslator {
     }
     
     func incrementSP() -> String {
-        adjustSP(sign: "+")
+        stepSP(sign: "+")
     }
     
     func decrementSP() -> String {
-        adjustSP(sign: "-")
+        stepSP(sign: "-")
     }
     
-    func adjustSP(sign: String) -> String {
+    func stepSP(sign: String) -> String {
         """
         @SP
         M=M\(sign)1
