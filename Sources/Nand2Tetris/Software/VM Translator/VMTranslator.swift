@@ -139,30 +139,27 @@ class VMTranslator {
         at offset: String,
         in file: String
     ) -> String {
-        if let mnemonic = mnemonic(for: segment) {
+        switch segment {
+        case _ where mnemonic(for: segment) != nil:
             return setRegister(register,
-                               toMnemonic: mnemonic,
+                               toMnemonic: mnemonic(for: segment)!,
                                offset: offset)
-        }
-        
-        if segment == "pointer" {
-            let segment = offset == "0" ? "this" : "that"
+        case "pointer" where offset == "0":
             return setRegister(register,
-                               toMnemonic: mnemonic(for: segment)!)
-        }
-        
-        if segment == "temp" {
+                               toMnemonic: mnemonic(for: "this")!)
+        case "pointer" where offset == "1":
+            return setRegister(register,
+                               toMnemonic: mnemonic(for: "that")!)
+        case "temp":
             return setRegister(register,
                                toValue: "5",
                                offset: offset)
-        }
-        
-        if segment == "static" {
+        case "static":
             return setRegister(register,
                                toValue: "\(file).\(offset)")
+        default:
+            fatalError("Unrecognised segment '\(segment)'")
         }
-        
-        fatalError("Unrecognised segment '\(segment)'")
     }
     
     func mnemonic(for segment: String) -> String? {
