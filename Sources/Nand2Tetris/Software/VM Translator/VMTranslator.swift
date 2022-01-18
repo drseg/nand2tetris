@@ -15,13 +15,9 @@ class VMTranslator {
     ) -> String {
         vm.lines
             .enumerated()
-            .map {
-                translated(
-                    VMLine(code: $0.element,
-                           fileName: fileName,
-                           index: $0.offset)
-                )
-            }
+            .map { translated(VMLine(code: $0.element,
+                                     fileName: fileName,
+                                     index: $0.offset)) }
             .joined(separator: "\n")
     }
     
@@ -54,6 +50,7 @@ class VMTranslator {
     
     func controlFlowToAssebly(_ line: VMLine) -> String {
         let words = line.words
+        
         let command = words[0]
         let label = words[1]
         
@@ -77,7 +74,7 @@ class VMTranslator {
         switch command {
         case "push" where segment == "constant":
             return pushConstant(offset)
-        case "push" where segment != "constant":
+        case "push":
             return push(segment,
                         at: offset,
                         in: line.fileName)
@@ -135,11 +132,7 @@ class VMTranslator {
         """
         \(set("A", to: segment, at: offset, in: file))
         D=M
-        @SP
-        A=M
-        M=D
-        @SP
-        M=M+1
+        \(pushDToStack())
         """
     }
     
@@ -214,11 +207,29 @@ class VMTranslator {
     }
     
     func pushConstant(_ c: String) -> String {
-        let isNeg = c[0] == "-"
-        
-        return """
-        @\(isNeg ? String(c.dropFirst()) : c)
-        D=\(isNeg ? "-A" : "A")
+        c[0] == "-"
+        ? pushNegativeConstant(c)
+        : pushPositiveConstant(c)
+    }
+    
+    func pushPositiveConstant(_ c: String) -> String {
+        """
+        @\(c)
+        D=A
+        \(pushDToStack())
+        """
+    }
+    
+    func pushNegativeConstant(_ c: String) -> String {
+        """
+        @\(c.dropFirst())
+        D=-A
+        \(pushDToStack())
+        """
+    }
+    
+    func pushDToStack() -> String {
+        """
         \(aEqualsSP())
         M=D
         \(incrementSP())
@@ -270,14 +281,10 @@ class VMTranslator {
     }
     
     func binaryOperation(_ o: String) -> String {
-        let dCommand = o == "-"
-        ? "D=M\(o)D"
-        : "D=D\(o)M"
-        
-        return """
+        """
         \(popStack())
         A=M-1
-        \(dCommand)
+        D=\(o == "-" ? "M-D" : "D\(o)M")
         \(replaceTop())
         """
     }

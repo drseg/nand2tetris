@@ -23,14 +23,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assembler = Assembler()
         initialiseMemory()
     }
-    
-    override func runProgram(
-        _ program: [String],
-        useFastClocking: Bool = true
-    ) {
-        super.runProgram(program, useFastClocking: useFastClocking)
-    }
-    
+
     func initialiseMemory() {
         c.memory(sp.b, "1", 0.b, "1")
         c.memory(lcl.b, "1", 1.b, "1")
@@ -38,6 +31,14 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         c.memory(this.b, "1", 3.b, "1")
         c.memory(that.b, "1", 4.b, "1")
     }
+
+    override func runProgram(
+        _ program: [String],
+        useFastClocking: Bool = true
+    ) {
+        super.runProgram(program, useFastClocking: useFastClocking)
+    }
+    
     
     var dRegister: String {
         c.cpu.dRegister.value.toDecimal()
@@ -302,32 +303,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                        "Memory[\(toSecond ?? toFirst + 1)]")
     }
     
-    func assertPushAndPop(
-        _ segment: String,
-        toFirst: Int,
-        sp: Int = 256
-    ) {
-        let pushAndPop =
-                    """
-                    push constant 9
-                    push constant 10
-                    pop \(segment) 0
-                    pop \(segment) 1
-                    push \(segment) 0
-                    push \(segment) 1
-                    add
-                    pop \(segment) 0
-                    """
-        runProgram(translated(pushAndPop))
-        
-        XCTAssertEqual(String(sp),
-                       stackPointer,
-                       "Stack Pointer")
-        XCTAssertEqual(String(19),
-                       memory(toFirst),
-                       "Memory[\(toFirst)]")
-    }
-    
     func testPopLocal() {
         assertPopped("local", toFirst: lcl)
     }
@@ -354,6 +329,32 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     
     func testPopStatic() {
         assertPopped("static", toFirst: 16)
+    }
+    
+    func assertPushAndPop(
+        _ segment: String,
+        toFirst: Int,
+        sp: Int = 256
+    ) {
+        let pushAndPop =
+                    """
+                    push constant 9
+                    push constant 10
+                    pop \(segment) 0
+                    pop \(segment) 1
+                    push \(segment) 0
+                    push \(segment) 1
+                    add
+                    pop \(segment) 0
+                    """
+        runProgram(translated(pushAndPop))
+        
+        XCTAssertEqual(String(sp),
+                       stackPointer,
+                       "Stack Pointer")
+        XCTAssertEqual(String(19),
+                       memory(toFirst),
+                       "Memory[\(toFirst)]")
     }
     
     func testPushLocal() {
