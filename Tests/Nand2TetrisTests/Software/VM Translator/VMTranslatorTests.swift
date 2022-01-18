@@ -21,15 +21,14 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         super.setUp()
         translator = VMTranslator()
         assembler = Assembler()
-        c.usesFastClocking = true
         initialiseMemory()
     }
     
     override func runProgram(
         _ program: [String],
-        usingFastClocking: Bool = true
+        useFastClocking: Bool = true
     ) {
-        super.runProgram(program, usingFastClocking: usingFastClocking)
+        super.runProgram(program, useFastClocking: useFastClocking)
     }
     
     func initialiseMemory() {
@@ -76,15 +75,14 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assertResult(d: -1)
     }
     
-    func testPushTwoConstants() {
+    func testPushManyConstants() {
         let push =
-                    """
-                    push constant 2
-                    push constant 3
-                    push constant 4
-                    push constant 5
-                    """
-        
+                """
+                push constant 2
+                push constant 3
+                push constant 4
+                push constant 5
+                """
         runProgram(translated(push))
         assertResult(d: 5, sp: 260)
     }
@@ -120,7 +118,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     push constant 3
                     sub
                     """
-
         runProgram(translated(sub3From2))
         assertResult(d: -1)
     }
@@ -134,7 +131,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     add
                     add
                     """
-
         runProgram(translated(add2And2And3))
         assertResult(d: 7)
     }
@@ -146,7 +142,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     push constant 2
                     eq
                     """
-        
         runProgram(translated(equal))
         assertResult(d: 0)
     }
@@ -158,11 +153,9 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     push constant 1
                     eq
                     """
-        
         runProgram(translated(notEqual))
         assertResult(d: -1)
     }
-    
     
     func testLessThan() {
         let lt =
@@ -171,7 +164,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 3
                 lt
                 """
-        
         runProgram(translated(lt))
         assertResult(d: 0)
     }
@@ -183,7 +175,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 2
                 lt
                 """
-        
         runProgram(translated(notLT))
         assertResult(d: -1)
     }
@@ -195,7 +186,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 2
                 gt
                 """
-        
         runProgram(translated(gt))
         assertResult(d: 0)
     }
@@ -207,7 +197,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 3
                 gt
                 """
-        
         runProgram(translated(notGT))
         assertResult(d: -1)
     }
@@ -218,7 +207,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 1
                 neg
                 """
-        
         runProgram(translated(neg))
         assertResult(d: -1)
     }
@@ -229,7 +217,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant -1
                 neg
                 """
-        
         runProgram(translated(neg))
         assertResult(d: 1)
     }
@@ -241,7 +228,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 neg
                 neg
                 """
-        
         runProgram(translated(neg))
         assertResult(d: 1)
     }
@@ -252,7 +238,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant -1
                 not
                 """
-        
         runProgram(translated(not))
         assertResult(d: 0)
     }
@@ -264,7 +249,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 not
                 not
                 """
-        
         runProgram(translated(not))
         assertResult(d: -1)
     }
@@ -292,7 +276,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func assertPopped(
-        segment: String,
+        _ segment: String,
         toFirst: Int,
         toSecond: Int? = nil,
         sp: Int = 256
@@ -319,7 +303,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func assertPushAndPop(
-        segment: String,
+        _ segment: String,
         toFirst: Int,
         sp: Int = 256
     ) {
@@ -345,59 +329,59 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPopLocal() {
-        assertPopped(segment: "local", toFirst: lcl)
+        assertPopped("local", toFirst: lcl)
     }
     
     func testPopArgument() {
-        assertPopped(segment: "argument", toFirst: arg)
+        assertPopped("argument", toFirst: arg)
     }
     
     func testPopThis() {
-        assertPopped(segment: "this", toFirst: this)
+        assertPopped("this", toFirst: this)
     }
     
     func testPopThat() {
-        assertPopped(segment: "that", toFirst: that)
+        assertPopped("that", toFirst: that)
     }
     
     func testPopTemp() {
-        assertPopped(segment: "temp", toFirst: temp)
+        assertPopped("temp", toFirst: temp)
     }
     
     func testPopPointer() {
-        assertPopped(segment: "pointer", toFirst: ptr0, toSecond: ptr1)
+        assertPopped("pointer", toFirst: ptr0, toSecond: ptr1)
     }
     
     func testPopStatic() {
-        assertPopped(segment: "static", toFirst: 16)
+        assertPopped("static", toFirst: 16)
     }
     
     func testPushLocal() {
-        assertPushAndPop(segment: "local", toFirst: lcl)
+        assertPushAndPop("local", toFirst: lcl)
     }
     
     func testPushArgument() {
-        assertPushAndPop(segment: "argument", toFirst: arg)
+        assertPushAndPop("argument", toFirst: arg)
     }
     
     func testPushThis() {
-        assertPushAndPop(segment: "this", toFirst: this)
+        assertPushAndPop("this", toFirst: this)
     }
     
     func testPushThat() {
-        assertPushAndPop(segment: "that", toFirst: that)
+        assertPushAndPop("that", toFirst: that)
     }
     
     func testPushTemp() {
-        assertPushAndPop(segment: "temp", toFirst: temp)
+        assertPushAndPop("temp", toFirst: temp)
     }
     
     func testPushPointer() {
-        assertPushAndPop(segment: "pointer", toFirst: ptr0)
+        assertPushAndPop("pointer", toFirst: ptr0)
     }
     
     func testPushStatic() {
-        assertPushAndPop(segment: "static", toFirst: 16)
+        assertPushAndPop("static", toFirst: 16)
     }
     
     func testLabelAndGoto() {

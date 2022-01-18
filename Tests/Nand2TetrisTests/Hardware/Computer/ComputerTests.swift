@@ -15,10 +15,10 @@ class ComputerTestCase: CPUTestCase {
                                     screen: screen))
     }
     
-    func runProgram(_ program: [String], usingFastClocking: Bool = false) {
+    func runProgram(_ program: [String], useFastClocking: Bool = false) {
         c.load(program)
-        c.usesFastClocking = usingFastClocking
-        c.cycles = program.count * (usingFastClocking ? 1 : 2) + 1
+        c.useFastClocking = useFastClocking
+        c.cycles = program.count * (useFastClocking ? 1 : 2)
         c.runSync()
     }
 }

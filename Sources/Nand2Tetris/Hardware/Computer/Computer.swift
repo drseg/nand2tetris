@@ -4,42 +4,30 @@ import XCTest
 final class Computer {
     let cpu: CPU
     let memory: Memory
-    let rom = FastRAM(32768)
+    let rom: FastRAM
     
     var reset: Char = "0"
     var cycles = Int.max
-    var usesFastClocking = false
+    var shouldRun: Bool { cycles >= 0 }
+    var useFastClocking = false
     
     init(cpu: CPU, memory: Memory) {
         self.cpu = cpu
         self.memory = memory
+        self.rom = FastRAM(32768)
     }
     
     func load(_ instructions: [String]) {
         rom.load(instructions)
     }
-    
-    var clockState: Char = "0"
-    var nextClock: Char {
-        defer {
-            clockState = clockState == "0"
-            ? "1"
-            : "0"
-        }
-        cycles -= 1
-        return usesFastClocking ? "1" : clockState
-    }
-    
+
     func run() {
-        DispatchQueue.global().async { [self] in
-            runSync()
-        }
+        DispatchQueue.global().async { self.runSync() }
     }
     
-    func runSync() {
-        var lastOut = CPU.Out.null
-        while cycles > 0 {
-            lastOut = performNext(lastOut, nextClock)
+    func runSync(_ lastOut: CPU.Out = CPU.Out.null) {
+        if shouldRun {
+            runSync(performNext(lastOut, nextClock))
         }
     }
     
@@ -51,11 +39,20 @@ final class Computer {
                           current.shouldWrite,
                           current.aValue,
                           clock)
-
+        
         return cpu(mOut,
                    rom[current.pcValue],
                    reset,
                    clock)
+    }
+    
+    private var clockState: Char = "0"
+    private var nextClock: Char {
+        defer {
+            clockState = clockState == "0" ? "1" : "0"
+            cycles -= 1
+        }
+        return useFastClocking ? "1" : clockState
     }
 }
 
