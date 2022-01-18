@@ -9,19 +9,20 @@ class VMTranslator {
         }
     }
     
-    func translate(
-        _ vmCode: String,
-        fileName: String = #fileID
+    func translateToAssembly(
+        _ vm: String,
+        fileName: String = #function
     ) -> String {
-        vmCode
+        vm
             .lines
             .enumerated()
             .map {
-                VMLine(code: $0.element,
-                       fileName: fileName,
-                       index: $0.offset)
+                translateLine(
+                    VMLine(code: $0.element,
+                           fileName: fileName,
+                           index: $0.offset)
+                )
             }
-            .map(translateLine)
             .joined(separator: "\n")
     }
     
@@ -30,7 +31,7 @@ class VMTranslator {
         case 1: return computationToAssembly(line)
         case 3: return memoryAccessToAssembly(line)
         default:
-            fatalError("VM lines can't have \(line.words.count) words")
+            fatalError("Lines can't have \(line.words.count) words")
         }
     }
     
@@ -47,9 +48,7 @@ class VMTranslator {
         case "lt": return lt(String(line.index))
             
         default:
-            fatalError(
-                "'\(line.code)' is not a valid command"
-            )
+            fatalError("'\(line.code)' is not a valid command")
         }
     }
     
@@ -62,13 +61,17 @@ class VMTranslator {
         return command == "push"
         ? segment == "constant"
             ? pushConstant(offset)
-            : push(segment, at: offset)
-        : pop(to: segment, at: offset)
+        : push(segment, at: offset, in: line.fileName)
+        : pop(to: segment, at: offset, in: line.fileName)
     }
     
-    func pop(to segment: String, at offset: String) -> String {
+    func pop(
+        to segment: String,
+        at offset: String,
+        in file: String
+    ) -> String {
         """
-        \(set("D", to: segment, at: offset))
+        \(set("D", to: segment, at: offset, in: file))
         @R15
         M=D
         \(popStack())
@@ -78,9 +81,13 @@ class VMTranslator {
         """
     }
     
-    func push(_ segment: String, at offset: String) -> String {
+    func push(
+        _ segment: String,
+        at offset: String,
+        in file: String
+    ) -> String {
         """
-        \(set("A", to: segment, at: offset))
+        \(set("A", to: segment, at: offset, in: file))
         D=M
         @SP
         A=M
@@ -93,7 +100,8 @@ class VMTranslator {
     func set(
         _ register: String,
         to segment: String,
-        at offset: String
+        at offset: String,
+        in file: String
     ) -> String {
         if let mnemonic = mnemonic(for: segment) {
             return setRegister(register,
@@ -104,8 +112,7 @@ class VMTranslator {
         if segment == "pointer" {
             let segment = offset == "0" ? "this" : "that"
             return setRegister(register,
-                               toMnemonic: mnemonic(for: segment)!,
-                               offset: "0")
+                               toMnemonic: mnemonic(for: segment)!)
         }
         
         if segment == "temp" {
@@ -114,13 +121,18 @@ class VMTranslator {
                                offset: offset)
         }
         
+        if segment == "static" {
+            return setRegister(register,
+                               toValue: "\(file).\(offset)")
+        }
+        
         fatalError("Unrecognised segment '\(segment)'")
     }
     
     func setRegister(
         _ register: String,
         toMnemonic mnemonic: String,
-        offset: String
+        offset: String = "0"
     ) -> String {
         setWithOffsetRegister(register,
                               to: mnemonic,
@@ -131,7 +143,7 @@ class VMTranslator {
     func setRegister(
         _ register: String,
         toValue value: String,
-        offset: String
+        offset: String = "0"
     ) -> String {
         setWithOffsetRegister(register,
                               to: value,
