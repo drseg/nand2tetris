@@ -10,26 +10,24 @@ class Assembler {
         self.resolver = resolver
     }
     
-    func assemble(_ assembly: String) -> [String] {
+    func toBinary(_ assembly: String) -> [String] {
         resolver
-            .resolvingSymbols(
-                in: cleaner.clean(assembly)
-            )
+            .resolvingSymbols(in: cleaner.clean(assembly))
             .lines
             .reduce(into: [String]()) {
-            if isAInstruction($1) {
-                $0.append(aInstructionCode($1))
+                if isAInstruction($1) {
+                    $0.append(aInstructionCode($1))
+                }
+                else {
+                    let computation = padComputation($1)
+                    $0.append(compCode +
+                              aluCode(computation.aluMnemonic) +
+                              destCode(computation.destMnemonic) +
+                              jumpCode(computation.jumpMnemonic))
+                }
             }
-            else {
-                let computation = padComputation($1)
-                $0.append(compCode +
-                          aluCode(computation.aluMnemonic) +
-                          destCode(computation.destMnemonic) +
-                          jumpCode(computation.jumpMnemonic))
-            }
-        }
     }
-        
+    
     func isAInstruction(_ i: String) -> Bool {
         i.first == "@"
     }

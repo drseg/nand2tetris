@@ -9,7 +9,7 @@ class AssemblerTests: XCTestCase {
     }
     
     func assemble(_ assembly: String) -> [String] {
-        assembler.assemble(assembly)
+        assembler.toBinary(assembly)
     }
     
     func testConvertsACommands() {

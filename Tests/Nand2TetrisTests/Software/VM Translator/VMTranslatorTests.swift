@@ -31,14 +31,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         c.memory(this.b, "1", 3.b, "1")
         c.memory(that.b, "1", 4.b, "1")
     }
-
-    override func runProgram(
-        _ program: [String],
-        useFastClocking: Bool = true
-    ) {
-        super.runProgram(program, useFastClocking: useFastClocking)
-    }
     
+    func runProgram(_ vmProgram: String) {
+        runProgram(translated(vmProgram), useFastClocking: true)
+    }
     
     var dRegister: String {
         c.cpu.dRegister.value.toDecimal()
@@ -54,10 +50,9 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     
     func translated(_ vmCode: String) -> [String] {
         let resolver = SymbolResolver()
-        let translated = translator
-            .translateToAssembly(vmCode)
+        let translated = translator.toAssembly(vmCode)
         assembly = resolver.resolvingSymbols(in: translated)
-        binary = assembler.assemble(assembly)
+        binary = assembler.toBinary(assembly)
         return binary
     }
     
@@ -72,7 +67,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPushNegativeConstant() {
-        runProgram(translated("push constant -1"))
+        runProgram("push constant -1")
         assertResult(d: -1)
     }
     
@@ -84,7 +79,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 4
                 push constant 5
                 """
-        runProgram(translated(push))
+        runProgram(push)
         assertResult(d: 5, sp: 260)
     }
     
@@ -96,7 +91,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     add
                     """
 
-        runProgram(translated(add2And3))
+        runProgram(add2And3)
         assertResult(d: 5)
     }
     
@@ -108,7 +103,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     sub
                     """
 
-        runProgram(translated(sub2From3))
+        runProgram(sub2From3)
         assertResult(d: 1)
     }
     
@@ -119,7 +114,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     push constant 3
                     sub
                     """
-        runProgram(translated(sub3From2))
+        runProgram(sub3From2)
         assertResult(d: -1)
     }
     
@@ -132,7 +127,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     add
                     add
                     """
-        runProgram(translated(add2And2And3))
+        runProgram(add2And2And3)
         assertResult(d: 7)
     }
     
@@ -143,7 +138,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     push constant 2
                     eq
                     """
-        runProgram(translated(equal))
+        runProgram(equal)
         assertResult(d: 0)
     }
     
@@ -154,7 +149,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     push constant 1
                     eq
                     """
-        runProgram(translated(notEqual))
+        runProgram(notEqual)
         assertResult(d: -1)
     }
     
@@ -165,7 +160,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 3
                 lt
                 """
-        runProgram(translated(lt))
+        runProgram(lt)
         assertResult(d: 0)
     }
     
@@ -176,7 +171,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 2
                 lt
                 """
-        runProgram(translated(notLT))
+        runProgram(notLT)
         assertResult(d: -1)
     }
     
@@ -187,7 +182,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 2
                 gt
                 """
-        runProgram(translated(gt))
+        runProgram(gt)
         assertResult(d: 0)
     }
     
@@ -198,7 +193,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 3
                 gt
                 """
-        runProgram(translated(notGT))
+        runProgram(notGT)
         assertResult(d: -1)
     }
     
@@ -208,7 +203,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant 1
                 neg
                 """
-        runProgram(translated(neg))
+        runProgram(neg)
         assertResult(d: -1)
     }
     
@@ -218,7 +213,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant -1
                 neg
                 """
-        runProgram(translated(neg))
+        runProgram(neg)
         assertResult(d: 1)
     }
     
@@ -229,7 +224,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 neg
                 neg
                 """
-        runProgram(translated(neg))
+        runProgram(neg)
         assertResult(d: 1)
     }
     
@@ -239,7 +234,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant -1
                 not
                 """
-        runProgram(translated(not))
+        runProgram(not)
         assertResult(d: 0)
     }
     
@@ -250,7 +245,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 not
                 not
                 """
-        runProgram(translated(not))
+        runProgram(not)
         assertResult(d: -1)
     }
     
@@ -261,7 +256,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant -1
                 and
                 """
-        runProgram(translated(and))
+        runProgram(and)
         assertResult(d: 0)
     }
     
@@ -272,7 +267,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 push constant -1
                 or
                 """
-        runProgram(translated(or))
+        runProgram(or)
         assertResult(d: -1)
     }
     
@@ -290,7 +285,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                 pop \(segment) 1
                 """
         
-        runProgram(translated(pop))
+        runProgram(pop)
         
         XCTAssertEqual(String(sp),
                        stackPointer,
@@ -347,7 +342,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     add
                     pop \(segment) 0
                     """
-        runProgram(translated(pushAndPop))
+        runProgram(pushAndPop)
         
         XCTAssertEqual(String(sp),
                        stackPointer,
@@ -397,7 +392,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
             push constant 3
             add
             """
-        runProgram(translated(goto))
+        runProgram(goto)
         assertResult(d: 5)
     }
 
@@ -411,7 +406,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
             push constant 6
             label end
             """
-        runProgram(translated(ifGotoTrue))
+        runProgram(ifGotoTrue)
         assertResult(d: 0, sp: 256)
     }
     
@@ -425,7 +420,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
             push constant 6
             label end
             """
-        runProgram(translated(ifGotoFalse))
+        runProgram(ifGotoFalse)
         assertResult(d: 6, sp: 257)
     }
 }

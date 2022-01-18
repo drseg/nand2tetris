@@ -9,14 +9,11 @@ class VMTranslator {
         }
     }
     
-    func translateToAssembly(
-        _ vm: String,
-        fileName: String = #function
-    ) -> String {
+    func toAssembly(_ vm: String, file: String = #fileID) -> String {
         vm.lines
             .enumerated()
             .map { translated(VMLine(code: $0.element,
-                                     fileName: fileName,
+                                     fileName: file,
                                      index: $0.offset)) }
             .joined(separator: "\n")
     }
@@ -24,7 +21,7 @@ class VMTranslator {
     func translated(_ line: VMLine) -> String {
         switch line.words.count {
         case 1: return computationToAssembly(line)
-        case 2: return controlFlowToAssebly(line)
+        case 2: return branchingToAssebly(line)
         case 3: return memoryAccessToAssembly(line)
         default:
             fatalError("Lines can't have \(line.words.count) words")
@@ -42,13 +39,12 @@ class VMTranslator {
         case "eq": return eq(String(line.index))
         case "gt": return gt(String(line.index))
         case "lt": return lt(String(line.index))
-            
         default:
             fatalError("Unrecognised computation '\(line.code)'")
         }
     }
     
-    func controlFlowToAssebly(_ line: VMLine) -> String {
+    func branchingToAssebly(_ line: VMLine) -> String {
         let words = line.words
         
         let command = words[0]
@@ -58,7 +54,6 @@ class VMTranslator {
         case "label": return addLabel(label)
         case "goto": return goto(label)
         case "if-goto": return ifGoto(label)
-            
         default:
             fatalError("Unrecognised branching command '\(command)'")
         }
@@ -171,7 +166,6 @@ class VMTranslator {
         case "argument": return "ARG"
         case "this": return "THIS"
         case "that": return "THAT"
-            
         default: return nil
         }
     }
