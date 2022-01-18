@@ -7,7 +7,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     let arg = 1250
     let this = 1500
     let that = 1750
-    
     let temp = 5
     var ptr0: Int { this }
     var ptr1: Int { that }
@@ -54,8 +53,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func translated(_ vmCode: String) -> [String] {
-        assembly = SymbolResolver()
-            .resolvingSymbols(in: translator.translateToAssembly(vmCode))
+        let resolver = SymbolResolver()
+        let translated = translator
+            .translateToAssembly(vmCode)
+        assembly = resolver.resolvingSymbols(in: translated)
         binary = assembler.assemble(assembly)
         return binary
     }
@@ -64,7 +65,9 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
         if sp > 256 {
-            XCTAssertEqual(String(top ?? d), memory(sp-1), "Memory \(sp-1)")
+            XCTAssertEqual(String(top ?? d),
+                           memory(sp-1),
+                           "Memory \(sp-1)")
         }
     }
     
@@ -428,7 +431,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testIfGotoFalse() {
-        let ifGotoTrue =
+        let ifGotoFalse =
             """
             push constant 2
             push constant 3
@@ -437,17 +440,11 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
             push constant 6
             label end
             """
-        runProgram(translated(ifGotoTrue))
+        runProgram(translated(ifGotoFalse))
         assertResult(d: 6, sp: 257)
     }
 }
 
-/// Branching commands:
-///
-/// label
-/// goto
-/// if-goto - pops the previously pushed conditional
-///
 /// Function commands:
 ///
 /// function
