@@ -22,12 +22,12 @@ final class Computer {
     var clockState: Char = "0"
     var nextClock: Char {
         defer {
-            clockState =
-            clockState == "0" || usesFastClocking
+            clockState = clockState == "0"
             ? "1"
             : "0"
         }
-        return clockState
+        cycles -= 1
+        return usesFastClocking ? "1" : clockState
     }
     
     func run() {
@@ -40,7 +40,6 @@ final class Computer {
         var lastOut = CPU.Out.null
         while cycles > 0 {
             lastOut = performNext(lastOut, nextClock)
-            cycles -= 1
         }
     }
     
@@ -52,7 +51,7 @@ final class Computer {
                           current.shouldWrite,
                           current.aValue,
                           clock)
-        
+
         return cpu(mOut,
                    rom[current.pcValue],
                    reset,

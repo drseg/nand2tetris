@@ -5,7 +5,6 @@ class ComputerTestCase: CPUTestCase {
     var c: Computer!
     var screen: FastRAM!
     var keyboard: Keyboard!
-    var cycles = 13
     
     override func setUp() {
         super.setUp()
@@ -16,9 +15,10 @@ class ComputerTestCase: CPUTestCase {
                                     screen: screen))
     }
     
-    func runProgram(_ program: [String]) {
+    func runProgram(_ program: [String], usingFastClocking: Bool = false) {
         c.load(program)
-        c.cycles = cycles
+        c.usesFastClocking = usingFastClocking
+        c.cycles = program.count * (usingFastClocking ? 1 : 2) + 1
         c.runSync()
     }
 }

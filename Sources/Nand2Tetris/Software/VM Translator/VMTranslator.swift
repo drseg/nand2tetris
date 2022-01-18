@@ -82,7 +82,7 @@ class VMTranslator {
     
     func ifGoto(_ label: String) -> String {
         """
-        // ifGoto
+        \(popStack())
         @\(label)
         D;JEQ
         """

@@ -22,10 +22,15 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         super.setUp()
         translator = VMTranslator()
         assembler = Assembler()
-        cycles = 45
-        
         c.usesFastClocking = true
         initialiseMemory()
+    }
+    
+    override func runProgram(
+        _ program: [String],
+        usingFastClocking: Bool = true
+    ) {
+        super.runProgram(program, usingFastClocking: usingFastClocking)
     }
     
     func initialiseMemory() {
@@ -54,16 +59,31 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         binary = assembler.assemble(assembly)
         return binary
     }
-
+    
     func assertResult(d: Int, sp: Int = 257, top: Int? = nil) {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
-        XCTAssertEqual(String(top ?? d), memory(sp-1), "Memory 256")
+        if sp > 256 {
+            XCTAssertEqual(String(top ?? d), memory(sp-1), "Memory \(sp-1)")
+        }
     }
     
     func testPushNegativeConstant() {
         runProgram(translated("push constant -1"))
         assertResult(d: -1)
+    }
+    
+    func testPushTwoConstants() {
+        let push =
+                    """
+                    push constant 2
+                    push constant 3
+                    push constant 4
+                    push constant 5
+                    """
+        
+        runProgram(translated(push))
+        assertResult(d: 5, sp: 260)
     }
     
     func testAdd2And3() {
@@ -311,7 +331,6 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     add
                     pop \(segment) 0
                     """
-        cycles = 88
         runProgram(translated(pushAndPop))
         
         XCTAssertEqual(String(sp),
@@ -381,11 +400,11 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     func testLabelAndGoto() {
         let goto =
             """
-            goto cat
+            goto skip
             push constant 6
             push constant 7
             add
-            label cat
+            label skip
             push constant 2
             push constant 3
             add
@@ -393,35 +412,33 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         runProgram(translated(goto))
         assertResult(d: 5)
     }
-    
-//    func testIfGotoTrue() {
-//        let ifGotoTrue =
-//            """
-//            push constant 2
-//            push constant 3
-//            lt
-//            if-goto end
-//            push constant 2
-//            push constant 3
-//            add
-//            label end
-//            """
-//        runProgram(translated(ifGotoTrue))
-//        assertResult(d: 0, sp: 256)
-//    }
-    
-    func testIfGotoFalse() {
-        let ifGotoFalse =
+
+    func testIfGotoTrue() {
+        let ifGotoTrue =
             """
-            push constant 1
+            push constant 2
+            push constant 3
+            lt
             if-goto end
-            push constant 4
+            push constant 6
             label end
             """
-        runProgram(translated(ifGotoFalse))
-        assertResult(d: 4, sp: 258)
-        
-        print(assembly)
+        runProgram(translated(ifGotoTrue))
+        assertResult(d: 0, sp: 256)
+    }
+    
+    func testIfGotoFalse() {
+        let ifGotoTrue =
+            """
+            push constant 2
+            push constant 3
+            gt
+            if-goto end
+            push constant 6
+            label end
+            """
+        runProgram(translated(ifGotoTrue))
+        assertResult(d: 6, sp: 257)
     }
 }
 
