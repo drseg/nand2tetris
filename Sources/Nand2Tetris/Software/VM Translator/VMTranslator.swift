@@ -13,11 +13,10 @@ class VMTranslator {
         _ vm: String,
         fileName: String = #function
     ) -> String {
-        vm
-            .lines
+        vm.lines
             .enumerated()
             .map {
-                translateLine(
+                translated(
                     VMLine(code: $0.element,
                            fileName: fileName,
                            index: $0.offset)
@@ -26,9 +25,10 @@ class VMTranslator {
             .joined(separator: "\n")
     }
     
-    func translateLine(_ line: VMLine) -> String {
+    func translated(_ line: VMLine) -> String {
         switch line.words.count {
         case 1: return computationToAssembly(line)
+        case 2: return controlFlowToAssebly(line)
         case 3: return memoryAccessToAssembly(line)
         default:
             fatalError("Lines can't have \(line.words.count) words")
@@ -48,8 +48,44 @@ class VMTranslator {
         case "lt": return lt(String(line.index))
             
         default:
-            fatalError("'\(line.code)' is not a valid command")
+            fatalError("'\(line.code)' is not a valid computation")
         }
+    }
+    
+    func controlFlowToAssebly(_ line: VMLine) -> String {
+        let words = line.words
+        let command = words[0]
+        let label = words[1]
+        
+        switch command {
+        case "label": return addLabel(label)
+        case "goto": return goto(label)
+        case "if-goto": return ifGoto(label)
+            
+        default:
+            fatalError("'\(command)' is not a valid branching command")
+        }
+    }
+    
+    func addLabel(_ label: String) -> String {
+        """
+        (\(label))
+        """
+    }
+    
+    func goto(_ label: String) -> String {
+        """
+        @\(label)
+        0;JMP
+        """
+    }
+    
+    func ifGoto(_ label: String) -> String {
+        """
+        // ifGoto
+        @\(label)
+        D;JEQ
+        """
     }
     
     func memoryAccessToAssembly(_ line: VMLine) -> String {

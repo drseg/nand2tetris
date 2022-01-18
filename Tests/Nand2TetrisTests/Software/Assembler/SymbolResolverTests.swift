@@ -22,7 +22,7 @@ class SymbolResolverTests: XCTestCase {
     
     func resolve(_ assembly: String) -> String {
         resolver = SymbolResolver()
-        return resolver.resolve(assembly)
+        return resolver.resolvingSymbols(in: assembly)
     }
     
     func testResolvesEmpty() {

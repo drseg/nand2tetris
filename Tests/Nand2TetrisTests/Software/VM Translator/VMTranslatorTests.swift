@@ -49,7 +49,8 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func translated(_ vmCode: String) -> [String] {
-        assembly = translator.translateToAssembly(vmCode)
+        assembly = SymbolResolver()
+            .resolvingSymbols(in: translator.translateToAssembly(vmCode))
         binary = assembler.assemble(assembly)
         return binary
     }
@@ -57,7 +58,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     func assertResult(d: Int, sp: Int = 257, top: Int? = nil) {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
-        XCTAssertEqual(String(top ?? d), memory(256), "Memory 256")
+        XCTAssertEqual(String(top ?? d), memory(sp-1), "Memory 256")
     }
     
     func testPushNegativeConstant() {
@@ -376,4 +377,62 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     func testPushStatic() {
         assertPushAndPop(segment: "static", toFirst: 16)
     }
+    
+    func testLabelAndGoto() {
+        let goto =
+            """
+            goto cat
+            push constant 6
+            push constant 7
+            add
+            label cat
+            push constant 2
+            push constant 3
+            add
+            """
+        runProgram(translated(goto))
+        assertResult(d: 5)
+    }
+    
+//    func testIfGotoTrue() {
+//        let ifGotoTrue =
+//            """
+//            push constant 2
+//            push constant 3
+//            lt
+//            if-goto end
+//            push constant 2
+//            push constant 3
+//            add
+//            label end
+//            """
+//        runProgram(translated(ifGotoTrue))
+//        assertResult(d: 0, sp: 256)
+//    }
+    
+    func testIfGotoFalse() {
+        let ifGotoFalse =
+            """
+            push constant 1
+            if-goto end
+            push constant 4
+            label end
+            """
+        runProgram(translated(ifGotoFalse))
+        assertResult(d: 4, sp: 258)
+        
+        print(assembly)
+    }
 }
+
+/// Branching commands:
+///
+/// label
+/// goto
+/// if-goto - pops the previously pushed conditional
+///
+/// Function commands:
+///
+/// function
+/// call
+/// return

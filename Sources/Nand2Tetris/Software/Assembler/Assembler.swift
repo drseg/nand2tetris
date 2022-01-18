@@ -1,10 +1,20 @@
 class Assembler {
-    let cleaner = AssemblyCleaner()
-    let resolver = SymbolResolver()
+    let cleaner: AssemblyCleaner
+    let resolver: SymbolResolver
+    
+    init(
+        cleaner: AssemblyCleaner = AssemblyCleaner(),
+        resolver: SymbolResolver = SymbolResolver()
+    ) {
+        self.cleaner = cleaner
+        self.resolver = resolver
+    }
     
     func assemble(_ assembly: String) -> [String] {
         resolver
-            .resolve(cleaner.clean(assembly))
+            .resolvingSymbols(
+                in: cleaner.clean(assembly)
+            )
             .lines
             .reduce(into: [String]()) {
             if isAInstruction($1) {
