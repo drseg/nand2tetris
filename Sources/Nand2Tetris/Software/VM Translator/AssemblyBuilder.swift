@@ -2,12 +2,12 @@ class AssemblyBuilder {
     private (set) var assembly = ""
     
     func popSegmentWithMnemonic(
-        to mnemonic: String,
+        to segment: String,
         at offset: String
     ) {
         append(
         """
-        \(setRegister("D", mnemonic: mnemonic, offset: offset))
+        \(setRegister("D", mnemonic: mnemonic(segment), offset: offset))
         @R15
         M=D
         \(popStack())
@@ -36,12 +36,12 @@ class AssemblyBuilder {
     }
     
     func pushSegmentWithMnemonic(
-        _ mnemonic: String,
+        _ segment: String,
         at offset: String
     ) {
         append(
         """
-        \(setRegister("A", mnemonic: mnemonic, offset: offset))
+        \(setRegister("A", mnemonic: mnemonic(segment), offset: offset))
         D=M
         \(pushDToStack())
         """
@@ -128,6 +128,25 @@ class AssemblyBuilder {
         D;JEQ
         """
         )
+    }
+    
+    private func mnemonic(_ segment: String) -> String {
+        switch segment {
+        case "local":
+            return "LCL"
+            
+        case "argument":
+            return "ARG"
+            
+        case "this":
+            return "THIS"
+            
+        case "that":
+            return "THAT"
+            
+        default:
+            fatalError("No mnemonic for segment '\(segment)'")
+        }
     }
     
     private func setRegister(

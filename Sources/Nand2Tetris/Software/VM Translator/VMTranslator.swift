@@ -122,13 +122,10 @@ class VMTranslator {
             ? accessPointerZero(command)
             : accessPointerOne(command)
             
-        case _ where mnemonic(segment) != nil:
+        default:
             accessMnemonic(command,
                            segment: segment,
                            offset: offset)
-            
-        default:
-            fatalError("Unrecognised memory command '\(command)'")
         }
     }
     
@@ -157,7 +154,7 @@ class VMTranslator {
         segment: String,
         offset: String
     ) {
-        segmentWithMnemonic(c)(mnemonic(segment)!, offset)
+        segmentWithMnemonic(c)(segment, offset)
     }
     
     private func segmentWithMnemonic(
@@ -174,23 +171,5 @@ class VMTranslator {
         c == "push"
             ? b.pushSegmentWithValue
             : b.popSegmentWithValue
-    }
-    
-    private func mnemonic(_ segment: String) -> String? {
-        switch segment {
-        case "local":
-            return "LCL"
-            
-        case "argument":
-            return "ARG"
-            
-        case "this":
-            return "THIS"
-            
-        case "that":
-            return "THAT"
-            
-        default: return nil
-        }
     }
 }
