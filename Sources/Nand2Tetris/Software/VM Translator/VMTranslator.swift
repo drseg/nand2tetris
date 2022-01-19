@@ -9,10 +9,10 @@ class VMTranslator {
         }
     }
     
-    private let builder: AssemblyBuilder
+    private let b: AssemblyBuilder
     
     init(_ builder: AssemblyBuilder = AssemblyBuilder()) {
-        self.builder = builder
+        b = builder
     }
     
     func toAssembly(_ vm: String, file: String = #fileID) -> String {
@@ -21,14 +21,20 @@ class VMTranslator {
             .forEach { toAssembly(VMLine(code: $0.element,
                                      fileName: file,
                                      index: $0.offset)) }
-        return builder.assembly
+        return b.assembly
     }
     
     private func toAssembly(_ line: VMLine) {
         switch line.words.count {
-        case 1: computationToAssembly(line)
-        case 2: branchingToAssebly(line)
-        case 3: memoryAccessToAssembly(line)
+        case 1:
+            computationToAssembly(line)
+            
+        case 2:
+            branchingToAssebly(line)
+            
+        case 3:
+            memoryAccessToAssembly(line)
+            
         default:
             fatalError("Lines can't have \(line.words.count) words")
         }
@@ -36,15 +42,33 @@ class VMTranslator {
     
     private func computationToAssembly(_ line: VMLine) {
         switch line.code {
-        case "add": builder.add()
-        case "sub": builder.sub()
-        case "not": builder.not()
-        case "neg": builder.neg()
-        case "and": builder.and()
-        case "or": builder.or()
-        case "eq": builder.eq(String(line.index))
-        case "gt": builder.gt(String(line.index))
-        case "lt": builder.lt(String(line.index))
+        case "add":
+            b.add()
+            
+        case "sub":
+            b.sub()
+            
+        case "not":
+            b.not()
+            
+        case "neg":
+            b.neg()
+            
+        case "and":
+            b.and()
+            
+        case "or":
+            b.or()
+            
+        case "eq":
+            b.eq(String(line.index))
+            
+        case "gt":
+            b.gt(String(line.index))
+            
+        case "lt":
+            b.lt(String(line.index))
+            
         default:
             fatalError("Unrecognised computation '\(line.code)'")
         }
@@ -57,9 +81,15 @@ class VMTranslator {
         let label = words[1]
         
         switch command {
-        case "label": builder.addLabel(label)
-        case "goto": builder.goto(label)
-        case "if-goto": builder.ifGoto(label)
+        case "label":
+            b.addLabel(label)
+            
+        case "goto":
+            b.goto(label)
+            
+        case "if-goto":
+            b.ifGoto(label)
+            
         default:
             fatalError("Unrecognised branching command '\(command)'")
         }
@@ -74,32 +104,37 @@ class VMTranslator {
         
         switch segment {
         case "constant":
-            builder.pushConstant(offset)
+            b.pushConstant(offset)
             
         case "temp":
             accessTemp(command, offset: offset)
             
         case "static":
-            accessStatic(command, offset: offset, fileName: line.fileName)
+            accessStatic(command,
+                         offset: offset,
+                         fileName: line.fileName)
             
-        case "pointer" where offset == "0":
-            accessPointerZero(command)
-            
-        case "pointer" where offset == "1":
-            accessPointerOne(command)
+        case "pointer":
+            offset == "0"
+            ? accessPointerZero(command)
+            : accessPointerOne(command)
             
         case _ where mnemonic(segment) != nil:
-            accessMnemonic(command, segment: segment, offset: offset)
+            accessMnemonic(command,
+                           segment: segment,
+                           offset: offset)
             
         default:
             fatalError("Unrecognised memory command '\(command)'")
         }
     }
     
-    private func accessStatic(_ c: String, offset: String, fileName: String) {
-        c == "push"
-        ? builder.pushSegmentWithValue("\(fileName).\(offset)", at: "0")
-        : builder.popSegmentWithValue(to: "\(fileName).\(offset)", at: "0")
+    private func accessStatic(
+        _ c: String,
+        offset: String,
+        fileName: String
+    ) {
+        segmentWithValue(c)("\(fileName).\(offset)", "0")
     }
     
     private func accessPointerZero(_ c: String) {
@@ -111,25 +146,43 @@ class VMTranslator {
     }
     
     private func accessTemp(_ c: String, offset: String) {
-        c == "push"
-        ? builder.pushSegmentWithValue("5", at: offset)
-        : builder.popSegmentWithValue(to: "5", at: offset)
+        segmentWithValue(c)("5", offset)
     }
     
-    private func accessMnemonic(_ c: String, segment: String, offset: String) {
+    private func accessMnemonic(
+        _ c: String,
+        segment: String,
+        offset: String
+    ) {
+        segmentWithMnemonic(c)(mnemonic(segment)!, offset)
+    }
+    
+    private func segmentWithMnemonic(_ c: String) -> (String, String) -> () {
         c == "push"
-        ? builder.pushSegmentWithMnemonic(mnemonic(segment)!,
-                                          at: offset)
-        : builder.popSegmentWithMnemonic(to: mnemonic(segment)!,
-                                         at: offset)
+            ? b.pushSegmentWithMnemonic
+            : b.popSegmentWithMnemonic
+    }
+    
+    private func segmentWithValue(_ c: String) -> (String, String) -> () {
+        c == "push"
+            ? b.pushSegmentWithValue
+            : b.popSegmentWithValue
     }
     
     private func mnemonic(_ segment: String) -> String? {
         switch segment {
-        case "local": return "LCL"
-        case "argument": return "ARG"
-        case "this": return "THIS"
-        case "that": return "THAT"
+        case "local":
+            return "LCL"
+            
+        case "argument":
+            return "ARG"
+            
+        case "this":
+            return "THIS"
+            
+        case "that":
+            return "THAT"
+            
         default: return nil
         }
     }
