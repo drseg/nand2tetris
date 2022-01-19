@@ -12,18 +12,26 @@ class TestLoaderTests: XCTestCase {
                          directory: directory,
                          firstOutputColumn: firstOutputColumn,
                          factory: actualsFactory)
-            .run(swiftFile: #filePath,
-                 swiftLine: line)
+            .run(swiftFile: #filePath, swiftLine: line)
     }
     
-    private func assertFailure(_ message: String, test: () throws -> ()) {
-        XCTExpectFailure { $0.description.contains(message) }
+    private func assertFailure(
+        _ message: String,
+        test: () throws -> ()
+    ) {
+        XCTExpectFailure {
+            $0.description.contains(message)
+        }
         try? test()
     }
     
-    private func assertThrows(_ message: String, test: () throws -> ()) {
+    private func assertThrows(
+        _ message: String,
+        test: () throws -> ()
+    ) {
         XCTAssertThrowsError(try test()) { error in
-            XCTAssertEqual((error as! ATRError).message, message)
+            XCTAssertEqual((error as! ATRError).message,
+                           message)
         }
     }
     

@@ -18,7 +18,7 @@ class SymbolResolver {
         commands + symbols + staticSymbols
     }
     
-    func resolvingSymbols(in assembly: String) -> String {
+    func resolving(_ assembly: String) -> String {
         makeCommandMap(assembly)
         makeSymbolMap(assembly)
         

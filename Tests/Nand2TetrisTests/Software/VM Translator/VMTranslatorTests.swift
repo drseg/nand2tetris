@@ -51,7 +51,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     func translated(_ vmCode: String) -> [String] {
         let resolver = SymbolResolver()
         let translated = translator.toAssembly(vmCode)
-        assembly = resolver.resolvingSymbols(in: translated)
+        assembly = resolver.resolving(translated)
         binary = assembler.toBinary(assembly)
         return binary
     }

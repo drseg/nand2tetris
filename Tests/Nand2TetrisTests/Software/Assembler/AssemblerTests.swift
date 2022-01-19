@@ -143,8 +143,8 @@ class AssemblerTests: XCTestCase {
         let cleaner = AssemblyCleaner()
         
         assemble(
-            resolver.resolvingSymbols(
-                in: cleaner.clean(
+            resolver.resolving(
+                cleaner.clean(
                     assembly
                 )
             )

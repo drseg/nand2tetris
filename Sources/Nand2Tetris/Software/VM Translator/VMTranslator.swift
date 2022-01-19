@@ -12,13 +12,13 @@ class VMTranslator {
     func toAssembly(_ vm: String, file: String = #fileID) -> String {
         vm.lines
             .enumerated()
-            .map { translated(VMLine(code: $0.element,
+            .map { toAssembly(VMLine(code: $0.element,
                                      fileName: file,
                                      index: $0.offset)) }
             .joined(separator: "\n")
     }
     
-    func translated(_ line: VMLine) -> String {
+    func toAssembly(_ line: VMLine) -> String {
         switch line.words.count {
         case 1: return computationToAssembly(line)
         case 2: return branchingToAssebly(line)
