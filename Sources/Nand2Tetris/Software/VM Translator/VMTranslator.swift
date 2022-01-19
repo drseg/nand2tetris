@@ -1,26 +1,29 @@
-class VMTranslator {
-    struct VMLine {
-        let code: String
-        let fileName: String
-        let index: Int
-        
-        var words: [String] {
-            code.components(separatedBy: " ")
-        }
-    }
+private struct VMLine {
+    let code: String
+    let fileName: String
+    let index: Int
     
+    var words: [String] {
+        code.components(separatedBy: " ")
+    }
+}
+
+class VMTranslator {
     private let b: AssemblyBuilder
     
-    init(_ builder: AssemblyBuilder = AssemblyBuilder()) {
-        b = builder
+    init(_ b: AssemblyBuilder = AssemblyBuilder()) {
+        self.b = b
     }
     
-    func toAssembly(_ vm: String, file: String = #fileID) -> String {
-        vm.lines
-            .enumerated()
-            .forEach { toAssembly(VMLine(code: $0.element,
-                                     fileName: file,
-                                     index: $0.offset)) }
+    func toAssembly(
+        _ vm: String,
+        file: String = #fileID
+    ) -> String {
+        vm.lines.enumerated().forEach {
+            toAssembly(VMLine(code: $0.element,
+                              fileName: file,
+                              index: $0.offset))
+        }
         return b.assembly
     }
     
@@ -82,7 +85,7 @@ class VMTranslator {
         
         switch command {
         case "label":
-            b.addLabel(label)
+            b.label(label)
             
         case "goto":
             b.goto(label)
@@ -157,13 +160,17 @@ class VMTranslator {
         segmentWithMnemonic(c)(mnemonic(segment)!, offset)
     }
     
-    private func segmentWithMnemonic(_ c: String) -> (String, String) -> () {
+    private func segmentWithMnemonic(
+        _ c: String
+    ) -> (String, String) -> () {
         c == "push"
             ? b.pushSegmentWithMnemonic
             : b.popSegmentWithMnemonic
     }
     
-    private func segmentWithValue(_ c: String) -> (String, String) -> () {
+    private func segmentWithValue(
+        _ c: String
+    ) -> (String, String) -> () {
         c == "push"
             ? b.pushSegmentWithValue
             : b.popSegmentWithValue

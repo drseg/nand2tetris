@@ -103,7 +103,7 @@ class AssemblyBuilder {
         unaryOperation("-")
     }
     
-    func addLabel(_ label: String) {
+    func label(_ label: String) {
         append(
         """
         (\(label))
