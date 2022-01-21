@@ -424,6 +424,16 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         assertResult(d: 6, sp: 257)
     }
     
+    func testFunctionDeclarationPushesArgsZeros() {
+        let args = Int.random(in: 0...5)
+        let function =
+                    """
+                    function doNothing \(args)
+                    """
+        runProgram(function)
+        assertResult(d: 0, sp: 256 + args)
+    }
+    
     /// todo:
     ///
     /// clean vm, handle comments etc.

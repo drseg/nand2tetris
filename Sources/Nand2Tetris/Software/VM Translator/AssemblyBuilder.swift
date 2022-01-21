@@ -8,63 +8,63 @@ class AssemblyBuilder {
     }
     
     func pushThis(offset: String) {
-        pushSegmentWithMnemonic("THIS", at: offset)
+        pushMnemonic("THIS", at: offset)
     }
     
     func popThis(offset: String) {
-        popSegmentWithMnemonic(to: "THIS", at: offset)
+        popToMnemonic("THIS", at: offset)
     }
     
     func pushThat(offset: String) {
-        pushSegmentWithMnemonic("THAT", at: offset)
+        pushMnemonic("THAT", at: offset)
     }
     
     func popThat(offset: String) {
-        popSegmentWithMnemonic(to: "THAT", at: offset)
+        popToMnemonic("THAT", at: offset)
     }
     
     func pushLocal(offset: String) {
-        pushSegmentWithMnemonic("LCL", at: offset)
+        pushMnemonic("LCL", at: offset)
     }
     
     func popLocal(offset: String) {
-        popSegmentWithMnemonic(to: "LCL", at: offset)
+        popToMnemonic("LCL", at: offset)
     }
     
     func pushArgument(offset: String) {
-        pushSegmentWithMnemonic("ARG", at: offset)
+        pushMnemonic("ARG", at: offset)
     }
     
     func popArgument(offset: String) {
-        popSegmentWithMnemonic(to: "ARG", at: offset)
+        popToMnemonic("ARG", at: offset)
     }
     
     func pushStatic(offset: String, identifier: String) {
-        pushSegment("\(identifier).\(offset)")
+        pushValue("\(identifier).\(offset)")
     }
     
     func popStatic(offset: String, identifier: String) {
-        popSegment(to: "\(identifier).\(offset)")
+        popTo("\(identifier).\(offset)")
     }
     
     func pushPointer(offset: String) {
         offset == "0"
-        ? pushSegmentWithMnemonic("THIS")
-        : pushSegmentWithMnemonic("THAT")
+        ? pushMnemonic("THIS")
+        : pushMnemonic("THAT")
     }
     
     func popPointer(offset: String) {
         offset == "0"
-        ? popSegmentWithMnemonic(to: "THIS")
-        : popSegmentWithMnemonic(to: "THAT")
+        ? popToMnemonic("THIS")
+        : popToMnemonic("THAT")
     }
     
     func pushTemp(offset: String) {
-        pushSegment("5", at: offset)
+        pushValue("5", at: offset)
     }
     
     func popTemp(offset: String) {
-        popSegment(to: "5", at: offset)
+        popTo("5", at: offset)
     }
     
     func eq(_ count: String) {
@@ -103,6 +103,22 @@ class AssemblyBuilder {
         unaryOperation("-")
     }
     
+    func newFunction(name: String, args: Int) {
+        label(name)
+        (0..<args).forEach { _ in
+            pushConstant("0")
+        }
+    }
+    
+    func callFunction(name: String, args: Int) {
+        
+    }
+    
+    func functionReturn() {
+        
+    }
+    
+#warning("label is supposed to be functionName$label")
     func label(_ label: String) {
         append(
         """
@@ -130,13 +146,13 @@ class AssemblyBuilder {
         )
     }
     
-    private func popSegment(
-        to value: String,
+    private func popTo(
+        _ segment: String,
         at offset: String = "0"
     ) {
         append(
         """
-        \(setRegister("D", value: value, offset: offset))
+        \(setRegister("D", value: segment, offset: offset))
         @R15
         M=D
         \(popStack())
@@ -147,8 +163,8 @@ class AssemblyBuilder {
         )
     }
     
-    func popSegmentWithMnemonic(
-        to mnemonic: String,
+    private func popToMnemonic(
+        _ mnemonic: String,
         at offset: String = "0"
     ) {
         append(
@@ -164,7 +180,7 @@ class AssemblyBuilder {
         )
     }
     
-    private func pushSegment(
+    private func pushValue(
         _ value: String,
         at offset: String = "0"
     ) {
@@ -177,7 +193,7 @@ class AssemblyBuilder {
         )
     }
     
-    private func pushSegmentWithMnemonic(
+    private func pushMnemonic(
         _ mnemonic: String,
         at offset: String = "0"
     ) {

@@ -15,10 +15,7 @@ class VMTranslator {
         self.b = b
     }
     
-    func toAssembly(
-        _ vm: String,
-        file: String = #fileID
-    ) -> String {
+    func toAssembly(_ vm: String, file: String = #fileID) -> String {
         vm.lines.enumerated().forEach {
             toAssembly(VMLine(code: $0.element,
                               fileName: file,
@@ -28,73 +25,77 @@ class VMTranslator {
     }
     
     private func toAssembly(_ line: VMLine) {
-        switch line.words.count {
-        case 1:
-            computationToAssembly(line)
-            
-        case 2:
-            branchingToAssebly(line)
-            
-        case 3:
-            memoryAccessToAssembly(line)
-            
-        default:
-            fatalError("Lines can't have \(line.words.count) words")
-        }
-    }
-    
-    private func computationToAssembly(_ line: VMLine) {
-        switch line.code {
-        case "add":
-            b.add()
-            
-        case "sub":
-            b.sub()
-            
-        case "not":
-            b.not()
-            
-        case "neg":
-            b.neg()
-            
-        case "and":
-            b.and()
-            
-        case "or":
-            b.or()
-            
-        case "eq":
-            b.eq(String(line.index))
-            
-        case "gt":
-            b.gt(String(line.index))
-            
-        case "lt":
-            b.lt(String(line.index))
-            
-        default:
-            fatalError("Unrecognised computation '\(line.code)'")
-        }
-    }
-    
-    private func branchingToAssebly(_ line: VMLine) {
         let words = line.words
         
-        let command = words[0]
-        let label = words[1]
-        
-        switch command {
-        case "label":
-            b.label(label)
+        switch words.count {
+        case 1:
+            switch words[0] {
+            case "add":
+                b.add()
+                
+            case "sub":
+                b.sub()
+                
+            case "not":
+                b.not()
+                
+            case "neg":
+                b.neg()
+                
+            case "and":
+                b.and()
+                
+            case "or":
+                b.or()
+                
+            case "eq":
+                b.eq(String(line.index))
+                
+            case "gt":
+                b.gt(String(line.index))
+                
+            case "lt":
+                b.lt(String(line.index))
+                
+            case "return":
+                b.functionReturn()
+                
+            default:
+                fatalError("Unrecognised computation '\(line.code)'")
+            }
+        case 2:
+            let command = words[0]
+            let label = words[1]
             
-        case "goto":
-            b.goto(label)
+            switch command {
+#warning("label is supposed to be functionName$label")
+            case "label":
+                b.label(label)
+                
+            case "goto":
+                b.goto(label)
+                
+            case "if-goto":
+                b.ifGoto(label)
+                
+            default:
+                fatalError("Unrecognised branching command '\(command)'")
+            }
             
-        case "if-goto":
-            b.ifGoto(label)
-            
+        case 3:
+            switch words[0] {
+            case "push", "pop":
+                memoryAccessToAssembly(line)
+                
+            case "function", "call":
+                functionToAssembly(line)
+                
+            default:
+                fatalError("Unrecognised command '\(words[0])")
+            }
+   
         default:
-            fatalError("Unrecognised branching command '\(command)'")
+            fatalError("Lines can't have \(line.words.count) words")
         }
     }
     
@@ -149,5 +150,25 @@ class VMTranslator {
         default:
             fatalError("Unrecognised segment '\(segment)'")
         }
+    }
+    
+    private func functionToAssembly(_ line: VMLine) {
+        let words = line.words
+        
+        let command = words[0]
+        let name = words[1]
+        let argCount = Int(words[2])!
+        
+        switch command {
+        case "function":
+            b.newFunction(name: name,
+                          args: argCount)
+        case "call":
+            b.callFunction(name: name,
+                           args: argCount)
+        default:
+            fatalError("Unrecognised command '\(command)'")
+        }
+        
     }
 }
