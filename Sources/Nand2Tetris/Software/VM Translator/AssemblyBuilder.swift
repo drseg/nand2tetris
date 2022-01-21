@@ -1,70 +1,70 @@
 class AssemblyBuilder {
     private (set) var assembly = ""
     
-    func popSegmentWithMnemonic(
-        to segment: String,
-        at offset: String
-    ) {
-        append(
-        """
-        \(setRegister("D", mnemonic: mnemonic(segment), offset: offset))
-        @R15
-        M=D
-        \(popStack())
-        @R15
-        A=M
-        M=D
-        """
-        )
-    }
-    
-    func popSegmentWithValue(
-        to value: String,
-        at offset: String
-    ) {
-        append(
-        """
-        \(setRegister("D", value: value, offset: offset))
-        @R15
-        M=D
-        \(popStack())
-        @R15
-        A=M
-        M=D
-        """
-        )
-    }
-    
-    func pushSegmentWithMnemonic(
-        _ segment: String,
-        at offset: String
-    ) {
-        append(
-        """
-        \(setRegister("A", mnemonic: mnemonic(segment), offset: offset))
-        D=M
-        \(pushDToStack())
-        """
-        )
-    }
-    
-    func pushSegmentWithValue(
-        _ value: String,
-        at offset: String
-    ) {
-        append(
-        """
-        \(setRegister("A", value: value, offset: offset))
-        D=M
-        \(pushDToStack())
-        """
-        )
-    }
-    
     func pushConstant(_ c: String) {
         c[0] == "-"
         ? pushNegativeConstant(c)
         : pushPositiveConstant(c)
+    }
+    
+    func pushThis(offset: String) {
+        pushSegmentWithMnemonic("THIS", at: offset)
+    }
+    
+    func popThis(offset: String) {
+        popSegmentWithMnemonic(to: "THIS", at: offset)
+    }
+    
+    func pushThat(offset: String) {
+        pushSegmentWithMnemonic("THAT", at: offset)
+    }
+    
+    func popThat(offset: String) {
+        popSegmentWithMnemonic(to: "THAT", at: offset)
+    }
+    
+    func pushLocal(offset: String) {
+        pushSegmentWithMnemonic("LCL", at: offset)
+    }
+    
+    func popLocal(offset: String) {
+        popSegmentWithMnemonic(to: "LCL", at: offset)
+    }
+    
+    func pushArgument(offset: String) {
+        pushSegmentWithMnemonic("ARG", at: offset)
+    }
+    
+    func popArgument(offset: String) {
+        popSegmentWithMnemonic(to: "ARG", at: offset)
+    }
+    
+    func pushStatic(offset: String, identifier: String) {
+        pushSegment("\(identifier).\(offset)")
+    }
+    
+    func popStatic(offset: String, identifier: String) {
+        popSegment(to: "\(identifier).\(offset)")
+    }
+    
+    func pushPointer(offset: String) {
+        offset == "0"
+        ? pushSegmentWithMnemonic("THIS")
+        : pushSegmentWithMnemonic("THAT")
+    }
+    
+    func popPointer(offset: String) {
+        offset == "0"
+        ? popSegmentWithMnemonic(to: "THIS")
+        : popSegmentWithMnemonic(to: "THAT")
+    }
+    
+    func pushTemp(offset: String) {
+        pushSegment("5", at: offset)
+    }
+    
+    func popTemp(offset: String) {
+        popSegment(to: "5", at: offset)
     }
     
     func eq(_ count: String) {
@@ -130,23 +130,64 @@ class AssemblyBuilder {
         )
     }
     
-    private func mnemonic(_ segment: String) -> String {
-        switch segment {
-        case "local":
-            return "LCL"
-            
-        case "argument":
-            return "ARG"
-            
-        case "this":
-            return "THIS"
-            
-        case "that":
-            return "THAT"
-            
-        default:
-            fatalError("No mnemonic for segment '\(segment)'")
-        }
+    private func popSegment(
+        to value: String,
+        at offset: String = "0"
+    ) {
+        append(
+        """
+        \(setRegister("D", value: value, offset: offset))
+        @R15
+        M=D
+        \(popStack())
+        @R15
+        A=M
+        M=D
+        """
+        )
+    }
+    
+    func popSegmentWithMnemonic(
+        to mnemonic: String,
+        at offset: String = "0"
+    ) {
+        append(
+        """
+        \(setRegister("D", mnemonic: mnemonic, offset: offset))
+        @R15
+        M=D
+        \(popStack())
+        @R15
+        A=M
+        M=D
+        """
+        )
+    }
+    
+    private func pushSegment(
+        _ value: String,
+        at offset: String = "0"
+    ) {
+        append(
+        """
+        \(setRegister("A", value: value, offset: offset))
+        D=M
+        \(pushDToStack())
+        """
+        )
+    }
+    
+    private func pushSegmentWithMnemonic(
+        _ mnemonic: String,
+        at offset: String = "0"
+    ) {
+        append(
+        """
+        \(setRegister("A", mnemonic: mnemonic, offset: offset))
+        D=M
+        \(pushDToStack())
+        """
+        )
     }
     
     private func setRegister(

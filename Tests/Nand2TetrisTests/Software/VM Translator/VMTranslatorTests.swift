@@ -423,6 +423,13 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         runProgram(ifGotoFalse)
         assertResult(d: 6, sp: 257)
     }
+    
+    /// todo:
+    ///
+    /// clean vm, handle comments etc.
+    /// consider rewriting VMLine struct as a more accurate data structure
+    /// sys code at beginning of assembly files
+    /// use acceptance tests from original project
 }
 
 /// Function commands:

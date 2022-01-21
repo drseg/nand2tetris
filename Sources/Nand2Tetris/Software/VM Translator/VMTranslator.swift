@@ -105,71 +105,49 @@ class VMTranslator {
         let segment = words[1]
         let offset = words[2]
         
+        let isPush = command == "push"
+        
         switch segment {
         case "constant":
             b.pushConstant(offset)
             
         case "temp":
-            accessTemp(command, offset: offset)
+            isPush
+            ? b.pushTemp(offset: offset)
+            : b.popTemp(offset: offset)
             
         case "static":
-            accessStatic(command,
-                         offset: offset,
-                         fileName: line.fileName)
+            isPush
+            ? b.pushStatic(offset: offset, identifier: line.fileName)
+            : b.popStatic(offset: offset, identifier: line.fileName)
             
         case "pointer":
-            offset == "0"
-            ? accessPointerZero(command)
-            : accessPointerOne(command)
+            isPush
+            ? b.pushPointer(offset: offset)
+            : b.popPointer(offset: offset)
+            
+        case "local":
+            isPush
+            ? b.pushLocal(offset: offset)
+            : b.popLocal(offset: offset)
+            
+        case "argument":
+            isPush
+            ? b.pushArgument(offset: offset)
+            : b.popArgument(offset: offset)
+            
+        case "this":
+            isPush
+            ? b.pushThis(offset: offset)
+            : b.popThis(offset: offset)
+            
+        case "that":
+            isPush
+            ? b.pushThat(offset: offset)
+            : b.popThat(offset: offset)
             
         default:
-            accessMnemonic(command,
-                           segment: segment,
-                           offset: offset)
+            fatalError("Unrecognised segment '\(segment)'")
         }
-    }
-    
-    private func accessStatic(
-        _ c: String,
-        offset: String,
-        fileName: String
-    ) {
-        segmentWithValue(c)("\(fileName).\(offset)", "0")
-    }
-    
-    private func accessPointerZero(_ c: String) {
-        accessMnemonic(c, segment: "this", offset: "0")
-    }
-    
-    private func accessPointerOne(_ c: String) {
-        accessMnemonic(c, segment: "that", offset: "0")
-    }
-    
-    private func accessTemp(_ c: String, offset: String) {
-        segmentWithValue(c)("5", offset)
-    }
-    
-    private func accessMnemonic(
-        _ c: String,
-        segment: String,
-        offset: String
-    ) {
-        segmentWithMnemonic(c)(segment, offset)
-    }
-    
-    private func segmentWithMnemonic(
-        _ c: String
-    ) -> (String, String) -> () {
-        c == "push"
-            ? b.pushSegmentWithMnemonic
-            : b.popSegmentWithMnemonic
-    }
-    
-    private func segmentWithValue(
-        _ c: String
-    ) -> (String, String) -> () {
-        c == "push"
-            ? b.pushSegmentWithValue
-            : b.popSegmentWithValue
     }
 }
