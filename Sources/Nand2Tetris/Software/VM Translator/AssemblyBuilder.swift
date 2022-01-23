@@ -142,6 +142,47 @@ class AssemblyBuilder {
     func functionReturn() {
         append(
         """
+        @LCL
+        D=M
+        @R13
+        M=D
+        
+        @5
+        D=D-A
+        @R14
+        M=D
+        """
+        )
+        
+        popToMnemonic("ARG")
+        
+        append(
+        """
+        @ARG
+        D=M
+        @SP
+        M=D+1
+        
+        @R13
+        D=M-1
+        @THAT
+        M=D
+        
+        D=D-1
+        @THIS
+        M=D
+        
+        D=D-1
+        @ARG
+        M=D
+        
+        D=D-1
+        @LCL
+        M=D
+        
+        @R14
+        A=M
+        0;JMP
         """
         )
     }

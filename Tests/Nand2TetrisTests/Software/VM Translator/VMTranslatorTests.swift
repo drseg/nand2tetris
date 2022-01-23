@@ -481,10 +481,19 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testReturn() {
-        runProgram("return")
+        runProgram(
+                """
+                call Test.add 0
+                function Test.add 2
+                push constant 99
+                push constant 100
+                add
+                return
+                """
+        )
+        
+        assertResult(d: 258, sp: 257, top: 199)
     }
-    
-    
     
     /// todo:
     ///
