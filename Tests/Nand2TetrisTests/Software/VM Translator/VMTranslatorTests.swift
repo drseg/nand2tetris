@@ -13,6 +13,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     
     var translator: VMTranslator!
     var assembler: Assembler!
+    var translated: String!
     
     var assembly = ""
     var binary = [String]()
@@ -33,7 +34,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func runProgram(_ vmProgram: String) {
-        runProgram(translated(vmProgram), useFastClocking: true)
+        runProgram(toBinary(vmProgram), useFastClocking: true)
     }
     
     var dRegister: String {
@@ -48,9 +49,10 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         c.memory.value(i.b).toDecimal()
     }
     
-    func translated(_ vmCode: String) -> [String] {
+    @discardableResult
+    func toBinary(_ vmCode: String) -> [String] {
         let resolver = SymbolResolver()
-        let translated = translator.toAssembly(vmCode)
+        translated = translator.toAssembly(vmCode)
         assembly = resolver.resolving(translated)
         binary = assembler.toBinary(assembly)
         return binary
@@ -432,6 +434,24 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     """
         runProgram(function)
         assertResult(d: 0, sp: 256 + args)
+    }
+    
+    func testLabelsWithinFunctionFormattedCorrectly() {
+        let function =
+                    """
+                    function doNothing 0
+                    label test
+                    goto test
+                    if-goto test
+                    """
+        toBinary(function)
+        
+        translated
+            .components(separatedBy: "(doNothing$test)")
+            .count => 2
+        translated
+            .components(separatedBy: "@doNothing$test")
+            .count => 3
     }
     
     /// todo:

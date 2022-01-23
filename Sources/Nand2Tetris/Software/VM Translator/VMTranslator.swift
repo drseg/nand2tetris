@@ -1,6 +1,7 @@
 private struct VMLine {
     let code: String
     let fileName: String
+    let functionName: String
     let index: Int
     
     var words: [String] {
@@ -16,9 +17,16 @@ class VMTranslator {
     }
     
     func toAssembly(_ vm: String, file: String = #fileID) -> String {
+        var function = "null"
+        
         vm.lines.enumerated().forEach {
+            if $0.element.prefix(8) == "function" {
+                function = $0.element.components(separatedBy: " ")[1]
+            }
+            
             toAssembly(VMLine(code: $0.element,
                               fileName: file,
+                              functionName: function,
                               index: $0.offset))
         }
         return b.assembly
@@ -68,15 +76,14 @@ class VMTranslator {
             let label = words[1]
             
             switch command {
-#warning("label is supposed to be functionName$label")
             case "label":
-                b.label(label)
+                b.label(label, function: line.functionName)
                 
             case "goto":
-                b.goto(label)
+                b.goto(label, function: line.functionName)
                 
             case "if-goto":
-                b.ifGoto(label)
+                b.ifGoto(label, function: line.functionName)
                 
             default:
                 fatalError("Unrecognised branching command '\(command)'")
@@ -161,14 +168,11 @@ class VMTranslator {
         
         switch command {
         case "function":
-            b.newFunction(name: name,
-                          args: argCount)
+            b.newFunction(name: name, args: argCount)
         case "call":
-            b.callFunction(name: name,
-                           args: argCount)
+            b.callFunction(name: name, args: argCount)
         default:
             fatalError("Unrecognised command '\(command)'")
         }
-        
     }
 }

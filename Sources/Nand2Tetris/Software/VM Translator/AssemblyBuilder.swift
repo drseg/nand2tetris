@@ -104,7 +104,7 @@ class AssemblyBuilder {
     }
     
     func newFunction(name: String, args: Int) {
-        label(name)
+        append("\(name)")
         (0..<args).forEach { _ in
             pushConstant("0")
         }
@@ -118,29 +118,28 @@ class AssemblyBuilder {
         
     }
     
-#warning("label is supposed to be functionName$label")
-    func label(_ label: String) {
+    func label(_ label: String, function: String) {
         append(
         """
-        (\(label))
+        (\(function)$\(label))
         """
         )
     }
     
-    func goto(_ label: String) {
+    func goto(_ label: String, function: String) {
         append(
         """
-        @\(label)
+        @\(function)$\(label)
         0;JMP
         """
         )
     }
     
-    func ifGoto(_ label: String) {
+    func ifGoto(_ label: String, function: String) {
         append(
         """
         \(popStack())
-        @\(label)
+        @\(function)$\(label)
         D;JEQ
         """
         )
