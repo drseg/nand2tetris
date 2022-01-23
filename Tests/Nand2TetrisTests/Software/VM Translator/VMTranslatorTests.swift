@@ -2,14 +2,21 @@ import XCTest
 @testable import Nand2Tetris
 
 class VMTranslatorAcceptanceTests: ComputerTestCase {
-    let sp = 256
-    let lcl = 1000
-    let arg = 1250
-    let this = 1500
-    let that = 1750
+    let SP = 0
+    let LCL = 1
+    let ARG = 2
+    let THIS = 3
+    let THAT = 4
+    
+    let defaultSP = 256
+    let defaultLCL = 1000
+    let defaultARG = 1250
+    let defaultTHIS = 1500
+    let defaultTHAT = 1750
+    
     let temp = 5
-    var ptr0: Int { this }
-    var ptr1: Int { that }
+    var ptr0: Int { defaultTHIS }
+    var ptr1: Int { defaultTHAT }
     
     var translator: VMTranslator!
     var assembler: Assembler!
@@ -26,11 +33,11 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
 
     func initialiseMemory() {
-        c.memory(sp.b, "1", 0.b, "1")
-        c.memory(lcl.b, "1", 1.b, "1")
-        c.memory(arg.b, "1", 2.b, "1")
-        c.memory(this.b, "1", 3.b, "1")
-        c.memory(that.b, "1", 4.b, "1")
+        c.memory(defaultSP.b, "1", SP.b, "1")
+        c.memory(defaultLCL.b, "1", LCL.b, "1")
+        c.memory(defaultARG.b, "1", ARG.b, "1")
+        c.memory(defaultTHIS.b, "1", THIS.b, "1")
+        c.memory(defaultTHAT.b, "1", THAT.b, "1")
     }
     
     func runProgram(_ vmProgram: String) {
@@ -301,19 +308,19 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPopLocal() {
-        assertPopped("local", toFirst: lcl)
+        assertPopped("local", toFirst: defaultLCL)
     }
     
     func testPopArgument() {
-        assertPopped("argument", toFirst: arg)
+        assertPopped("argument", toFirst: defaultARG)
     }
     
     func testPopThis() {
-        assertPopped("this", toFirst: this)
+        assertPopped("this", toFirst: defaultTHIS)
     }
     
     func testPopThat() {
-        assertPopped("that", toFirst: that)
+        assertPopped("that", toFirst: defaultTHAT)
     }
     
     func testPopTemp() {
@@ -355,19 +362,19 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testPushLocal() {
-        assertPushAndPop("local", toFirst: lcl)
+        assertPushAndPop("local", toFirst: defaultLCL)
     }
     
     func testPushArgument() {
-        assertPushAndPop("argument", toFirst: arg)
+        assertPushAndPop("argument", toFirst: defaultARG)
     }
     
     func testPushThis() {
-        assertPushAndPop("this", toFirst: this)
+        assertPushAndPop("this", toFirst: defaultTHIS)
     }
     
     func testPushThat() {
-        assertPushAndPop("that", toFirst: that)
+        assertPushAndPop("that", toFirst: defaultTHAT)
     }
     
     func testPushTemp() {
@@ -433,7 +440,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                     function doNothing \(args)
                     """
         runProgram(function)
-        assertResult(d: 0, sp: 256 + args)
+        memory(0) => String(256 + args)
     }
     
     func testLabelsWithinFunctionFormattedCorrectly() {
@@ -464,12 +471,17 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
         
         XCTAssert(memory(256) != "0")
         
-        memory(257) => String(lcl)
-        memory(258) => String(arg)
-        memory(259) => String(this)
-        memory(260) => String(that)
-        memory(1) => "262"
-        memory(2) => "254"
+        memory(257) => String(defaultLCL)
+        memory(258) => String(defaultARG)
+        memory(259) => String(defaultTHIS)
+        memory(260) => String(defaultTHAT)
+        
+        memory(LCL) => "262"
+        memory(ARG) => "254"
+    }
+    
+    func testReturn() {
+        runProgram("return")
     }
     
     
