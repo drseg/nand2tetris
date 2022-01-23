@@ -454,6 +454,26 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
             .count => 3
     }
     
+    func testCallFunction() {
+        let vm =
+                """
+                call Test.add 2
+                """
+        
+        runProgram(vm)
+        
+        XCTAssert(memory(256) != "0")
+        
+        memory(257) => String(lcl)
+        memory(258) => String(arg)
+        memory(259) => String(this)
+        memory(260) => String(that)
+        memory(1) => "262"
+        memory(2) => "254"
+    }
+    
+    
+    
     /// todo:
     ///
     /// clean vm, handle comments etc.

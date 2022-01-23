@@ -111,11 +111,39 @@ class AssemblyBuilder {
     }
     
     func callFunction(name: String, args: Int) {
+        let returnLabel = "\(name).returnAddress"
         
+        pushConstant("\(returnLabel)")
+        pushValue(at: "LCL")
+        pushValue(at: "ARG")
+        pushValue(at: "THIS")
+        pushValue(at: "THAT")
+        
+        pushValue(at: "SP")
+        pushConstant("5")
+        sub()
+        pushConstant(String(args))
+        sub()
+        
+        append(
+        """
+        @ARG
+        M=D
+        @SP
+        D=M
+        @LCL
+        M=D
+        goto \(name)
+        (\(returnLabel))
+        """
+        )
     }
     
     func functionReturn() {
-        
+        append(
+        """
+        """
+        )
     }
     
     func label(_ label: String, function: String) {
@@ -233,6 +261,16 @@ class AssemblyBuilder {
         @\(value)
         \(register)=D+\(addend)
         """
+    }
+    
+    private func pushValue(at pointer: String) {
+        append(
+        """
+        @\(pointer)
+        D=M
+        \(pushDToStack())
+        """
+        )
     }
     
     private func pushPositiveConstant(_ c: String) {
