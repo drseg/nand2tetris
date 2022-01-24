@@ -35,6 +35,10 @@ class SymbolResolverTests: XCTestCase {
         resolveCommands("(LOOP)") => ["LOOP": 0]
     }
     
+    func testResolvesMultiplePseudoCommands() {
+        resolveCommands("(A)\n(B)\n(C)") => ["A": 0, "B": 0, "C": 0]
+    }
+    
     func testIncrementsCommandAddressCorrectly() {
         resolveCommands("(LOOP)\nM=A\n(END)") => ["LOOP": 0, "END": 1]
     }

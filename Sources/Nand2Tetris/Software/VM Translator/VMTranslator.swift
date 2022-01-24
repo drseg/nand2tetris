@@ -26,7 +26,9 @@ class VMTranslator {
             return currentFunction
         }
         
-        vm.lines
+        vm
+            .droppingComments
+            .lines
             .filter { $0 != "" }
             .enumerated()
             .forEach {
