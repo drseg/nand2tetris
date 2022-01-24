@@ -1,5 +1,11 @@
 class AssemblyBuilder {
-    private (set) var assembly = ""
+    private (set) var assembly =
+    """
+    @256
+    D=A
+    @SP
+    M=D
+    """
     
     func pushConstant(_ c: String) {
         c[0] == "-"
@@ -104,36 +110,36 @@ class AssemblyBuilder {
     }
     
     func newFunction(name: String, args: Int) {
-        append("\(name)")
+        append("(\(name))")
         (0..<args).forEach { _ in
             pushConstant("0")
         }
     }
     
-    func callFunction(name: String, args: Int) {
-        let returnLabel = "\(name).returnAddress"
+    func callFunction(name: String, args: Int, index: Int) {
+        let returnLabel = "\(name).returnAddress.\(index)"
         
         pushConstant("\(returnLabel)")
         pushValue(at: "LCL")
         pushValue(at: "ARG")
         pushValue(at: "THIS")
         pushValue(at: "THAT")
-        
         pushValue(at: "SP")
         pushConstant("5")
         sub()
         pushConstant(String(args))
         sub()
-        
         append(
         """
+        \(popStack())
         @ARG
         M=D
         @SP
         D=M
         @LCL
         M=D
-        goto \(name)
+        @\(name)
+        0;JMP
         (\(returnLabel))
         """
         )
@@ -146,40 +152,32 @@ class AssemblyBuilder {
         D=M
         @R13
         M=D
-        
         @5
         D=D-A
         @R14
         M=D
         """
         )
-        
         popToMnemonic("ARG")
-        
         append(
         """
         @ARG
         D=M
         @SP
         M=D+1
-        
         @R13
         D=M-1
         @THAT
         M=D
-        
         D=D-1
         @THIS
         M=D
-        
         D=D-1
         @ARG
         M=D
-        
         D=D-1
         @LCL
         M=D
-        
         @R14
         A=M
         0;JMP
@@ -344,6 +342,7 @@ class AssemblyBuilder {
     
     private func bool(_ predicate: String) {
         sub()
+        
         append(
         """
         @\(predicate + "_TRUE")

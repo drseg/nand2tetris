@@ -20,7 +20,7 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     
     var translator: VMTranslator!
     var assembler: Assembler!
-    var translated: String!
+    var translated = ""
     
     var assembly = ""
     var binary = [String]()
@@ -33,15 +33,16 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
 
     func initialiseMemory() {
-        c.memory(defaultSP.b, "1", SP.b, "1")
         c.memory(defaultLCL.b, "1", LCL.b, "1")
         c.memory(defaultARG.b, "1", ARG.b, "1")
         c.memory(defaultTHIS.b, "1", THIS.b, "1")
         c.memory(defaultTHAT.b, "1", THAT.b, "1")
     }
     
-    func runProgram(_ vmProgram: String) {
-        runProgram(toBinary(vmProgram), useFastClocking: true)
+    func runProgram(_ vmProgram: String, cycles: Int? = nil) {
+        runProgram(toBinary(vmProgram),
+                   useFastClocking: true,
+                   cycles: cycles)
     }
     
     var dRegister: String {
@@ -73,6 +74,11 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
                            memory(sp-1),
                            "Memory \(sp-1)")
         }
+    }
+    
+    func testEmptyProgramSetsSP() {
+        runProgram("")
+        assertResult(d: 256, sp: 256)
     }
     
     func testPushNegativeConstant() {
@@ -462,38 +468,103 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     }
     
     func testCallFunction() {
-        let vm =
+        let argCount = Int.random(in: 0...5)
+        
+        runProgram(
                 """
-                call Test.add 2
+                call Test.add \(argCount)
                 """
+        )
         
-        runProgram(vm)
-        
-        XCTAssert(memory(256) != "0")
-        
+        memory(defaultSP) => "93" // return address
         memory(257) => String(defaultLCL)
         memory(258) => String(defaultARG)
         memory(259) => String(defaultTHIS)
         memory(260) => String(defaultTHAT)
         
-        memory(LCL) => "262"
-        memory(ARG) => "254"
+        memory(ARG) => String(defaultSP - argCount)
+        memory(LCL) => String(defaultSP + 5)
     }
     
     func testReturn() {
         runProgram(
                 """
-                call Test.add 0
-                function Test.add 2
                 push constant 99
-                push constant 100
-                add
                 return
                 """
         )
         
-        assertResult(d: 258, sp: 257, top: 199)
+        memory(SP) => String(defaultARG + 1)
+        memory(defaultARG) => "99"
+        
+        memory(THAT) => String(defaultLCL - 1)
+        memory(THIS) => String(defaultLCL - 2)
+        memory(ARG) => String(defaultLCL - 3)
+        memory(LCL) => String(defaultLCL - 4)
+        memory(14) => String(defaultLCL - 5)
     }
+    
+    func testRecursion() {
+        runProgram(
+                """
+                push constant 1
+                call Test.add 1
+                function Test.add 1
+                push argument 0
+                push constant 99
+                add
+                return
+                """
+                , cycles: 1000)
+        
+        /// Something's up with the jump/return logic, and perhaps also with setting the return address. How is it actually supposed to work? A function is called by a certain instruction, and a return value is set that I assume should be the next instruction to execute after the return. But what instruction is that?!
+        
+        print(String(repeating: "-", count: 80))
+        print(assembly)
+        print(String(repeating: "-", count: 80))
+        print(translated)
+        print(String(repeating: "-", count: 80))
+        print("SP: \(memory(SP))")
+        print(String(repeating: "-", count: 80))
+        (256...280).forEach {
+            print(memory($0))
+        }
+        print(String(repeating: "*", count: 100))
+
+    }
+    
+//    func testFibonacci() {
+//        let fib = """
+//                push constant 9
+//                call Main.fibonacci 1
+//                function Main.fibonacci 0
+//                push argument 0
+//                push constant 2
+//                lt
+//                if-goto IF_TRUE
+//                goto IF_FALSE
+//                label IF_TRUE
+//                push argument 0
+//                return
+//                label IF_FALSE
+//                push argument 0
+//                push constant 2
+//                sub
+//                call Main.fibonacci 1
+//                push argument 0
+//                push constant 1
+//                sub
+//                call Main.fibonacci 1
+//                add
+//                return
+//                """
+//
+//        runProgram(fib, cycles: 1000)
+//        assertResult(d: 258, sp: 257, top: 34)
+//        (256...500).forEach {
+//            print(memory($0))
+//        }
+//    }
     
     /// todo:
     ///
@@ -502,9 +573,3 @@ class VMTranslatorAcceptanceTests: ComputerTestCase {
     /// sys code at beginning of assembly files
     /// use acceptance tests from original project
 }
-
-/// Function commands:
-///
-/// function
-/// call
-/// return

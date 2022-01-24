@@ -1,7 +1,7 @@
 private struct VMLine {
     let code: String
-    let fileName: String
-    let functionName: String
+    let file: String
+    let function: String
     let index: Int
     
     var words: [String] {
@@ -17,16 +17,22 @@ class VMTranslator {
     }
     
     func toAssembly(_ vm: String, file: String = #fileID) -> String {
-        var function = "null"
-        
-        vm.lines.enumerated().forEach {
-            if $0.element.prefix(8) == "function" {
-                function = $0.element.components(separatedBy: " ")[1]
+        var currentFunction = "null"
+        func getCurrentFunction(_ line: String) -> String {
+            let words = line.components(separatedBy: " ")
+            if words[0] == "function" {
+                currentFunction = words[1]
             }
-            
+            return currentFunction
+        }
+        
+        vm.lines
+            .filter { $0 != "" }
+            .enumerated()
+            .forEach {
             toAssembly(VMLine(code: $0.element,
-                              fileName: file,
-                              functionName: function,
+                              file: file,
+                              function: getCurrentFunction($0.element),
                               index: $0.offset))
         }
         return b.assembly
@@ -77,13 +83,13 @@ class VMTranslator {
             
             switch command {
             case "label":
-                b.label(label, function: line.functionName)
+                b.label(label, function: line.function)
                 
             case "goto":
-                b.goto(label, function: line.functionName)
+                b.goto(label, function: line.function)
                 
             case "if-goto":
-                b.ifGoto(label, function: line.functionName)
+                b.ifGoto(label, function: line.function)
                 
             default:
                 fatalError("Unrecognised branching command '\(command)'")
@@ -126,8 +132,8 @@ class VMTranslator {
             
         case "static":
             isPush
-            ? b.pushStatic(offset: offset, identifier: line.fileName)
-            : b.popStatic(offset: offset, identifier: line.fileName)
+            ? b.pushStatic(offset: offset, identifier: line.file)
+            : b.popStatic(offset: offset, identifier: line.file)
             
         case "pointer":
             isPush
@@ -170,7 +176,7 @@ class VMTranslator {
         case "function":
             b.newFunction(name: name, args: argCount)
         case "call":
-            b.callFunction(name: name, args: argCount)
+            b.callFunction(name: name, args: argCount, index: line.index)
         default:
             fatalError("Unrecognised command '\(command)'")
         }
