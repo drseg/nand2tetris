@@ -33,7 +33,10 @@ class VMTranslatorTestCase: ComputerTestCase {
     }
 
     func initialiseMemory() {
-        fatalError("subclasses must implement")
+        c.memory(defaultLCL.b, "1", LCL.b, "1")
+        c.memory(defaultARG.b, "1", ARG.b, "1")
+        c.memory(defaultTHIS.b, "1", THIS.b, "1")
+        c.memory(defaultTHAT.b, "1", THAT.b, "1")
     }
     
     func runProgram(_ vmProgram: String, cycles: Int? = nil) {
@@ -78,13 +81,6 @@ class VMTranslatorTestCase: ComputerTestCase {
 }
 
 class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
-    override func initialiseMemory() {
-        c.memory(defaultLCL.b, "1", LCL.b, "1")
-        c.memory(defaultARG.b, "1", ARG.b, "1")
-        c.memory(defaultTHIS.b, "1", THIS.b, "1")
-        c.memory(defaultTHAT.b, "1", THAT.b, "1")
-    }
-    
     func testEmptyProgramSetsSP() {
         runProgram("")
         assertResult(d: 256, sp: 256)
@@ -92,6 +88,21 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
     
     func testPushNegativeConstant() {
         runProgram("push constant -1")
+        assertResult(d: -1)
+    }
+    
+    func testRemovesComments() {
+        runProgram("push constant -1 // I'm a comment")
+        assertResult(d: -1)
+    }
+    
+    func testRemovesLeadingTrailingWhitespaces() {
+        runProgram("   push constant -1  ")
+        assertResult(d: -1)
+    }
+    
+    func testRemovesMultiSpaces() {
+        runProgram("push   constant  -1")
         assertResult(d: -1)
     }
     
@@ -450,8 +461,23 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
 }
 
 class VMFunctionTests: VMTranslatorTestCase {
-    override func initialiseMemory() {
-        // leave memory blank
+    func log(verbose: Bool = false, upto max: Int = 280, width: Int = 80) {
+        if verbose {
+            print(String(repeating: "-", count: width))
+            print(assembly)
+            print(String(repeating: "-", count: width))
+            print(translated)
+        }
+        
+        print(String(repeating: "-", count: width))
+        print("SP: \(memory(SP))")
+        print(String(repeating: "-", count: width))
+        (256...max).forEach {
+            print("\($0):\(memory($0))")
+        }
+        print(String(repeating: "-", count: width))
+        print("R13: \(memory(13))")
+        print("R14: \(memory(14))")
     }
     
     func testFunctionDeclarationPushesArgsZeros() {
@@ -492,95 +518,141 @@ class VMFunctionTests: VMTranslatorTestCase {
         )
         
         memory(defaultSP) => "93" // return address
-        memory(257) => "0"
-        memory(258) => "0"
-        memory(259) => "0"
-        memory(260) => "0"
+        memory(257) => String(defaultLCL)
+        memory(258) => String(defaultARG)
+        memory(259) => String(defaultTHIS)
+        memory(260) => String(defaultTHAT)
         
         memory(ARG) => String(defaultSP - argCount)
         memory(LCL) => String(defaultSP + 5)
     }
     
     func testReturn() {
-//        runProgram(
-//                    """
-//                    push constant 99
-//                    return
-//                    """
-//        )
+        runProgram(
+                    """
+                    push constant 99
+                    return
+                    """
+        )
         
-//        memory(SP) => String(defaultARG + 1)
-//        memory(defaultARG) => "99"
+        memory(SP) => String(defaultARG + 1)
+        memory(defaultARG) => "99"
         
-//        memory(THAT) => String(defaultLCL - 1)
-//        memory(THIS) => String(defaultLCL - 2)
-//        memory(ARG) => String(defaultLCL - 3)
-//        memory(LCL) => String(defaultLCL - 4)
-//        memory(14) => String(defaultLCL - 5)
+        memory(THAT) => String(defaultLCL - 1)
+        memory(THIS) => String(defaultLCL - 2)
+        memory(ARG) => String(defaultLCL - 3)
+        memory(LCL) => String(defaultLCL - 4)
+        memory(14) => "0"
+    }
+    
+    func testFunctionWithNoArgs() {
+        runProgram(
+        """
+        call Test.main 0
+        push constant 7777
+        push constant 8888
+        label loopy
+        goto loopy
+                    
+        function Test.main 0
+        push constant 1
+        return
+        """)
+        
+        memory(13) => "261"
+        memory(14) => "93"
+        memory(256) => "1"
+        memory(257) => "7777"
+        memory(258) => "8888"
+    }
+    
+    func testFunctionWithOneArg() {
+        runProgram(
+        """
+        push constant 9
+        
+        call Test.inc 1
+        push constant 7777
+        push constant 8888
+        label loopy
+        goto loopy
+                    
+        function Test.inc 0
+        push argument 0
+        push constant 1
+        add
+        return
+        """)
+        
+        memory(13) => "262"
+        memory(14) => "100"
+        memory(256) => "10"
+        memory(257) => "7777"
+        memory(258) => "8888"
+    }
+    
+    func testFunctionWithTwoArgs() {
+        runProgram(
+        """
+        push constant 9
+        push constant 1
+        
+        call Test.inc 2
+        push constant 7777
+        push constant 8888
+        label loopy
+        goto loopy
+                    
+        function Test.inc 0
+        push argument 0
+        push argument 1
+        add
+        return
+        """)
+        
+        memory(13) => "263"
+        memory(14) => "107"
+        memory(256) => "10"
+        memory(257) => "7777"
+        memory(258) => "8888"
     }
     
     func testRecursion() {
-        runProgram(
-                    """
-                    call Test.main 0
-                    push constant 7777
-                    push constant 8888
-                    label loopy
-                    goto loopy
-                    
-                    function Test.main 0
-                    push constant 1
-                    return
-                    """
-                    , cycles: 1000)
         
-        /// Something's up with the jump/return logic, and perhaps also with setting the return address. How is it actually supposed to work? A function is called by a certain instruction, and a return value is set that I assume should be the next instruction to execute after the return. But what instruction is that?!
-        
-//        print(String(repeating: "-", count: 80))
-//        print(assembly)
-//        print(String(repeating: "-", count: 80))
-//        print(translated)
-        print(String(repeating: "-", count: 80))
-        print("SP: \(memory(SP))")
-        print(String(repeating: "-", count: 80))
-        (256...280).forEach {
-            print("\($0):\(memory($0))")
-        }
-        print(String(repeating: "-", count: 80))
-        print("R13: \(memory(13))")
-        print("R14: \(memory(14))")
     }
     
-    //    func testFibonacci() {
-    //        let fib = """
-    //                push constant 9
-    //                call Main.fibonacci 1
-    //                function Main.fibonacci 0
-    //                push argument 0
-    //                push constant 2
-    //                lt
-    //                if-goto IF_TRUE
-    //                goto IF_FALSE
-    //                label IF_TRUE
-    //                push argument 0
-    //                return
-    //                label IF_FALSE
-    //                push argument 0
-    //                push constant 2
-    //                sub
-    //                call Main.fibonacci 1
-    //                push argument 0
-    //                push constant 1
-    //                sub
-    //                call Main.fibonacci 1
-    //                add
-    //                return
-    //                """
-    //
-    //        runProgram(fib, cycles: 1000)
-    //        assertResult(d: 258, sp: 257, top: 34)
-    //        (256...500).forEach {
-    //            print(memory($0))
-    //        }
-    //    }
+//    func testFibonacci() {
+//        let fib =
+//        """
+//        push constant 9
+//        call Main.fibonacci 1
+//        push constant 9898
+//        label loopy
+//        goto loopy
+//
+//        function Main.fibonacci 0
+//        push argument 0
+//        push constant 2
+//        lt
+//        if-goto IF_TRUE
+//        goto IF_FALSE
+//        label IF_TRUE
+//        push argument 0
+//        return
+//        label IF_FALSE
+//        push argument 0
+//        push constant 2
+//        sub
+//        call Main.fibonacci 1
+//        push argument 0
+//        push constant 1
+//        sub
+//        call Main.fibonacci 1
+//        add
+//        return
+//        """
+//
+//        runProgram(fib, cycles: 2000)
+//        log(verbose: true, upto: 400)
+//    }
 }

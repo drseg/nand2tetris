@@ -26,12 +26,7 @@ class VMTranslator {
             return currentFunction
         }
         
-        vm
-            .droppingComments
-            .lines
-            .filter { $0 != "" }
-            .enumerated()
-            .forEach {
+        vm.cleanLines.forEach {
             toAssembly(VMLine(code: $0.element,
                               file: file,
                               function: getCurrentFunction($0.element),
@@ -182,5 +177,18 @@ class VMTranslator {
         default:
             fatalError("Unrecognised command '\(command)'")
         }
+    }
+}
+
+private extension String {
+    var cleanLines: EnumeratedSequence<[String]> {
+        droppingComments
+            .replacingOccurrences(of: "[ ]{2,}",
+                                  with: " ",
+                                  options: .regularExpression)
+            .lines
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { $0 != "" }
+            .enumerated()
     }
 }
