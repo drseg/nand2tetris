@@ -116,6 +116,10 @@ final class FastRAM: RAM {
         _ address: String,
         _ clock: Char
     ) -> String {
+        guard Int(address.toDecimal())! < words.count else {
+            return 0.b
+        }
+        
         let address = Int(address, radix: 2)!
         
         if load == "1" && clock == "1" {

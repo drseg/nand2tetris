@@ -182,13 +182,13 @@ class VMTranslator {
 
 private extension String {
     var cleanLines: EnumeratedSequence<[String]> {
-        droppingComments
-            .replacingOccurrences(of: "[ ]{2,}",
-                                  with: " ",
-                                  options: .regularExpression)
-            .lines
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { $0 != "" }
-            .enumerated()
+            lines.map {
+                $0
+                    .droppingComments
+                    .trimmingCharacters(in: .whitespaces)
+                    .replacingOccurrences(of: "[ ]{2,}",
+                                     with: " ",
+                                     options: .regularExpression)
+            }.filter { $0 != "" }.enumerated()
     }
 }
