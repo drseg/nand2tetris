@@ -1,7 +1,7 @@
 import XCTest
 @testable import Nand2Tetris
 
-class VMTranslatorTestCase: ComputerTestCase {
+class VMTranslatorTests: ComputerTestCase {
     let SP = 0
     let LCL = 1
     let ARG = 2
@@ -76,6 +76,38 @@ class VMTranslatorTestCase: ComputerTestCase {
         return resolver.resolving(cleaner.clean(assembly))
     }
     
+    func log(
+        verbose: Bool = false,
+        upto max: Int = 280,
+        width: Int = 80
+    ) {
+        func sectionBreak() {
+            print(String(repeating: "-", count: width))
+        }
+        
+        if verbose {
+            sectionBreak()
+            print(assembly)
+            sectionBreak()
+            print(translated)
+        }
+        
+        sectionBreak()
+        print("SP: \(memory(SP))")
+        print("LCL: \(memory(LCL))")
+        print("ARG: \(memory(ARG))")
+        print("THIS: \(memory(THIS))")
+        print("THAT: \(memory(THAT))")
+        sectionBreak()
+        (256...max).forEach {
+            print("M[\($0)]: \(memory($0))")
+        }
+        sectionBreak()
+        print("R13: \(memory(13))")
+        print("R14: \(memory(14))")
+        sectionBreak()
+    }
+    
     func assertResult(d: Int, sp: Int = 257, top: Int? = nil) {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
@@ -85,9 +117,7 @@ class VMTranslatorTestCase: ComputerTestCase {
                            "Memory \(sp-1)")
         }
     }
-}
 
-class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
     func testEmptyProgramSetsSP() {
         runProgram("")
         assertResult(d: 256, sp: 256)
@@ -100,18 +130,16 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
     
     func testRemovesComments() {
         let uncommented = translated(
-                            """
-                            push constant 1
-                            push constant 3
-                            """
-        )
+        """
+        push constant 1
+        push constant 3
+        """)
         let commented = translated(
-                """
-                push constant 1
-                //push constant 2
-                push constant 3
-                """
-        )
+        """
+        push constant 1
+        //push constant 2
+        push constant 3
+        """)
         
         commented => uncommented
     }
@@ -131,202 +159,182 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
     }
 
     func testPushManyConstants() {
-        let push =
-                """
-                push constant 2
-                push constant 3
-                push constant 4
-                push constant 5
-                """
-        runProgram(push)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        push constant 4
+        push constant 5
+        """)
         assertResult(d: 5, sp: 260)
     }
     
     func testAdd2And3() {
-        let add2And3 =
-                    """
-                    push constant 2
-                    push constant 3
-                    add
-                    """
-
-        runProgram(add2And3)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        add
+        """)
         assertResult(d: 5)
     }
     
     func testSubtract2From3() {
-        let sub2From3 =
-                    """
-                    push constant 3
-                    push constant 2
-                    sub
-                    """
-
-        runProgram(sub2From3)
+        runProgram(
+        """
+        push constant 3
+        push constant 2
+        sub
+        """)
         assertResult(d: 1)
     }
     
     func testSubtract3From2() {
-        let sub3From2 =
-                    """
-                    push constant 2
-                    push constant 3
-                    sub
-                    """
-        runProgram(sub3From2)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        sub
+        """)
         assertResult(d: -1)
     }
     
     func testChainedAddition() {
-        let add2And2And3 =
-                    """
-                    push constant 2
-                    push constant 2
-                    push constant 3
-                    add
-                    add
-                    """
-        runProgram(add2And2And3)
+        runProgram(
+        """
+        push constant 2
+        push constant 2
+        push constant 3
+        add
+        add
+        """)
         assertResult(d: 7)
     }
     
     func testEqual() {
-        let equal =
-                    """
-                    push constant 2
-                    push constant 2
-                    eq
-                    """
-        runProgram(equal)
+        runProgram(
+        """
+        push constant 2
+        push constant 2
+        eq
+        """)
         assertResult(d: 0)
     }
     
     func testNotEqual() {
-        let notEqual =
-                    """
-                    push constant 2
-                    push constant 1
-                    eq
-                    """
-        runProgram(notEqual)
+        runProgram(
+        """
+        push constant 2
+        push constant 1
+        eq
+        """)
         assertResult(d: -1)
     }
     
     func testLessThan() {
-        let lt =
-                """
-                push constant 2
-                push constant 3
-                lt
-                """
-        runProgram(lt)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        lt
+        """)
         assertResult(d: 0)
     }
     
     func testNotLessThan() {
-        let notLT =
-                """
-                push constant 3
-                push constant 2
-                lt
-                """
-        runProgram(notLT)
+        runProgram(
+        """
+        push constant 3
+        push constant 2
+        lt
+        """)
         assertResult(d: -1)
     }
     
     func testGreaterThan() {
-        let gt =
-                """
-                push constant 3
-                push constant 2
-                gt
-                """
-        runProgram(gt)
+        runProgram(
+        """
+        push constant 3
+        push constant 2
+        gt
+        """)
         assertResult(d: 0)
     }
     
     func testNotGreaterThan() {
-        let notGT =
-                """
-                push constant 2
-                push constant 3
-                gt
-                """
-        runProgram(notGT)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        gt
+        """)
         assertResult(d: -1)
     }
     
     func testNegative() {
-        let neg =
-                """
-                push constant 1
-                neg
-                """
-        runProgram(neg)
+        runProgram(
+        """
+        push constant 1
+        neg
+        """)
         assertResult(d: -1)
     }
     
     func testDoubleNegative() {
-        let neg =
-                """
-                push constant -1
-                neg
-                """
-        runProgram(neg)
+        runProgram(
+        """
+        push constant -1
+        neg
+        """)
         assertResult(d: 1)
     }
     
     func testOtherDoubleNegative() {
-        let neg =
-                """
-                push constant 1
-                neg
-                neg
-                """
-        runProgram(neg)
+        runProgram(
+        """
+        push constant 1
+        neg
+        neg
+        """)
         assertResult(d: 1)
     }
     
     func testNot() {
-        let not =
-                """
-                push constant -1
-                not
-                """
-        runProgram(not)
+        runProgram(
+        """
+        push constant -1
+        not
+        """)
         assertResult(d: 0)
     }
     
     func testDoubleNot() {
-        let not =
-                """
-                push constant -1
-                not
-                not
-                """
-        runProgram(not)
+        runProgram(
+        """
+        push constant -1
+        not
+        not
+        """)
         assertResult(d: -1)
     }
     
     func testAnd() {
-        let and =
-                """
-                push constant 0
-                push constant -1
-                and
-                """
-        runProgram(and)
+        runProgram(
+        """
+        push constant 0
+        push constant -1
+        and
+        """)
         assertResult(d: 0)
     }
     
     func testOr() {
-        let or =
-                """
-                push constant 0
-                push constant -1
-                or
-                """
-        runProgram(or)
+        runProgram(
+        """
+        push constant 0
+        push constant -1
+        or
+        """)
         assertResult(d: -1)
     }
     
@@ -336,15 +344,13 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
         toSecond: Int? = nil,
         sp: Int = 256
     ) {
-        let pop =
-                """
-                push constant 9
-                push constant 10
-                pop \(segment) 0
-                pop \(segment) 1
-                """
-        
-        runProgram(pop)
+        runProgram(
+        """
+        push constant 9
+        push constant 10
+        pop \(segment) 0
+        pop \(segment) 1
+        """)
         
         XCTAssertEqual(String(sp),
                        stackPointer,
@@ -390,18 +396,17 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
         toFirst: Int,
         sp: Int = 256
     ) {
-        let pushAndPop =
-                    """
-                    push constant 9
-                    push constant 10
-                    pop \(segment) 0
-                    pop \(segment) 1
-                    push \(segment) 0
-                    push \(segment) 1
-                    add
-                    pop \(segment) 0
-                    """
-        runProgram(pushAndPop)
+        runProgram(
+        """
+        push constant 9
+        push constant 10
+        pop \(segment) 0
+        pop \(segment) 1
+        push \(segment) 0
+        push \(segment) 1
+        add
+        pop \(segment) 0
+        """)
         
         XCTAssertEqual(String(sp),
                        stackPointer,
@@ -440,77 +445,44 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
     }
     
     func testLabelAndGoto() {
-        let goto =
-            """
-            goto skip
-            push constant 6
-            push constant 7
-            add
-            label skip
-            push constant 2
-            push constant 3
-            add
-            """
-        runProgram(goto)
+        runProgram(
+        """
+        goto skip
+        push constant 6
+        push constant 7
+        add
+        label skip
+        push constant 2
+        push constant 3
+        add
+        """)
         assertResult(d: 5)
     }
 
     func testIfGotoTrue() {
-        let ifGotoTrue =
-            """
-            push constant 2
-            push constant 3
-            lt
-            if-goto end
-            push constant 6
-            label end
-            """
-        runProgram(ifGotoTrue)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        lt
+        if-goto end
+        push constant 6
+        label end
+        """)
         assertResult(d: 0, sp: 256)
     }
     
     func testIfGotoFalse() {
-        let ifGotoFalse =
-            """
-            push constant 2
-            push constant 3
-            gt
-            if-goto end
-            push constant 6
-            label end
-            """
-        runProgram(ifGotoFalse)
+        runProgram(
+        """
+        push constant 2
+        push constant 3
+        gt
+        if-goto end
+        push constant 6
+        label end
+        """)
         assertResult(d: 6, sp: 257)
-    }
-}
-
-class VMFunctionTests: VMTranslatorTestCase {
-    func log(verbose: Bool = false, upto max: Int = 280, width: Int = 80) {
-        func sectionBreak() {
-            print(String(repeating: "-", count: width))
-        }
-        
-        if verbose {
-            sectionBreak()
-            print(assembly)
-            sectionBreak()
-            print(translated)
-        }
-        
-        sectionBreak()
-        print("SP: \(memory(SP))")
-        print("LCL: \(memory(LCL))")
-        print("ARG: \(memory(ARG))")
-        print("THIS: \(memory(THIS))")
-        print("THAT: \(memory(THAT))")
-        sectionBreak()
-        (256...max).forEach {
-            print("M[\($0)]: \(memory($0))")
-        }
-        sectionBreak()
-        print("R13: \(memory(13))")
-        print("R14: \(memory(14))")
-        sectionBreak()
     }
     
     func assertSegmentsReturnedToDefault() {
@@ -530,42 +502,26 @@ class VMFunctionTests: VMTranslatorTestCase {
 
     func testFunctionDeclarationPushesArgsZeros() {
         let args = Int.random(in: 0...5)
-        let function =
-                        """
-                        function doNothing \(args)
-                        """
-        runProgram(function)
+        runProgram("function doNothing \(args)")
         memory(0) => String(256 + args)
     }
     
     func testLabelsWithinFunctionFormattedCorrectly() {
-        let function =
-                        """
-                        function doNothing 0
-                        label test
-                        goto test
-                        if-goto test
-                        """
-        toBinary(function)
+        toBinary(
+        """
+        function test 0
+        label TEST
+        goto TEST
+        if-goto TEST
+        """)
         
-        translated
-            .components(separatedBy: "(doNothing$test)")
-            .count => 2
-        translated
-            .components(separatedBy: "@doNothing$test")
-            .count => 3
+        translated.components(separatedBy: "(test$TEST)").count => 2
+        translated.components(separatedBy: "@test$TEST").count => 3
     }
     
     func testCallFunction() {
-        let argCount = 0
-        
-        runProgram(
-                    """
-                    call Test.add \(argCount)
-                    """
-        )
-        
-        log()
+        let argCount = Int.random(in: 0...5)
+        runProgram("call Test.add \(argCount)")
         
         memory(defaultSP) => "93" // return address
         memory(257) => String(defaultLCL)
@@ -578,30 +534,31 @@ class VMFunctionTests: VMTranslatorTestCase {
     }
     
     func testCallReturn() {
-        runProgram("""
-                    call Test.test 0
-                    function Test.test 0
-                    push constant 99
-                    return
-                    """
-        )
+        runProgram(
+        """
+        call Test.test 0
+        function Test.test 0
+        push constant 99
+        return
+        """)
         
         assertStack(incrementedBy: 1, repeating: "99")
         assertSegmentsReturnedToDefault()
     }
     
     func testMultiCallReturn() {
-        runProgram("""
-                    call Test.test 0
-                    call Test.test 0
-                    call Test.test 0
-                    label LOOP
-                    goto LOOP
-                    function Test.test 0
-                    push constant 99
-                    return
-                    """
-                    , cycles: 500)
+        runProgram(
+        """
+        call Test.test 0
+        call Test.test 0
+        call Test.test 0
+        label LOOP
+        goto LOOP
+        function Test.test 0
+        push constant 99
+        return
+        """
+        , cycles: 500)
         
         assertStack(incrementedBy: 3, repeating: "99")
         assertSegmentsReturnedToDefault()
@@ -642,8 +599,7 @@ class VMFunctionTests: VMTranslatorTestCase {
         push constant 1
         add
         return
-        """
-        )
+        """)
         
         memory(256) => "10"
         memory(257) => "7777"
@@ -667,8 +623,7 @@ class VMFunctionTests: VMTranslatorTestCase {
         push argument 1
         add
         return
-        """
-        )
+        """)
         
         memory(256) => "10"
         memory(257) => "7777"
@@ -676,7 +631,7 @@ class VMFunctionTests: VMTranslatorTestCase {
     }
     
     func testFibonacci() {
-        let fib =
+        runProgram(
         """
         push constant 3
         call Main.fibonacci 1
@@ -705,9 +660,8 @@ class VMFunctionTests: VMTranslatorTestCase {
         call Main.fibonacci 1
         add
         return
-        """
+        """, cycles: 1400)
 
-        runProgram(fib, cycles: 1400)
         memory(256) => "2"
         memory(257) => "7777"
         memory(258) => "8888"
