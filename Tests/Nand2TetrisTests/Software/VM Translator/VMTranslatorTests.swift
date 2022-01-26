@@ -707,7 +707,7 @@ class VMFunctionTests: VMTranslatorTestCase {
         return
         """
 
-        runProgram(fib, cycles: 2000)
+        runProgram(fib, cycles: 1400)
         memory(256) => "2"
         memory(257) => "7777"
         memory(258) => "8888"
