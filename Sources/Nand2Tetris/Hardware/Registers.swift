@@ -25,7 +25,15 @@ final class Bit {
     }
 }
 
-final class Register {
+protocol Register16 {
+    func callAsFunction(
+        _ input: String,
+        _ load: Char,
+        _ clock: Char
+    ) -> String
+}
+
+final class Register: Register16 {
     private let bits = [Bit](count: 16, forEach: Bit())
     
     @discardableResult
@@ -40,8 +48,28 @@ final class Register {
     }
 }
 
+final class FastRegister: Register16 {
+    private var word = String(repeating: "0", count: 16)
+    
+    @discardableResult
+    func callAsFunction(
+        _ input: String,
+        _ load: Char,
+        _ clock: Char
+    ) -> String {
+        if clock == "1" && load == "1" {
+            word = input
+        }
+        return word
+    }
+}
+
 final class PC {
-    private let register = Register()
+    private let register: Register16
+    
+    init(register: Register16 = Register()) {
+        self.register = register
+    }
     
     func callAsFunction(
         _ input: String,

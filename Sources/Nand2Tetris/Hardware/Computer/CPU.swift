@@ -1,22 +1,24 @@
-final class CPU {
+class CPU {
     struct Out: Equatable {
         let mValue: String
         let shouldWrite: Char
         let aValue: String
         let pcValue: String
-        
-        func or(_ other: Out, if pred: Char) -> Out {
-            Out(mValue: mux16(mValue, other.mValue, pred),
-                shouldWrite: mux(shouldWrite, other.shouldWrite, pred),
-                aValue: mux16(aValue, other.aValue, pred),
-                pcValue: mux16(pcValue, other.pcValue, pred)
-            )
-        }
     }
     
-    let aRegister = Register()
-    let dRegister = Register()
-    let pcRegister = PC()
+    let aRegister: Register16
+    let dRegister: Register16
+    let pcRegister: PC
+    
+    init(
+        aRegister: Register16 = Register(),
+        dRegister: Register16 = Register(),
+        pcRegister: PC = PC(register: Register())
+    ) {
+        self.aRegister = aRegister
+        self.dRegister = dRegister
+        self.pcRegister = pcRegister
+    }
     
     @discardableResult
     func callAsFunction(
@@ -104,7 +106,32 @@ final class CPU {
                        pcValue: pcValue)
         }
         
-        return setA().or(computeCode(), if: isComputation)
+        return either(lhs: setA(),
+                      or: computeCode(),
+                      basedOn: isComputation)
+    }
+    
+    func either(
+        lhs: @autoclosure () -> (CPU.Out),
+        or rhs: @autoclosure () -> (CPU.Out),
+        basedOn pred: Char
+    ) -> CPU.Out {
+        let lhs = lhs()
+        let rhs = rhs()
+        
+        return CPU.Out(mValue: mux16(lhs.mValue,
+                                     rhs.mValue,
+                                     pred),
+                       shouldWrite: mux(lhs.shouldWrite,
+                                        rhs.shouldWrite,
+                                        pred),
+                       aValue: mux16(lhs.aValue,
+                                     rhs.aValue,
+                                     pred),
+                       pcValue: mux16(lhs.pcValue,
+                                      rhs.pcValue,
+                                      pred)
+        )
     }
     
     private func compute(
@@ -123,7 +150,17 @@ final class CPU {
     }
 }
 
-extension Register {
+class FastCPU: CPU {
+    override func either(
+        lhs: @autoclosure () -> (CPU.Out),
+        or rhs: @autoclosure () -> (CPU.Out),
+        basedOn pred: Char
+    ) -> CPU.Out {
+        pred == "0" ? lhs() : rhs()
+    }
+}
+
+extension Register16 {
     var value: String {
         self(0.b, "0", "0")
     }

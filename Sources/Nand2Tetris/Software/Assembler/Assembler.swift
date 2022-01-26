@@ -77,7 +77,7 @@ class Assembler {
         case "D&A", "D&M": code += "000000"
         case "D|A", "D|M": code += "010101"
             
-        default: code = "******"
+        default: fatalError("Unrecognised mnemonic '\(mnemonic)'")
         }
         
         return code
@@ -94,7 +94,7 @@ class Assembler {
         case "AD": return "110"
         case "AMD": return "111"
             
-        default: return "***"
+        default: fatalError("Unrecognised mnemonic '\(mnemonic)'")
         }
     }
     
@@ -109,7 +109,7 @@ class Assembler {
         case "JLE": return "110"
         case "JMP": return "111"
             
-        default: return "***"
+        default: fatalError("Unrecognised mnemonic '\(mnemonic)'")
         }
     }
 }

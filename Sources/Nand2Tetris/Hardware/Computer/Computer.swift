@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 
 final class Computer {
-    let cpu: CPU
+    var cpu: CPU
     let memory: Memory
     let rom: FastRAM
     

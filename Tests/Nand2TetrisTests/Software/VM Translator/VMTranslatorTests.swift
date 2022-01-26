@@ -27,6 +27,9 @@ class VMTranslatorTests: ComputerTestCase {
     
     override func setUp() {
         super.setUp()
+        c.cpu = FastCPU(aRegister: FastRegister(),
+                        dRegister: FastRegister(),
+                        pcRegister: PC(register: FastRegister()))
         translator = VMTranslator()
         assembler = Assembler()
         initialiseMemory()
