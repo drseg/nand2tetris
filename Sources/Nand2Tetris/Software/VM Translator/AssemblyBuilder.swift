@@ -170,16 +170,27 @@ class AssemblyBuilder {
         @SP
         M=D+1
         @R13
-        D=M-1
+        M=M-1
+        A=M
+        D=M
         @THAT
         M=D
-        D=D-1
+        @R13
+        M=M-1
+        A=M
+        D=M
         @THIS
         M=D
-        D=D-1
+        @R13
+        M=M-1
+        A=M
+        D=M
         @ARG
         M=D
-        D=D-1
+        @R13
+        M=M-1
+        A=M
+        D=M
         @LCL
         M=D
         @R14

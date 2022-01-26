@@ -39,9 +39,9 @@ class VMTranslatorTestCase: ComputerTestCase {
         c.memory(defaultTHAT.b, "1", THAT.b, "1")
     }
     
-    func runProgram(_ vmProgram: String, cycles: Int? = nil) {
+    func runProgram(_ vmProgram: String, cycles: Int? = nil, useFastClocking: Bool = true) {
         runProgram(toBinary(vmProgram),
-                   useFastClocking: true,
+                   useFastClocking: useFastClocking,
                    cycles: cycles)
     }
     
@@ -59,11 +59,8 @@ class VMTranslatorTestCase: ComputerTestCase {
     
     @discardableResult
     func toBinary(_ vmCode: String) -> [String] {
-        let resolver = SymbolResolver()
-        let cleaner = AssemblyCleaner()
-        
-        translated = translator.toAssembly(vmCode)
-        assembly = resolver.resolving(cleaner.clean(translated))
+        translated = translated(vmCode)
+        assembly = resolved(translated)
         binary = assembler.toBinary(translated)
         
         return binary
@@ -71,6 +68,12 @@ class VMTranslatorTestCase: ComputerTestCase {
     
     func translated(_ vmCode: String) -> String {
         VMTranslator().toAssembly(vmCode)
+    }
+    
+    func resolved(_ assembly: String) -> String {
+        let resolver = SymbolResolver()
+        let cleaner = AssemblyCleaner()
+        return resolver.resolving(cleaner.clean(assembly))
     }
     
     func assertResult(d: Int, sp: Int = 257, top: Int? = nil) {
@@ -483,26 +486,48 @@ class VMTranslatorAcceptanceTests: VMTranslatorTestCase {
 
 class VMFunctionTests: VMTranslatorTestCase {
     func log(verbose: Bool = false, upto max: Int = 280, width: Int = 80) {
+        func sectionBreak() {
+            print(String(repeating: "-", count: width))
+        }
+        
         if verbose {
-            print(String(repeating: "-", count: width))
+            sectionBreak()
             print(assembly)
-            print(String(repeating: "-", count: width))
+            sectionBreak()
             print(translated)
         }
         
-        print(String(repeating: "-", count: width))
+        sectionBreak()
         print("SP: \(memory(SP))")
-        print(String(repeating: "-", count: width))
+        print("LCL: \(memory(LCL))")
+        print("ARG: \(memory(ARG))")
+        print("THIS: \(memory(THIS))")
+        print("THAT: \(memory(THAT))")
+        sectionBreak()
         (256...max).forEach {
-            print("\($0):\(memory($0))")
+            print("M[\($0)]: \(memory($0))")
         }
-        print(String(repeating: "-", count: width))
+        sectionBreak()
         print("R13: \(memory(13))")
         print("R14: \(memory(14))")
+        sectionBreak()
     }
     
-
+    func assertSegmentsReturnedToDefault() {
+        memory(THAT) => String(defaultTHAT)
+        memory(THIS) => String(defaultTHIS)
+        memory(ARG) => String(defaultARG)
+        memory(LCL) => String(defaultLCL)
+    }
     
+    func assertStack(incrementedBy offset: Int, repeating value: String) {
+        (defaultSP...(defaultSP + offset - 1)).forEach {
+            memory($0) => value
+        }
+        memory(defaultSP + offset) !=> value
+        memory(SP) => String(defaultSP + offset)
+    }
+
     func testFunctionDeclarationPushesArgsZeros() {
         let args = Int.random(in: 0...5)
         let function =
@@ -532,7 +557,7 @@ class VMFunctionTests: VMTranslatorTestCase {
     }
     
     func testCallFunction() {
-        let argCount = Int.random(in: 0...5)
+        let argCount = 0
         
         runProgram(
                     """
@@ -540,32 +565,46 @@ class VMFunctionTests: VMTranslatorTestCase {
                     """
         )
         
+        log()
+        
         memory(defaultSP) => "93" // return address
         memory(257) => String(defaultLCL)
         memory(258) => String(defaultARG)
         memory(259) => String(defaultTHIS)
         memory(260) => String(defaultTHAT)
-        
+
         memory(ARG) => String(defaultSP - argCount)
         memory(LCL) => String(defaultSP + 5)
     }
     
-    func testReturn() {
-        runProgram(
-                    """
+    func testCallReturn() {
+        runProgram("""
+                    call Test.test 0
+                    function Test.test 0
                     push constant 99
                     return
                     """
         )
         
-        memory(SP) => String(defaultARG + 1)
-        memory(defaultARG) => "99"
+        assertStack(incrementedBy: 1, repeating: "99")
+        assertSegmentsReturnedToDefault()
+    }
+    
+    func testMultiCallReturn() {
+        runProgram("""
+                    call Test.test 0
+                    call Test.test 0
+                    call Test.test 0
+                    label LOOP
+                    goto LOOP
+                    function Test.test 0
+                    push constant 99
+                    return
+                    """
+                    , cycles: 500)
         
-        memory(THAT) => String(defaultLCL - 1)
-        memory(THIS) => String(defaultLCL - 2)
-        memory(ARG) => String(defaultLCL - 3)
-        memory(LCL) => String(defaultLCL - 4)
-        memory(14) => "0"
+        assertStack(incrementedBy: 3, repeating: "99")
+        assertSegmentsReturnedToDefault()
     }
     
     func testFunctionWithNoArgs() {
@@ -582,7 +621,6 @@ class VMFunctionTests: VMTranslatorTestCase {
         return
         """)
         
-        memory(13) => "261"
         memory(256) => "1"
         memory(257) => "7777"
         memory(258) => "8888"
@@ -607,7 +645,6 @@ class VMFunctionTests: VMTranslatorTestCase {
         """
         )
         
-        memory(13) => "262"
         memory(256) => "10"
         memory(257) => "7777"
         memory(258) => "8888"
@@ -633,100 +670,15 @@ class VMFunctionTests: VMTranslatorTestCase {
         """
         )
         
-        memory(13) => "263"
         memory(256) => "10"
         memory(257) => "7777"
         memory(258) => "8888"
     }
     
-    func testMultipleCalls() {
-        /// It's the name! Something about the function name/label, perhaps the one generated by call? Multiple calls work exactly as expected as long as the function hasn't already been called. So the mistake can't be in the function declaration code, and it can't be in the return code, so it must be in the 'call' code.
-        
-        runProgram(
-        """
-        push constant 1111
-        call Test.first 1
-        call Test.second 1
-        call Test.third 1
-        //call Test.first 1
-        //call Test.first 1
-        //call Test.first 1
-        //call Test.first 1
-        //call Test.first 1
-        //call Test.first 1
-        //call Test.first 1
-        push constant 9999
-        label LOOPY
-        goto LOOPY
-                    
-        function Test.first 0
-        push argument 0
-        push constant 1111
-        add
-        return
-        
-        function Test.second 0
-        push argument 0
-        push constant 1111
-        add
-        return
-        
-        function Test.third 0
-        push argument 0
-        push constant 1111
-        add
-        return
-        """
-        )
-        
-        log()
-    }
-    
-    func resetMemory() {
-        c.memory(0.b, "1", ARG.b, "1")
-        c.memory(0.b, "1", LCL.b, "1")
-        c.memory(0.b, "1", THIS.b, "1")
-        c.memory(0.b, "1", THAT.b, "1")
-    }
-    
-    func testRecursion() throws {
-        throw XCTSkip()
-        
-        resetMemory()
-        
-        runProgram(
-        """
-        push constant 1
-        call Test.recur 1
-        push constant 7777
-        label LOOPY
-        goto LOOPY
-                    
-        function Test.recur 0
-        push argument 0
-        push constant 2
-        gt
-        if-goto END1
-        push argument 0
-        push constant 1
-        add
-        call Test.recur 1
-        goto END2
-        label END1
-        push argument 0
-        label END2
-        return
-        """, cycles: 400)
-        
-        log(upto: 276)
-    }
-    
-    func testFibonacci() throws {
-        throw XCTSkip()
-        
+    func testFibonacci() {
         let fib =
         """
-        push constant 9
+        push constant 3
         call Main.fibonacci 1
         push constant 7777
         push constant 8888
@@ -755,7 +707,9 @@ class VMFunctionTests: VMTranslatorTestCase {
         return
         """
 
-        runProgram(fib, cycles: 1000)
-        log(upto: 400)
+        runProgram(fib, cycles: 2000)
+        memory(256) => "2"
+        memory(257) => "7777"
+        memory(258) => "8888"
     }
 }
