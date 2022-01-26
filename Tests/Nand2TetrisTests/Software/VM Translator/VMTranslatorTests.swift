@@ -2,17 +2,17 @@ import XCTest
 @testable import Nand2Tetris
 
 class VMTranslatorTests: ComputerTestCase {
-    let SP = 0
-    let LCL = 1
-    let ARG = 2
-    let THIS = 3
-    let THAT = 4
+    let SP = 0,
+        LCL = 1,
+        ARG = 2,
+        THIS = 3,
+        THAT = 4
     
-    let defaultSP = 256
-    let defaultLCL = 1000
-    let defaultARG = 1250
-    let defaultTHIS = 1500
-    let defaultTHAT = 1750
+    let defaultSP = 256,
+        defaultLCL = 1000,
+        defaultARG = 1250,
+        defaultTHIS = 1500,
+        defaultTHAT = 1750
     
     let temp = 5
     var ptr0: Int { defaultTHIS }
@@ -20,8 +20,8 @@ class VMTranslatorTests: ComputerTestCase {
     
     var translator: VMTranslator!
     var assembler: Assembler!
-    var translated = ""
     
+    var translated = ""
     var assembly = ""
     var binary = [String]()
     

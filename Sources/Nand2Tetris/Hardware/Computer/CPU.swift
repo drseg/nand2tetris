@@ -106,31 +106,23 @@ class CPU {
                        pcValue: pcValue)
         }
         
-        return either(lhs: setA(),
+        return either(setA(),
                       or: computeCode(),
                       basedOn: isComputation)
     }
     
     func either(
-        lhs: @autoclosure () -> (CPU.Out),
+        _ lhs: @autoclosure () -> (CPU.Out),
         or rhs: @autoclosure () -> (CPU.Out),
         basedOn pred: Char
     ) -> CPU.Out {
-        let lhs = lhs()
-        let rhs = rhs()
+        let l = lhs(), r = rhs()
         
-        return CPU.Out(mValue: mux16(lhs.mValue,
-                                     rhs.mValue,
-                                     pred),
-                       shouldWrite: mux(lhs.shouldWrite,
-                                        rhs.shouldWrite,
-                                        pred),
-                       aValue: mux16(lhs.aValue,
-                                     rhs.aValue,
-                                     pred),
-                       pcValue: mux16(lhs.pcValue,
-                                      rhs.pcValue,
-                                      pred)
+        return CPU.Out(
+            mValue: mux16(l.mValue,r.mValue,pred),
+            shouldWrite: mux(l.shouldWrite, r.shouldWrite, pred),
+            aValue: mux16(l.aValue, r.aValue, pred),
+            pcValue: mux16(l.pcValue, r.pcValue, pred)
         )
     }
     
@@ -152,7 +144,7 @@ class CPU {
 
 class FastCPU: CPU {
     override func either(
-        lhs: @autoclosure () -> (CPU.Out),
+        _ lhs: @autoclosure () -> (CPU.Out),
         or rhs: @autoclosure () -> (CPU.Out),
         basedOn pred: Char
     ) -> CPU.Out {
