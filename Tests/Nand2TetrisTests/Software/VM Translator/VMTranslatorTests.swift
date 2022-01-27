@@ -27,9 +27,10 @@ class VMTranslatorTests: ComputerTestCase {
     
     override func setUp() {
         super.setUp()
-        c.cpu = FastCPU(aRegister: FastRegister(),
-                        dRegister: FastRegister(),
-                        pcRegister: PC(register: FastRegister()))
+        cpu = FastCPU(aRegister: FastRegister(),
+                      dRegister: FastRegister(),
+                      pcRegister: PC(register: FastRegister()))
+        c.cpu = cpu
         translator = VMTranslator()
         assembler = Assembler()
         initialiseMemory()
@@ -42,7 +43,11 @@ class VMTranslatorTests: ComputerTestCase {
         c.memory(defaultTHAT.b, "1", THAT.b, "1")
     }
     
-    func runProgram(_ vmProgram: String, cycles: Int? = nil, useFastClocking: Bool = true) {
+    func runProgram(
+        _ vmProgram: String,
+        useFastClocking: Bool = true,
+        cycles: Int? = nil
+    ) {
         runProgram(toBinary(vmProgram),
                    useFastClocking: useFastClocking,
                    cycles: cycles)

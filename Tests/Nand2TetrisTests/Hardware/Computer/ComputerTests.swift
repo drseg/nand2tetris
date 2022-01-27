@@ -15,7 +15,11 @@ class ComputerTestCase: CPUTestCase {
                                     screen: screen))
     }
     
-    func runProgram(_ program: [String], useFastClocking: Bool = false, cycles: Int? = nil) {
+    func runProgram(
+        _ program: [String],
+        useFastClocking: Bool = false,
+        cycles: Int? = nil
+    ) {
         c.load(program)
         c.useFastClocking = useFastClocking
         c.cycles = program.count * (useFastClocking ? 1 : 2)
@@ -42,10 +46,10 @@ class ComputerTests: ComputerTestCase {
         let dEqualsMplus1 = "111 1 110111 010 000".trimmed
         
         runProgram([setA12345,
-                dEqualsA,
-                setA0,
-                mEqualsD,
-                dEqualsMplus1])
+                    dEqualsA,
+                    setA0,
+                    mEqualsD,
+                    dEqualsMplus1])
         
         cpu.dRegister.value => 12346.b
     }

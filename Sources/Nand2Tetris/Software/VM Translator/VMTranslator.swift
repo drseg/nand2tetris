@@ -27,10 +27,12 @@ class VMTranslator {
         }
         
         vm.cleanLines.forEach {
-            toAssembly(VMLine(code: $0.element,
-                              file: file,
-                              function: getCurrentFunction($0.element),
-                              index: $0.offset))
+            toAssembly(
+                VMLine(code: $0.element,
+                       file: file,
+                       function: getCurrentFunction($0.element),
+                       index: $0.offset)
+            )
         }
         return b.assembly
     }
@@ -74,6 +76,7 @@ class VMTranslator {
             default:
                 fatalError("Unrecognised computation '\(line.code)'")
             }
+            
         case 2:
             let command = words[0]
             let label = words[1]
@@ -172,8 +175,10 @@ class VMTranslator {
         switch command {
         case "function":
             b.newFunction(name: name, args: argCount)
+            
         case "call":
             b.callFunction(name: name, args: argCount, index: line.index)
+            
         default:
             fatalError("Unrecognised command '\(command)'")
         }
