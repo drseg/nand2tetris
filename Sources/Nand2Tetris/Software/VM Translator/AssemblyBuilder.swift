@@ -111,7 +111,6 @@ class AssemblyBuilder {
     }
     
     func newFunction(name: String, args: Int) {
-        append("//function \(name) \(args)")
         append("(\(name))")
         (0..<args).forEach { _ in
             pushConstant("0")
@@ -121,7 +120,6 @@ class AssemblyBuilder {
     func callFunction(name: String, args: Int, index: Int) {
         let returnLabel = "\(name).returnAddress.\(index)"
         
-        append("//call \(name) \(args)")
         pushConstant("\(returnLabel)")
         pushValue(at: "LCL")
         pushValue(at: "ARG")
@@ -151,7 +149,6 @@ class AssemblyBuilder {
     func functionReturn() {
         append(
         """
-        // return
         @LCL
         D=M
         @R13
