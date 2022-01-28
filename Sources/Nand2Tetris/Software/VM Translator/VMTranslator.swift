@@ -15,28 +15,28 @@ struct VMFile {
 }
 
 class VMTranslator {
-    private let b: AssemblyBuilder
+    private let builder: AssemblyBuilder
     private var currentFunction = "null"
     
     init(_ b: AssemblyBuilder = AssemblyBuilder()) {
-        self.b = b
+        self.builder = b
     }
     
     func sysInit() {
-        b.sysInit()
+        builder.sysInit()
     }
     
-    func toAssembly(_ files: [VMFile]) -> String {
-        files.forEach(assemble)
-        return b.assembly
+    func translate(_ files: [VMFile]) -> String {
+        files.forEach(translate)
+        return builder.assembly
     }
 
-    func toAssembly(_ vm: String, file: String = #fileID) -> String {
-        assemble(VMFile(name: file, code: vm))
-        return b.assembly
+    func translate(_ vm: String, file: String = #fileID) -> String {
+        translate(VMFile(name: file, code: vm))
+        return builder.assembly
     }
     
-    func assemble(_ file: VMFile) {
+    private func translate(_ file: VMFile) {
         file.code.cleanLines.forEach {
             toAssembly(
                 VMLine(code: $0.element,
@@ -54,34 +54,34 @@ class VMTranslator {
         case 1:
             switch words[0] {
             case "add":
-                b.add()
+                builder.add()
                 
             case "sub":
-                b.sub()
+                builder.sub()
                 
             case "not":
-                b.not()
+                builder.not()
                 
             case "neg":
-                b.neg()
+                builder.neg()
                 
             case "and":
-                b.and()
+                builder.and()
                 
             case "or":
-                b.or()
+                builder.or()
                 
             case "eq":
-                b.eq(String(line.index))
+                builder.eq(String(line.index))
                 
             case "gt":
-                b.gt(String(line.index))
+                builder.gt(String(line.index))
                 
             case "lt":
-                b.lt(String(line.index))
+                builder.lt(String(line.index))
                 
             case "return":
-                b.functionReturn()
+                builder.functionReturn()
                 
             default:
                 fatalError("Unrecognised computation '\(line.code)'")
@@ -93,13 +93,13 @@ class VMTranslator {
             
             switch command {
             case "label":
-                b.label(label, function: line.function)
+                builder.label(label, function: line.function)
                 
             case "goto":
-                b.goto(label, function: line.function)
+                builder.goto(label, function: line.function)
                 
             case "if-goto":
-                b.ifGoto(label, function: line.function)
+                builder.ifGoto(label, function: line.function)
                 
             default:
                 fatalError("Unrecognised branching command '\(command)'")
@@ -133,42 +133,42 @@ class VMTranslator {
         
         switch segment {
         case "constant":
-            b.pushConstant(offset)
+            builder.pushConstant(offset)
             
         case "temp":
             isPush
-            ? b.pushTemp(offset: offset)
-            : b.popTemp(offset: offset)
+            ? builder.pushTemp(offset: offset)
+            : builder.popTemp(offset: offset)
             
         case "static":
             isPush
-            ? b.pushStatic(offset: offset, identifier: line.file)
-            : b.popStatic(offset: offset, identifier: line.file)
+            ? builder.pushStatic(offset: offset, identifier: line.file)
+            : builder.popStatic(offset: offset, identifier: line.file)
             
         case "pointer":
             isPush
-            ? b.pushPointer(offset: offset)
-            : b.popPointer(offset: offset)
+            ? builder.pushPointer(offset: offset)
+            : builder.popPointer(offset: offset)
             
         case "local":
             isPush
-            ? b.pushLocal(offset: offset)
-            : b.popLocal(offset: offset)
+            ? builder.pushLocal(offset: offset)
+            : builder.popLocal(offset: offset)
             
         case "argument":
             isPush
-            ? b.pushArgument(offset: offset)
-            : b.popArgument(offset: offset)
+            ? builder.pushArgument(offset: offset)
+            : builder.popArgument(offset: offset)
             
         case "this":
             isPush
-            ? b.pushThis(offset: offset)
-            : b.popThis(offset: offset)
+            ? builder.pushThis(offset: offset)
+            : builder.popThis(offset: offset)
             
         case "that":
             isPush
-            ? b.pushThat(offset: offset)
-            : b.popThat(offset: offset)
+            ? builder.pushThat(offset: offset)
+            : builder.popThat(offset: offset)
             
         default:
             fatalError("Unrecognised segment '\(segment)'")
@@ -184,10 +184,10 @@ class VMTranslator {
         
         switch command {
         case "function":
-            b.newFunction(name: name, args: argCount)
+            builder.newFunction(name: name, args: argCount)
             
         case "call":
-            b.callFunction(name: name, args: argCount, index: line.index)
+            builder.callFunction(name: name, args: argCount, index: line.index)
             
         default:
             fatalError("Unrecognised command '\(command)'")

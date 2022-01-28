@@ -1,6 +1,42 @@
 import XCTest
 @testable import Nand2Tetris
 
+class VMTranslatorFormattingTests: XCTestCase {
+    func translate(_ vmCode: String) -> String {
+        VMTranslator().translate(vmCode)
+    }
+    
+    func testRemovesComments() {
+        let uncommented = translate(
+        """
+        push constant 1
+        push constant 3
+        """)
+        let commented = translate(
+        """
+        push constant 1
+        //push constant 2
+        push constant 3
+        """)
+        
+        commented => uncommented
+    }
+    
+    func testRemovesLeadingTrailingWhitespaces() {
+        let withWhite = translate("   push constant -1  ")
+        let withoutWhite = translate("push constant -1")
+        
+        withWhite => withoutWhite
+    }
+    
+    func testRemovesMultiSpaces() {
+        let withMulti = translate("push   constant  -1")
+        let withoutMulti = translate("push constant -1")
+        
+        withMulti => withoutMulti
+    }
+}
+
 class VMTranslatorTests: ComputerTestCase {
     let SP = 0,
         LCL = 1,
@@ -79,22 +115,14 @@ class VMTranslatorTests: ComputerTestCase {
     
     @discardableResult
     func toBinary(_ files: [VMFile]) -> [String] {
-        translated = translator.toAssembly(files)
-        assembly += resolved(translated)
-        binary += assembler.toBinary(translated)
+        translated = translator.translate(files)
+        assembly = resolve(translated)
+        binary = assembler.toBinary(translated)
         
         return binary
     }
     
-    func translated(_ vmCode: String, file: String = #fileID) -> String {
-        translated([VMFile(name: file, code: vmCode)])
-    }
-    
-    func translated(_ files: [VMFile]) -> String {
-        VMTranslator().toAssembly(files)
-    }
-    
-    func resolved(_ assembly: String) -> String {
+    func resolve(_ assembly: String) -> String {
         SymbolResolver().resolving(
             AssemblyCleaner().clean(assembly)
         )
@@ -151,36 +179,6 @@ class VMTranslatorTests: ComputerTestCase {
     func testPushNegativeConstant() {
         runProgram("push constant -1")
         assertResult(d: -1)
-    }
-    
-    func testRemovesComments() {
-        let uncommented = translated(
-        """
-        push constant 1
-        push constant 3
-        """)
-        let commented = translated(
-        """
-        push constant 1
-        //push constant 2
-        push constant 3
-        """)
-        
-        commented => uncommented
-    }
-    
-    func testRemovesLeadingTrailingWhitespaces() {
-        let withWhite = translated("   push constant -1  ")
-        let withoutWhite = translated("push constant -1")
-        
-        withWhite => withoutWhite
-    }
-    
-    func testRemovesMultiSpaces() {
-        let withMulti = translated("push   constant  -1")
-        let withoutMulti = translated("push constant -1")
-        
-        withMulti => withoutMulti
     }
 
     func testPushManyConstants() {
@@ -532,7 +530,7 @@ class VMTranslatorTests: ComputerTestCase {
     }
     
     func testLabelsWithinFunctionFormattedCorrectly() {
-        toBinary(
+        let sut = translator.translate(
         """
         function test 0
         label TEST
@@ -540,8 +538,8 @@ class VMTranslatorTests: ComputerTestCase {
         if-goto TEST
         """)
         
-        translated.components(separatedBy: "(test$TEST)").count => 2
-        translated.components(separatedBy: "@test$TEST").count => 3
+        sut.components(separatedBy: "(test$TEST)").count => 2
+        sut.components(separatedBy: "@test$TEST").count => 3
     }
     
     func testCallFunction() {
@@ -602,6 +600,7 @@ class VMTranslatorTests: ComputerTestCase {
         return
         """)
         
+        memory(SP) => "259"
         memory(256) => "1"
         memory(257) => "7777"
         memory(258) => "8888"
@@ -625,6 +624,7 @@ class VMTranslatorTests: ComputerTestCase {
         return
         """)
         
+        memory(SP) => "259"
         memory(256) => "10"
         memory(257) => "7777"
         memory(258) => "8888"
@@ -649,6 +649,7 @@ class VMTranslatorTests: ComputerTestCase {
         return
         """)
         
+        memory(SP) => "259"
         memory(256) => "10"
         memory(257) => "7777"
         memory(258) => "8888"
@@ -686,6 +687,7 @@ class VMTranslatorTests: ComputerTestCase {
         return
         """, cycles: 1350)
 
+        memory(SP) => "259"
         memory(256) => "2"
         memory(257) => "7777"
         memory(258) => "8888"
@@ -713,6 +715,7 @@ class VMTranslatorTests: ComputerTestCase {
         runProgramFromFiles([VMFile(name: "F1", code: f1),
                              VMFile(name: "F2", code: f2)])
         
+        memory(SP) => "257"
         memory(256) => "9999"
     }
     
@@ -743,6 +746,7 @@ class VMTranslatorTests: ComputerTestCase {
         runProgramFromFiles([VMFile(name: "F1", code: f1),
                              VMFile(name: "F2", code: f2)])
         
+        memory(SP) => "258"
         memory(256) => "9999"
         memory(257) => "8888"
     }
@@ -766,6 +770,7 @@ class VMTranslatorTests: ComputerTestCase {
         """
         )
         
+        memory(SP) => "257"
         memory(256) => "9999"
     }
 }
