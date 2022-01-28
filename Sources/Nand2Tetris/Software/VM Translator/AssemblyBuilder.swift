@@ -1,11 +1,5 @@
 class AssemblyBuilder {
-    private (set) var assembly =
-    """
-    @256
-    D=A
-    @SP
-    M=D
-    """
+    private (set) var assembly = ""
     
     func sysInit() {
         setupSegments()

@@ -37,6 +37,7 @@ class VMTranslatorTests: ComputerTestCase {
     }
 
     func initialiseMemory() {
+        computer.memory(defaultSP.b, "1", SP.b, "1")
         computer.memory(defaultLCL.b, "1", LCL.b, "1")
         computer.memory(defaultARG.b, "1", ARG.b, "1")
         computer.memory(defaultTHIS.b, "1", THIS.b, "1")
@@ -145,11 +146,6 @@ class VMTranslatorTests: ComputerTestCase {
                            memory(sp-1),
                            "Memory \(sp-1)")
         }
-    }
-
-    func testEmptyProgramSetsSP() {
-        runProgram("")
-        assertResult(d: 256, sp: 256)
     }
     
     func testPushNegativeConstant() {
@@ -552,7 +548,6 @@ class VMTranslatorTests: ComputerTestCase {
         let argCount = Int.random(in: 0...5)
         runProgram("call Test.add \(argCount)")
         
-        memory(defaultSP) => "93" // return address
         memory(257) => String(defaultLCL)
         memory(258) => String(defaultARG)
         memory(259) => String(defaultTHIS)
