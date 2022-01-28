@@ -30,58 +30,73 @@ class VMTranslatorTests: ComputerTestCase {
         cpu = FastCPU(aRegister: FastRegister(),
                       dRegister: FastRegister(),
                       pcRegister: PC(register: FastRegister()))
-        c.cpu = cpu
+        computer.cpu = cpu
         translator = VMTranslator()
         assembler = Assembler()
         initialiseMemory()
     }
 
     func initialiseMemory() {
-        c.memory(defaultLCL.b, "1", LCL.b, "1")
-        c.memory(defaultARG.b, "1", ARG.b, "1")
-        c.memory(defaultTHIS.b, "1", THIS.b, "1")
-        c.memory(defaultTHAT.b, "1", THAT.b, "1")
+        computer.memory(defaultLCL.b, "1", LCL.b, "1")
+        computer.memory(defaultARG.b, "1", ARG.b, "1")
+        computer.memory(defaultTHIS.b, "1", THIS.b, "1")
+        computer.memory(defaultTHAT.b, "1", THAT.b, "1")
+    }
+    
+    func runProgramFromFiles(_ files: [VMFile]) {
+        runProgram(toBinary(files), useFastClocking: true)
     }
     
     func runProgram(
         _ vmProgram: String,
         useFastClocking: Bool = true,
-        cycles: Int? = nil
+        cycles: Int? = nil,
+        file: String = #fileID
+        
     ) {
-        runProgram(toBinary(vmProgram),
+        runProgram(toBinary(vmProgram, file: file),
                    useFastClocking: useFastClocking,
                    cycles: cycles)
     }
     
     var dRegister: String {
-        c.cpu.dRegister.value.toDecimal()
+        computer.cpu.dRegister.value.toDecimal()
     }
     
     var stackPointer: String {
-        c.memory.value(0.b).toDecimal()
+        computer.memory.value(0.b).toDecimal()
     }
     
     func memory(_ i: Int) -> String {
-        c.memory.value(i.b).toDecimal()
+        computer.memory.value(i.b).toDecimal()
     }
     
     @discardableResult
-    func toBinary(_ vmCode: String) -> [String] {
-        translated = translated(vmCode)
-        assembly = resolved(translated)
-        binary = assembler.toBinary(translated)
+    func toBinary(_ vmCode: String, file: String = #fileID) -> [String] {
+        toBinary([VMFile(name: file, code: vmCode)])
+    }
+    
+    @discardableResult
+    func toBinary(_ files: [VMFile]) -> [String] {
+        translated = translator.toAssembly(files)
+        assembly += resolved(translated)
+        binary += assembler.toBinary(translated)
         
         return binary
     }
     
-    func translated(_ vmCode: String) -> String {
-        VMTranslator().toAssembly(vmCode)
+    func translated(_ vmCode: String, file: String = #fileID) -> String {
+        translated([VMFile(name: file, code: vmCode)])
+    }
+    
+    func translated(_ files: [VMFile]) -> String {
+        VMTranslator().toAssembly(files)
     }
     
     func resolved(_ assembly: String) -> String {
-        let resolver = SymbolResolver()
-        let cleaner = AssemblyCleaner()
-        return resolver.resolving(cleaner.clean(assembly))
+        SymbolResolver().resolving(
+            AssemblyCleaner().clean(assembly)
+        )
     }
     
     func log(
@@ -101,18 +116,24 @@ class VMTranslatorTests: ComputerTestCase {
         }
         
         sectionBreak()
+        
         print("SP: \(memory(SP))")
         print("LCL: \(memory(LCL))")
         print("ARG: \(memory(ARG))")
         print("THIS: \(memory(THIS))")
         print("THAT: \(memory(THAT))")
+        
         sectionBreak()
+        
         (256...max).forEach {
             print("M[\($0)]: \(memory($0))")
         }
+        
         sectionBreak()
+        
         print("R13: \(memory(13))")
         print("R14: \(memory(14))")
+        
         sectionBreak()
     }
     
@@ -668,10 +689,88 @@ class VMTranslatorTests: ComputerTestCase {
         call Main.fibonacci 1
         add
         return
-        """, cycles: 1400)
+        """, cycles: 1350)
 
         memory(256) => "2"
         memory(257) => "7777"
         memory(258) => "8888"
+    }
+    
+    func testMultipleFiles() {
+        let f1 =
+        """
+        call F1.test 0
+        label LOOPY
+        goto LOOPY
+        
+        function F1.test 0
+        call F2.test 0
+        return
+        """
+        
+        let f2 =
+        """
+        function F2.test 0
+        push constant 9999
+        return
+        """
+        
+        runProgramFromFiles([VMFile(name: "F1", code: f1),
+                             VMFile(name: "F2", code: f2)])
+        
+        memory(256) => "9999"
+    }
+    
+    func testMultipleFilesWithStaticSegments() {
+        let f1 =
+        """
+        call F1.test 0
+        call F2.test 0
+        label LOOPY
+        goto LOOPY
+        
+        function F1.test 0
+        push constant 9999
+        pop static 0
+        push static 0
+        return
+        """
+        
+        let f2 =
+        """
+        function F2.test 0
+        push constant 8888
+        pop static 0
+        push static 0
+        return
+        """
+        
+        runProgramFromFiles([VMFile(name: "F1", code: f1),
+                             VMFile(name: "F2", code: f2)])
+        
+        memory(256) => "9999"
+        memory(257) => "8888"
+    }
+    
+    func testSysInit() {
+        translator.sysInit()
+        runProgram(
+        """
+        function Main.main 0
+        call Main.test1 0
+        call Main.test2 0
+        return
+        
+        function Main.test2 0
+        push constant 9999
+        return
+        
+        function Main.test1 0
+        push constant 8888
+        return
+        """
+        )
+        
+        memory(256) => "9999"
     }
 }

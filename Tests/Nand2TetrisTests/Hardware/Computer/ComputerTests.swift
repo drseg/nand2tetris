@@ -2,7 +2,7 @@ import XCTest
 @testable import Nand2Tetris
 
 class ComputerTestCase: CPUTestCase {
-    var c: Computer!
+    var computer: Computer!
     var screen: FastRAM!
     var keyboard: Keyboard!
     
@@ -10,7 +10,7 @@ class ComputerTestCase: CPUTestCase {
         super.setUp()
         screen = FastRAM(16384)
         keyboard = MockKeyboard()
-        c = Computer(cpu: cpu,
+        computer = Computer(cpu: cpu,
                      memory: Memory(keyboard: keyboard,
                                     screen: screen))
     }
@@ -20,11 +20,11 @@ class ComputerTestCase: CPUTestCase {
         useFastClocking: Bool = false,
         cycles: Int? = nil
     ) {
-        c.load(program)
-        c.useFastClocking = useFastClocking
-        c.cycles = program.count * (useFastClocking ? 1 : 2)
-        c.cycles = cycles == nil ? c.cycles : cycles!
-        c.runSync()
+        computer.load(program)
+        computer.useFastClocking = useFastClocking
+        computer.cycles = program.count * (useFastClocking ? 1 : 2)
+        computer.cycles = cycles == nil ? computer.cycles : cycles!
+        computer.runSync()
     }
 }
 
@@ -63,13 +63,13 @@ class ComputerTests: ComputerTestCase {
     
     func testSavesResultOfTwoPlusThreeToAddressZero() {
         runProgram(twoPlusThreeSavedToZero)
-        c.memory.value(0.b) => 5.b
+        computer.memory.value(0.b) => 5.b
     }
     
     func testResetPreventsExecution() {
-        c.reset = "1"
+        computer.reset = "1"
         runProgram(twoPlusThreeSavedToZero)
-        c.memory.value(0.b) => 0.b
+        computer.memory.value(0.b) => 0.b
     }
 }
 

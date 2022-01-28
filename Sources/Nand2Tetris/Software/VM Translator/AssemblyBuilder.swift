@@ -7,6 +7,13 @@ class AssemblyBuilder {
     M=D
     """
     
+    func sysInit() {
+        setupSegments()
+        callFunction(name: "Main.main", args: 0, index: 0)
+        label("LOOP", function: "Sys.init")
+        goto("LOOP", function: "Sys.init")
+    }
+    
     func pushConstant(_ c: String) {
         c[0] == "-"
         ? pushNegativeConstant(c)
@@ -73,16 +80,16 @@ class AssemblyBuilder {
         popTo("5", at: offset)
     }
     
-    func eq(_ count: String) {
-        bool("EQ" + count)
+    func eq(_ id: String) {
+        bool("EQ" + id)
     }
     
-    func gt(_ count: String) {
-        bool("GT" + count)
+    func gt(_ id: String) {
+        bool("GT" + id)
     }
     
-    func lt(_ count: String) {
-        bool("LT" + count)
+    func lt(_ id: String) {
+        bool("LT" + id)
     }
     
     func add() {
@@ -223,6 +230,17 @@ class AssemblyBuilder {
         \(popStack())
         @\(function)$\(label)
         D;JEQ
+        """
+        )
+    }
+    
+    private func setupSegments() {
+        append(
+        """
+        @256
+        D=A
+        @SP
+        M=D
         """
         )
     }

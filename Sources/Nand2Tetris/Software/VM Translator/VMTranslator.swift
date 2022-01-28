@@ -9,34 +9,44 @@ private struct VMLine {
     }
 }
 
+struct VMFile {
+    let name: String
+    let code: String
+}
+
 class VMTranslator {
     private let b: AssemblyBuilder
+    private var currentFunction = "null"
     
     init(_ b: AssemblyBuilder = AssemblyBuilder()) {
         self.b = b
     }
     
+    func sysInit() {
+        b.sysInit()
+    }
+    
+    func toAssembly(_ files: [VMFile]) -> String {
+        files.forEach(assemble)
+        return b.assembly
+    }
+
     func toAssembly(_ vm: String, file: String = #fileID) -> String {
-        var currentFunction = "null"
-        func getCurrentFunction(_ line: String) -> String {
-            let words = line.components(separatedBy: " ")
-            if words[0] == "function" {
-                currentFunction = words[1]
-            }
-            return currentFunction
-        }
-        
-        vm.cleanLines.forEach {
+        assemble(VMFile(name: file, code: vm))
+        return b.assembly
+    }
+    
+    func assemble(_ file: VMFile) {
+        file.code.cleanLines.forEach {
             toAssembly(
                 VMLine(code: $0.element,
-                       file: file,
+                       file: file.name,
                        function: getCurrentFunction($0.element),
                        index: $0.offset)
             )
         }
-        return b.assembly
     }
-    
+
     private func toAssembly(_ line: VMLine) {
         let words = line.words
         
@@ -183,17 +193,25 @@ class VMTranslator {
             fatalError("Unrecognised command '\(command)'")
         }
     }
+    
+    private func getCurrentFunction(_ line: String) -> String {
+        let words = line.components(separatedBy: " ")
+        if words[0] == "function" {
+            currentFunction = words[1]
+        }
+        return currentFunction
+    }
 }
 
 private extension String {
     var cleanLines: EnumeratedSequence<[String]> {
-            lines.map {
-                $0
-                    .droppingComments
-                    .trimmingCharacters(in: .whitespaces)
-                    .replacingOccurrences(of: "[ ]{2,}",
-                                     with: " ",
-                                     options: .regularExpression)
-            }.filter { $0 != "" }.enumerated()
+        lines.map {
+            $0
+                .droppingComments
+                .trimmingCharacters(in: .whitespaces)
+                .replacingOccurrences(of: "[ ]{2,}", // more than one space
+                                      with: " ",
+                                      options: .regularExpression)
+        }.filter { $0 != "" }.enumerated()
     }
 }
