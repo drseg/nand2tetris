@@ -10,8 +10,7 @@ private struct VMLine {
 }
 
 struct VMFile {
-    let name: String
-    let code: String
+    let name, code: String
 }
 
 class VMTranslator {

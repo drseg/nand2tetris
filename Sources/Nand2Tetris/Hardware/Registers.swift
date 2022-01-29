@@ -144,12 +144,7 @@ final class FastRAM: RAM {
         _ address: String,
         _ clock: Char
     ) -> String {
-        guard Int(address.toDecimal())! < words.count else {
-            return 0.b
-        }
-        
         let address = Int(address, radix: 2)!
-        
         if load == "1" && clock == "1" {
             words[address] = word
         }
@@ -203,13 +198,11 @@ extension RAMx8 {
         let loadMap = deMux8Way(load, address[0], address[1], address[2])
         let ramAddress = String(address.suffix(address.count - 3))
         
-        let out = subRAM.enumerated().reduce(into: [String]()) {
-            $0.append(
-                $1.element(word,
-                           loadMap[$1.offset],
-                           ramAddress,
-                           clock)
-            )
+        let out = subRAM.enumerated().reduce([String]()) {
+            $0 + [$1.element(word,
+                             loadMap[$1.offset],
+                             ramAddress,
+                             clock)]
         }
         
         return mux8Way16(out[0],
@@ -250,13 +243,11 @@ final class RAM16K: RAM {
         let loadMap = deMux4Way(load, address[0], address[1])
         let ram4KAddress = String(address.suffix(12))
         
-        let out = ram4Ks.enumerated().reduce(into: [String]()) {
-            $0.append(
-                $1.element(word,
-                           loadMap[$1.offset],
-                           ram4KAddress,
-                           clock)
-            )
+        let out = ram4Ks.enumerated().reduce([String]()) {
+            $0 + [$1.element(word,
+                             loadMap[$1.offset],
+                             ram4KAddress,
+                             clock)]
         }
         
         return mux4Way16(out[0],

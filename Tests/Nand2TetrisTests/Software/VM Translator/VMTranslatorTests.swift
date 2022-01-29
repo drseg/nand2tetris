@@ -12,9 +12,10 @@ class VMTranslatorFormattingTests: XCTestCase {
         push constant 1
         push constant 3
         """)
+        
         let commented = translate(
         """
-        push constant 1
+        push constant 1 //comment
         //push constant 2
         push constant 3
         """)
@@ -170,9 +171,7 @@ class VMTranslatorTests: ComputerTestCase {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
         if sp > 256 {
-            XCTAssertEqual(String(top ?? d),
-                           memory(sp-1),
-                           "Memory \(sp-1)")
+            XCTAssertEqual(String(top ?? d), memory(sp-1), "Memory \(sp-1)")
         }
     }
     
@@ -363,8 +362,8 @@ class VMTranslatorTests: ComputerTestCase {
     
     func assertPopped(
         _ segment: String,
-        toFirst: Int,
-        toSecond: Int? = nil,
+        atZero zero: Int,
+        atOne one: Int? = nil,
         sp: Int = 256
     ) {
         runProgram(
@@ -375,43 +374,39 @@ class VMTranslatorTests: ComputerTestCase {
         pop \(segment) 1
         """)
         
-        XCTAssertEqual(String(sp),
-                       stackPointer,
-                       "Stack Pointer")
-        XCTAssertEqual(String(10),
-                       memory(toFirst),
-                       "Memory[\(toFirst)]")
+        XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
+        XCTAssertEqual(String(10), memory(zero), "Memory[\(zero)]")
         XCTAssertEqual(String(9),
-                       memory(toSecond ?? toFirst + 1),
-                       "Memory[\(toSecond ?? toFirst + 1)]")
+                       memory(one ?? zero + 1),
+                       "Memory[\(one ?? zero + 1)]")
     }
     
     func testPopLocal() {
-        assertPopped("local", toFirst: defaultLCL)
+        assertPopped("local", atZero: defaultLCL)
     }
     
     func testPopArgument() {
-        assertPopped("argument", toFirst: defaultARG)
+        assertPopped("argument", atZero: defaultARG)
     }
     
     func testPopThis() {
-        assertPopped("this", toFirst: defaultTHIS)
+        assertPopped("this", atZero: defaultTHIS)
     }
     
     func testPopThat() {
-        assertPopped("that", toFirst: defaultTHAT)
+        assertPopped("that", atZero: defaultTHAT)
     }
     
     func testPopTemp() {
-        assertPopped("temp", toFirst: temp)
+        assertPopped("temp", atZero: temp)
     }
     
     func testPopPointer() {
-        assertPopped("pointer", toFirst: ptr0, toSecond: ptr1)
+        assertPopped("pointer", atZero: ptr0, atOne: ptr1)
     }
     
     func testPopStatic() {
-        assertPopped("static", toFirst: 16)
+        assertPopped("static", atZero: 16)
     }
     
     func assertPushAndPop(
@@ -431,12 +426,8 @@ class VMTranslatorTests: ComputerTestCase {
         pop \(segment) 0
         """)
         
-        XCTAssertEqual(String(sp),
-                       stackPointer,
-                       "Stack Pointer")
-        XCTAssertEqual(String(19),
-                       memory(toFirst),
-                       "Memory[\(toFirst)]")
+        XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
+        XCTAssertEqual(String(19), memory(toFirst), "Memory[\(toFirst)]")
     }
     
     func testPushLocal() {
@@ -515,7 +506,7 @@ class VMTranslatorTests: ComputerTestCase {
         memory(LCL) => String(defaultLCL)
     }
     
-    func assertStack(incrementedBy offset: Int, repeating value: String) {
+    func assertStack(depth offset: Int, repeating value: String) {
         (defaultSP...(defaultSP + offset - 1)).forEach {
             memory($0) => value
         }
@@ -564,7 +555,7 @@ class VMTranslatorTests: ComputerTestCase {
         return
         """)
         
-        assertStack(incrementedBy: 1, repeating: "99")
+        assertStack(depth: 1, repeating: "99")
         assertSegmentsReturnedToDefault()
     }
     
@@ -580,9 +571,9 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 99
         return
         """
-        , cycles: 500)
+        , cycles: 450)
         
-        assertStack(incrementedBy: 3, repeating: "99")
+        assertStack(depth: 3, repeating: "99")
         assertSegmentsReturnedToDefault()
     }
     
@@ -685,7 +676,7 @@ class VMTranslatorTests: ComputerTestCase {
         call Main.fibonacci 1
         add
         return
-        """, cycles: 1350)
+        """, cycles: 1340)
 
         memory(SP) => "259"
         memory(256) => "2"
