@@ -12,6 +12,10 @@ class AssemblerTests: XCTestCase {
         assembler.toBinary(assembly)
     }
     
+    func testConvertsNothing() {
+        assemble("") => []
+    }
+    
     func testConvertsACommands() {
         assemble("@0") => ["0000000000000000"]
         assemble("@1") => ["0000000000000001"]
