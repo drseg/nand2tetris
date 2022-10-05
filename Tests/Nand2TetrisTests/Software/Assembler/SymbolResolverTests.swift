@@ -2,114 +2,54 @@ import XCTest
 @testable import Nand2Tetris
 
 class SymbolResolverTests: XCTestCase {
-    private var resolver: SymbolResolver!
-    
-    override func setUp() {
-        resolver = SymbolResolver()
-    }
-    
-    func resolveCommands(_ assembly: String) -> [String: Int] {
-        resolver = SymbolResolver()
-        resolver.makeCommandMap(assembly)
-        return resolver.commands
-    }
-    
-    func resolveSymbols(_ assembly: String) -> [String: Int] {
-        resolver = SymbolResolver()
-        resolver.makeSymbolMap(assembly)
-        return resolver.symbols
-    }
-    
     func resolve(_ assembly: String) -> String {
-        resolver = SymbolResolver()
-        return resolver.resolving(assembly)
+        SymbolResolver().resolve(assembly)
     }
     
     func testResolvesEmpty() {
-        resolveCommands("") => [:]
-        resolveCommands(" ") => [:]
+        resolve("") => ""
+        resolve(" ") => " "
     }
     
     func testResolvesSinglePseudoCommand() {
-        resolveCommands("LOOP") => [:]
-        resolveCommands("(LOOP)") => ["LOOP": 0]
+        resolve("(LOOP)\n@LOOP") => "@0"
     }
-    
+
     func testResolvesMultiplePseudoCommands() {
-        resolveCommands("(A)\n(B)\n(C)") => ["A": 0, "B": 0, "C": 0]
+        resolve("(A)\n@A\n(B)\n@B\n(C)\n@C") => "@0\n@1\n@2"
     }
-    
-    func testIncrementsCommandAddressCorrectly() {
-        resolveCommands("(LOOP)\nM=A\n(END)") => ["LOOP": 0, "END": 1]
-    }
-    
+
     func testOnlyResolvesOneCommandPerLine() {
-        resolveCommands("(LOOP)(LOOP)") => ["LOOP": 0]
+        resolve("(LOOP)(LOOP)\n@LOOP") => "@0"
+    }
+
+    func testIgnoresSymbolWithLeadingDigit() {
+        resolve("(1LOOP)\n@1LOOP") => "(1LOOP)\n@1LOOP"
+        resolve("(LOOP1)\n@LOOP1") => "@0"
     }
     
-    func testDisallowsLeadingDigit() {
-        resolveCommands("(1LOOP)") => [:]
-        resolveCommands("(LOOP1)") => ["LOOP1": 0]
-    }
-    
-    func testPredefinedSymbols() {
-        resolver.staticSymbols["SP"] => 0
-        resolver.staticSymbols["LCL"] => 1
-        resolver.staticSymbols["ARG"] => 2
-        resolver.staticSymbols["THIS"] => 3
-        resolver.staticSymbols["THAT"] => 4
-        resolver.staticSymbols["SCREEN"] => 16384
-        resolver.staticSymbols["KBD"] => 24576
+    func testResolvesPredefinedSymbols() {
+        resolve("@SP") => "@0"
+        resolve("@LCL") => "@1"
+        resolve("@ARG") => "@2"
+        resolve("@THIS") => "@3"
+        resolve("@THAT") => "@4"
+        resolve("@SCREEN") => "@16384"
+        resolve("@KBD") => "@24576"
         
         for i in 0...15 {
-            resolver.staticSymbols["R\(i)"] => i
+            resolve("@R\(i)") => "@\(i)"
         }
     }
     
-    func testPredifinedSymbolsAreNotResolved() {
-        resolveSymbols("@R1") => [:]
-    }
-    
     func testResolvesSymbols() {
-        resolveSymbols("@i") => ["i": 16]
-        resolveSymbols("@i\n@i") => ["i": 16]
-
-        resolveSymbols("@i\n@j") => ["i": 16, "j": 17]
-        resolveSymbols("@i\n@i\n@i\n@j") => ["i": 16, "j": 17]
-    }
-    
-    func testDoesNotResolveSymbolIfActuallyCommand() {
-        resolver.makeCommandMap("(TEST)")
-        resolver.makeSymbolMap("@TEST")
-        resolver.symbols => [:]
+        resolve("@i") => "@16"
+        resolve("@i\n@i") => "@16\n@16"
+        resolve("@i\n@j") => "@16\n@17"
     }
     
     func testDoesNotResolveNumbers() {
-        resolveCommands("@256") => [:]
-        resolveSymbols("@256") => [:]
-    }
-    
-    func testResolvesSymbolsAndCommands() {
-        let assembly =
-        """
-        (LOOP)
-        @i
-        M=D
-        @j
-        D=M
-        (END)
-        @LOOP
-        (TEST)
-        M=D
-        @TEST
-        @END
-        """
-        
-        resolver.makeCommandMap(assembly)
-        resolver.makeSymbolMap(assembly)
-        
-        resolver.commands => ["LOOP": 0, "END": 4, "TEST": 5]
-        resolver.symbols => ["i": 16, "j": 17]
+        resolve("@256") => "@256"
     }
     
     func testDeletesResolvedCommands() {

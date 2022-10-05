@@ -1,5 +1,41 @@
 class SymbolResolver {
-    let staticSymbols = {
+    func resolve(_ assembly: String) -> String {
+        replaceSymbols(findCommands(assembly) +
+                       findSymbols(assembly) +
+                       staticSymbols,
+                       in: assembly)
+    }
+    
+    private func findCommands(_ assembly: String) -> [String: Int] {
+        var instructionAddress = 0
+        var commands = [String: Int]()
+        
+        assembly.eachLine {
+            if let command = $0.command {
+                commands[command] = instructionAddress
+            } else {
+                instructionAddress += 1
+            }
+        }
+        
+        return commands
+    }
+    
+    private func findSymbols(_ assembly: String) -> [String: Int] {
+        var address = 16
+        var symbols = staticSymbols
+        
+        assembly.eachLine {
+            if let symbol = $0.symbol, symbols[symbol] == nil {
+                symbols[symbol] = address
+                address += 1
+            }
+        }
+        
+        return symbols
+    }
+    
+    private lazy var staticSymbols = {
         (0...15).reduce(into: ["SP": 0,
                                "LCL": 1,
                                "ARG": 2,
@@ -11,22 +47,8 @@ class SymbolResolver {
         }
     }()
     
-    var commands = [String: Int]()
-    var symbols = [String: Int]()
-    
-    var allSymbols: [String: Int] {
-        commands + symbols + staticSymbols
-    }
-    
-    func resolving(_ assembly: String) -> String {
-        makeCommandMap(assembly)
-        makeSymbolMap(assembly)
-        
-        return replacingAll(assembly)
-    }
-    
-    func replacingAll(_ assembly: String) -> String {
-        allSymbols
+    private func replaceSymbols(_ symbols: [String: Int], in assembly: String) -> String {
+        symbols
             .sorted { $0.key.count > $1.key.count }
             .reduce(assembly)
         {
@@ -34,29 +56,6 @@ class SymbolResolver {
                           ("(\($1.key))\n", ""),
                           ("(\($1.key))", ""),
                           ($1.key, String($1.value))])
-        }
-    }
-    
-    func makeCommandMap(_ assembly: String) {
-        var instructionAddress = 0
-        
-        assembly.eachLine {
-            if let command = $0.command {
-                commands[command] = instructionAddress
-            } else {
-                instructionAddress += 1
-            }
-        }
-    }
-    
-    func makeSymbolMap(_ assembly: String) {
-        var address = 16
-        
-        assembly.eachLine {
-            if let symbol = $0.symbol, allSymbols[symbol] == nil {
-                symbols[symbol] = address
-                address += 1
-            }
         }
     }
 }

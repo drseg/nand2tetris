@@ -90,7 +90,6 @@ class VMTranslatorTests: ComputerTestCase {
         useFastClocking: Bool = true,
         cycles: Int? = nil,
         file: String = #fileID
-        
     ) {
         runProgram(toBinary(vmProgram, file: file),
                    useFastClocking: useFastClocking,
@@ -124,7 +123,7 @@ class VMTranslatorTests: ComputerTestCase {
     }
     
     func resolve(_ assembly: String) -> String {
-        SymbolResolver().resolving(
+        SymbolResolver().resolve(
             AssemblyCleaner().clean(assembly)
         )
     }

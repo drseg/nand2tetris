@@ -147,7 +147,7 @@ class AssemblerTests: XCTestCase {
         let cleaner = AssemblyCleaner()
         
         assemble(
-            resolver.resolving(
+            resolver.resolve(
                 cleaner.clean(
                     assembly
                 )

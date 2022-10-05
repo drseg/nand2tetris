@@ -12,7 +12,7 @@ class Assembler {
     
     func toBinary(_ assembly: String) -> [String] {
         resolver
-            .resolving(cleaner.clean(assembly))
+            .resolve(cleaner.clean(assembly))
             .lines
             .reduce(into: [String]()) {
                 if isAInstruction($1) {
