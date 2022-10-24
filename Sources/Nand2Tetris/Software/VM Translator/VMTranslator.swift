@@ -186,7 +186,7 @@ class VMTranslator {
             builder.newFunction(name: name, args: argCount)
             
         case "call":
-            builder.callFunction(name: name, args: argCount, index: line.index)
+            builder.functionCall(name: name, args: argCount, index: line.index)
             
         default:
             fatalError("Unrecognised command '\(command)'")
@@ -208,7 +208,8 @@ private extension String {
             $0
                 .droppingComments
                 .trimmingCharacters(in: .whitespaces)
-                .replacingOccurrences(of: "[ ]{2,}", // more than one space
+                .replacingOccurrences(of: "[ ]{2,}",
+                                      // more than one space
                                       with: " ",
                                       options: .regularExpression)
         }.filter { $0 != "" }.enumerated()

@@ -3,7 +3,7 @@ class AssemblyBuilder {
     
     func sysInit() {
         setupSegments()
-        callFunction(name: "Main.main", args: 0, index: 0)
+        functionCall(name: "Main.main", args: 0, index: 0)
         label("LOOP", function: "Sys.init")
         goto("LOOP", function: "Sys.init")
     }
@@ -117,7 +117,7 @@ class AssemblyBuilder {
         }
     }
     
-    func callFunction(name: String, args: Int, index: Int) {
+    func functionCall(name: String, args: Int, index: Int) {
         let returnLabel = "\(name).returnAddress.\(index)"
         
         pushConstant("\(returnLabel)")

@@ -166,7 +166,7 @@ class VMTranslatorTests: ComputerTestCase {
         sectionBreak()
     }
     
-    func assertResult(d: Int, sp: Int = 257, top: Int? = nil) {
+    func assertState(d: Int, sp: Int = 257, top: Int? = nil) {
         XCTAssertEqual(String(d), dRegister, "D Register")
         XCTAssertEqual(String(sp), stackPointer, "Stack Pointer")
         if sp > 256 {
@@ -176,7 +176,7 @@ class VMTranslatorTests: ComputerTestCase {
     
     func testPushNegativeConstant() {
         runProgram("push constant -1")
-        assertResult(d: -1)
+        assertState(d: -1)
     }
 
     func testPushManyConstants() {
@@ -187,7 +187,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 4
         push constant 5
         """)
-        assertResult(d: 5, sp: 260)
+        assertState(d: 5, sp: 260)
     }
     
     func testAdd2And3() {
@@ -197,7 +197,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 3
         add
         """)
-        assertResult(d: 5)
+        assertState(d: 5)
     }
     
     func testSubtract2From3() {
@@ -207,7 +207,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 2
         sub
         """)
-        assertResult(d: 1)
+        assertState(d: 1)
     }
     
     func testSubtract3From2() {
@@ -217,7 +217,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 3
         sub
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func testChainedAddition() {
@@ -229,7 +229,7 @@ class VMTranslatorTests: ComputerTestCase {
         add
         add
         """)
-        assertResult(d: 7)
+        assertState(d: 7)
     }
     
     func testEqual() {
@@ -239,7 +239,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 2
         eq
         """)
-        assertResult(d: 0)
+        assertState(d: 0)
     }
     
     func testNotEqual() {
@@ -249,7 +249,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 1
         eq
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func testLessThan() {
@@ -259,7 +259,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 3
         lt
         """)
-        assertResult(d: 0)
+        assertState(d: 0)
     }
     
     func testNotLessThan() {
@@ -269,7 +269,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 2
         lt
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func testGreaterThan() {
@@ -279,7 +279,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 2
         gt
         """)
-        assertResult(d: 0)
+        assertState(d: 0)
     }
     
     func testNotGreaterThan() {
@@ -289,7 +289,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 3
         gt
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func testNegative() {
@@ -298,7 +298,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 1
         neg
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func testDoubleNegative() {
@@ -307,7 +307,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant -1
         neg
         """)
-        assertResult(d: 1)
+        assertState(d: 1)
     }
     
     func testOtherDoubleNegative() {
@@ -317,7 +317,7 @@ class VMTranslatorTests: ComputerTestCase {
         neg
         neg
         """)
-        assertResult(d: 1)
+        assertState(d: 1)
     }
     
     func testNot() {
@@ -326,7 +326,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant -1
         not
         """)
-        assertResult(d: 0)
+        assertState(d: 0)
     }
     
     func testDoubleNot() {
@@ -336,7 +336,7 @@ class VMTranslatorTests: ComputerTestCase {
         not
         not
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func testAnd() {
@@ -346,7 +346,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant -1
         and
         """)
-        assertResult(d: 0)
+        assertState(d: 0)
     }
     
     func testOr() {
@@ -356,7 +356,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant -1
         or
         """)
-        assertResult(d: -1)
+        assertState(d: -1)
     }
     
     func assertPopped(
@@ -469,7 +469,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 3
         add
         """)
-        assertResult(d: 5)
+        assertState(d: 5)
     }
 
     func testIfGotoTrue() {
@@ -482,7 +482,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 6
         label end
         """)
-        assertResult(d: 0, sp: 256)
+        assertState(d: 0, sp: 256)
     }
     
     func testIfGotoFalse() {
@@ -495,7 +495,7 @@ class VMTranslatorTests: ComputerTestCase {
         push constant 6
         label end
         """)
-        assertResult(d: 6, sp: 257)
+        assertState(d: 6, sp: 257)
     }
     
     func assertSegmentsReturnedToDefault() {
@@ -569,8 +569,8 @@ class VMTranslatorTests: ComputerTestCase {
         function Test.test 0
         push constant 99
         return
-        """
-        , cycles: 450)
+        """,
+        cycles: 450)
         
         assertStack(depth: 3, repeating: "99")
         assertSegmentsReturnedToDefault()

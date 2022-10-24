@@ -49,7 +49,7 @@ final class Computer {
     private var clockState: Char = "0"
     private var nextClock: Char {
         defer {
-            clockState = clockState == "0" ? "1" : "0"
+            clockState.toggle()
             cycles -= 1
         }
         return useFastClocking ? "1" : clockState
@@ -72,15 +72,18 @@ extension FastRAM {
     
     func load(_ instructions: [String]) {
         reset()
-        
-        instructions.enumerated().forEach {
-            words[$0.offset] = $0.element
-        }
+        words = instructions + words[instructions.count...]
     }
     
     func reset() {
         for i in 0..<words.count {
             words[i] = 0.b
         }
+    }
+}
+
+extension Char {
+    mutating func toggle() {
+        self = self == "0" ? "1" : "0"
     }
 }
