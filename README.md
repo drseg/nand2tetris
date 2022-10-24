@@ -1,3 +1,3 @@
 # Nand2Tetris
 
-A description of this package.
+A work-in-progress Swift implementation of Nand2Tetris (https://www.nand2tetris.org)
